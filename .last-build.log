@@ -1,0 +1,39 @@
+
+> verity@0.1.0 build /Users/callummccaffrey/verity
+> next build
+
+   ▲ Next.js 15.4.6
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 1000ms
+
+./src/app/api/ask/route.ts
+Attempted import error: 'supaAdmin' is not exported from '@/lib/supabaseAdmin' (imported as 'supaAdmin').
+
+Import trace for requested module:
+./src/app/api/ask/route.ts
+
+./src/app/api/search/route.ts
+Attempted import error: 'supaAdmin' is not exported from '@/lib/supabaseAdmin' (imported as 'supaAdmin').
+
+Import trace for requested module:
+./src/app/api/search/route.ts
+
+ ✓ Compiled successfully in 1000ms
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/app/api/ask/route.ts:4:10
+Type error: Module '"@/lib/supabaseAdmin"' has no exported member 'supaAdmin'.
+
+[0m [90m 2 |[39m [36mimport[39m { openai } [36mfrom[39m [32m'@/lib/openai'[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { pineconeIndex } [36mfrom[39m [32m'@/lib/pinecone'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { supaAdmin } [36mfrom[39m [32m'@/lib/supabaseAdmin'[39m[33m;[39m
+ [90m   |[39m          [31m[1m^[22m[39m
+ [90m 5 |[39m
+ [90m 6 |[39m [36mexport[39m [36masync[39m [36mfunction[39m [33mPOST[39m(req[33m:[39m [33mNextRequest[39m) {
+ [90m 7 |[39m   [36mtry[39m {[0m
+Next.js build worker exited with code: 1 and signal: null
+ ELIFECYCLE  Command failed with exit code 1.

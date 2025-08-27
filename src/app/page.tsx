@@ -1,103 +1,154 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+export default function Page() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900">
+      {/* Nav */}
+      <header className="sticky top-0 z-20 bg-white/70 backdrop-blur border-b border-slate-200">
+        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-md bg-slate-900" />
+            <span className="font-semibold tracking-tight">Verity</span>
+          </Link>
+          <nav className="hidden sm:flex items-center gap-6 text-sm">
+            <Link href="/search" className="hover:opacity-80">Search</Link>
+            <Link href="/ask" className="hover:opacity-80">Ask AI</Link>
+            <Link href="/crawl" className="hover:opacity-80">Sources</Link>
+            <Link
+              href="/(app)/account"
+              className="rounded-xl border border-slate-300 px-3 py-1.5 hover:bg-slate-50"
+            >
+              Sign in
+            </Link>
+          </nav>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </header>
+
+      {/* Hero */}
+      <section className="relative">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:py-28">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs">
+              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+              Live beta
+            </div>
+            <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
+              AI-powered political watchdog for Australia.
+            </h1>
+            <p className="mt-4 text-slate-600 text-lg">
+              Verity crawls official sources, tracks bills, and explains what
+              actually changes your life—without the spin. Search everything.
+              Ask anything. Stay free.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/search"
+                className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-white hover:opacity-90"
+              >
+                Try the Search
+              </Link>
+              <Link
+                href="/ask"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 hover:bg-white"
+              >
+                Ask Verity AI
+              </Link>
+            </div>
+            <p className="mt-3 text-xs text-slate-500">
+              Built with Next.js, Supabase, Pinecone. Private by default.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Value props */}
+      <section className="border-t border-slate-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-14 grid gap-6 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 p-6">
+            <h3 className="font-semibold">Real sources only</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Crawls gov sites, hansard, regulator releases, MP pages, registers.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 p-6">
+            <h3 className="font-semibold">Explained in plain English</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Summaries, timelines, and red-flag callouts. No jargon.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 p-6">
+            <h3 className="font-semibold">Audit trail</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Every claim links back to the primary source. Verify everything.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="bg-slate-50 border-t border-slate-200">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <h2 className="text-2xl font-semibold tracking-tight">How Verity works</h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-4">
+            {[
+              ["1. Crawl", "Fetch from official sources on schedule."],
+              ["2. Index", "Clean, de-dup, embed to vector search."],
+              ["3. Answer", "RAG over trusted context, cite sources."],
+              ["4. Watch", "Re-index changes, alert you to updates."],
+            ].map(([title, desc], i) => (
+              <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="text-xs text-slate-500">Step {i + 1}</div>
+                <div className="mt-1 font-medium">{title}</div>
+                <p className="mt-2 text-sm text-slate-600">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="border-t border-slate-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-16 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div>
+            <h3 className="text-xl font-semibold">Get started now</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              Search the record, ask a question, or add your first source.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Link
+              href="/crawl"
+              className="rounded-xl border border-slate-300 px-4 py-2.5 hover:bg-slate-50"
+            >
+              Add Sources
+            </Link>
+            <Link
+              href="/search"
+              className="rounded-xl bg-slate-900 px-4 py-2.5 text-white hover:opacity-90"
+            >
+              Start Searching
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-10 text-sm text-slate-500 flex items-center justify-between">
+          <span>© {new Date().getFullYear()} Verity</span>
+          <div className="flex items-center gap-4">
+            <Link href="/(app)/account" className="hover:opacity-80">Account</Link>
+            <Link href="/ask" className="hover:opacity-80">AI</Link>
+            <a
+              className="hover:opacity-80"
+              href="mailto:founder@useverity.app"
+              rel="noopener noreferrer"
+            >
+              Contact
+            </a>
+          </div>
+        </div>
       </footer>
-    </div>
+    </main>
   );
 }
