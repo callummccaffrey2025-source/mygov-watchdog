@@ -1,0 +1,19 @@
+[
+  {
+    "external_id": "SAMPLE-001",
+    "title": "Infrastructure Investment Acceleration Bill 2025",
+    "url": "https://example.org/bill/SAMPLE-001",
+    "status": "Introduced",
+    "introduced_on": "2025-08-01",
+    "full_text": "A Bill for an Act to provide for accelerated funding and approvals for nationally significant infrastructure projects, and for related purposes. The Bill establishes an independent assessment panel and sets statutory timeframes for approvals."
+  },
+  {
+    "external_id": "SAMPLE-002",
+    "title": "Digital Privacy and Data Sovereignty Amendment Bill 2025",
+    "url": "https://example.org/bill/SAMPLE-002",
+    "status": "Committee",
+    "introduced_on": "2025-07-18",
+    "full_text": "An Act to amend existing privacy legislation to strengthen consent requirements, mandate data residency for sensitive data, and increase penalties for serious breaches."
+  }
+]
+
