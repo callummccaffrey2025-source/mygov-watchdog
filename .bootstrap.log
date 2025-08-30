@@ -1,0 +1,14 @@
+
+[1m▶ Linking Supabase project: sksgckurougyydhfmcse[0m
+Initialising cli_login_postgres role...
+Forgot your password? Reset it from the Dashboard: https://supabase.com/dashboard/project/sksgckurougyydhfmcse/settings/database
+Enter your database password: Connecting to remote database...
+failed to connect to postgres: failed to connect to `host=aws-0-ap-southeast-2.pooler.supabase.com user=postgres.sksgckurougyydhfmcse database=postgres`: failed SASL auth (invalid SCRAM server-final-message received from server)
+Try rerunning the command with --debug to troubleshoot the error.
+
+[1m▶ Fetching Supabase API keys[0m
+
+[1m▶ Upserting .env.local core vars[0m
+
+[1m▶ Ensuring API routes are dynamic[0m
+mv: src/app/api/db-stats/route.ts.tmp: No such file or directory

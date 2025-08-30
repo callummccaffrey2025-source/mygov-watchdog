@@ -2,3 +2,5 @@ ignoredBuiltDependencies:
   - '@tailwindcss/oxide'
   - sharp
   - unrs-resolver
+
+nodeLinker: hoisted

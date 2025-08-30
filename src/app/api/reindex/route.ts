@@ -1,8 +1,16 @@
-import { NextResponse } from 'next/server'
-import { admin } from '../../../lib/server_supabase'
+export const dynamic = 'force-dynamic';
+import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-export async function POST(){
-  const supa = admin()
-  const { data: bills } = await supa.from('bills').select('id, summary')
-  return NextResponse.json({ ok: true, count: bills?.length || 0 })
+export async function GET() {
+  try {
+    const { data: sources, error } = await supabaseAdmin.from("source").select("id,name,url,jurisdiction,type").limit(500);
+    if (error) throw error;
+
+    // TODO: replace with your real crawler enqueue (e.g., queue, function call)
+    // For now, this just returns how many sources would be crawled.
+    return NextResponse.json({ ok: true, toCrawl: sources?.length ?? 0 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }

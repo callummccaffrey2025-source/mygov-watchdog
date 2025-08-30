@@ -1,10 +1,24 @@
-export function chunkText(text: string, maxLen = 1200, overlap = 120) {
-  const chunks:string[] = [];
-  let i = 0;
-  while (i < text.length) {
-    const end = Math.min(i + maxLen, text.length);
-    chunks.push(text.slice(i, end));
-    i = end - overlap; if (i < 0) i = 0;
+export function chunk(text: string, max = 800, overlap = 120): string[] {
+  const words = (text || '').split(/\s+/).filter(Boolean);
+  const out: string[] = [];
+  let cur: string[] = [];
+
+  const pushCur = () => {
+    const s = cur.join(' ').trim();
+    if (s) out.push(s);
+  };
+
+  for (const w of words) {
+    const next = (cur.length ? cur.join(' ') + ' ' : '') + w;
+    if (next.length > max) {
+      pushCur();
+      // keep an approximate overlap by words (avoid breaking mid-sentence too aggressively)
+      const keep = Math.max(0, Math.floor(overlap / 6));
+      const tail = cur.slice(-keep);
+      cur = tail.length ? tail : [];
+    }
+    cur.push(w);
   }
-  return chunks;
+  if (cur.length) pushCur();
+  return out;
 }

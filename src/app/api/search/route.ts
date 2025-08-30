@@ -1,35 +1,53 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { openai } from '@/lib/openai';
-import { pineconeIndex } from '@/lib/pinecone';
-import { supaAdmin } from '@/lib/supabaseAdmin';
+// app/api/search/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+export const dynamic = "force-dynamic"; // always fresh
+export const runtime = "nodejs";
+
+function snippet(text: string, q: string, len = 240) {
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return text.slice(0, len) + (text.length > len ? "…" : "");
+  const start = Math.max(0, i - Math.floor(len / 3));
+  const end = Math.min(text.length, start + len);
+  return (start > 0 ? "…" : "") + text.slice(start, end) + (end < text.length ? "…" : "");
+}
 
 export async function GET(req: NextRequest) {
-  try {
-    const sp = new URL(req.url).searchParams;
-    const q = sp.get('q') || '';
-    const jurisdiction = sp.get('jurisdiction') || undefined;
-    if (!q) return NextResponse.json({ results: [] });
+  const url = new URL(req.url);
+  const q = (url.searchParams.get("q") || "").trim();
+  if (!q) return NextResponse.json({ error: "q required" }, { status: 400 });
 
-    const emb = await openai.embeddings.create({ model: 'text-embedding-3-small', input: q });
+  // Basic full-text search using generated tsvector column `content_tsv`
+  // Falls back to ILIKE if tsv not present
+  const { data, error } = await supabaseAdmin
+    .rpc("verity_search_docs", { query: q })
+    .select()
+    .limit(25);
 
-    // v6: flat options
-    const res = await pineconeIndex.query({
-      topK: 10,
-      vector: emb.data[0].embedding,
-      includeMetadata: true,
-      filter: jurisdiction ? { jurisdiction: { $eq: jurisdiction } } : undefined,
-    });
-
-    const ids = Array.from(new Set((res.matches ?? []).map(m => (m.metadata as any)?.doc_id).filter(Boolean)));
-    if (!ids.length) return NextResponse.json({ results: [] });
-
-    const { data: docs } = await supaAdmin
-      .from('document')
-      .select('id,title,url,created_at')
-      .in('id', ids);
-
-    return NextResponse.json({ results: docs ?? [] });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? 'search failed' }, { status: 500 });
+  // If RPC not installed, try direct query
+  let hits: any[] = [];
+  if (!error && Array.isArray(data)) {
+    hits = data;
+  } else {
+    const { data: likeData, error: likeErr } = await supabaseAdmin
+      .from("document")
+      .select("id,title,url,content,published_at")
+      .or(`title.ilike.%${q}%,content.ilike.%${q}%`)
+      .order("published_at", { ascending: false })
+      .limit(25);
+    if (likeErr) return NextResponse.json({ error: likeErr.message }, { status: 500 });
+    hits = likeData ?? [];
   }
+
+  const mapped = hits.map((d: any) => ({
+    id: String(d.id),
+    title: d.title ?? "",
+    url: d.url ?? "",
+    published_at: d.published_at ?? null,
+    snippet: d.content ? snippet(d.content, q) : undefined,
+  }));
+
+  return NextResponse.json({ hits: mapped });
 }
+

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+name="${1:-dev}"; shift || true
+cmd="${*:-pnpm dev}"
+mkdir -p logs
+: > "logs/${name}.log"
+$cmd >> "logs/${name}.log" 2>&1 &
+echo $! > "logs/${name}.pid"
+echo "started ${name} (pid $(cat logs/${name}.pid)), logging to logs/${name}.log"

@@ -1,5 +1,5 @@
-export async function GET() {
-  return new Response(JSON.stringify({ ok: true, ts: new Date().toISOString() }), {
-    headers: { "content-type": "application/json" }
-  });
+export const dynamic = "force-dynamic";
+import { NextResponse } from "next/server";
+export function GET() {
+  return NextResponse.json({ ok: true, at: "/api/health", time: new Date().toISOString() });
 }

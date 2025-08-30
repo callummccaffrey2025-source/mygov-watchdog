@@ -1,154 +1,199 @@
 import Link from "next/link";
+import { Shield, Bell, Landmark, Search, Users, Vote, Check } from "lucide-react";
 
-export default function Page() {
+export const metadata = {
+  title: "Verity — AI-powered political watchdog for Australia",
+  description:
+    "Search bills, votes and speeches. Ask questions with citations you can verify.",
+};
+
+function Feature({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900">
-      {/* Nav */}
-      <header className="sticky top-0 z-20 bg-white/70 backdrop-blur border-b border-slate-200">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-md bg-slate-900" />
-            <span className="font-semibold tracking-tight">Verity</span>
-          </Link>
-          <nav className="hidden sm:flex items-center gap-6 text-sm">
-            <Link href="/search" className="hover:opacity-80">Search</Link>
-            <Link href="/ask" className="hover:opacity-80">Ask AI</Link>
-            <Link href="/crawl" className="hover:opacity-80">Sources</Link>
-            <Link
-              href="/(app)/account"
-              className="rounded-xl border border-slate-300 px-3 py-1.5 hover:bg-slate-50"
-            >
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <div className="card card-hover p-5">
+      <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-white">
+        {icon}
+      </div>
+      <h3 className="mb-1 font-semibold">{title}</h3>
+      <p className="text-sm text-zinc-600">{text}</p>
+    </div>
+  );
+}
 
-      {/* Hero */}
-      <section className="relative">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:py-28">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs">
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-              Live beta
-            </div>
-            <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
-              AI-powered political watchdog for Australia.
-            </h1>
-            <p className="mt-4 text-slate-600 text-lg">
-              Verity crawls official sources, tracks bills, and explains what
-              actually changes your life—without the spin. Search everything.
-              Ask anything. Stay free.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/search"
-                className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-white hover:opacity-90"
-              >
-                Try the Search
-              </Link>
-              <Link
-                href="/ask"
-                className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 hover:bg-white"
-              >
-                Ask Verity AI
-              </Link>
-            </div>
-            <p className="mt-3 text-xs text-slate-500">
-              Built with Next.js, Supabase, Pinecone. Private by default.
-            </p>
-          </div>
-        </div>
-      </section>
+function Step({ n, title, points }: { n: number; title: string; points: string[] }) {
+  return (
+    <li className="card p-5">
+      <div className="mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white">{n}</div>
+      <h4 className="mb-2 font-semibold">{title}</h4>
+      <ul className="space-y-2">
+        {points.map((p) => (
+          <li key={p} className="flex items-start gap-2 text-sm text-zinc-700">
+            <Check className="mt-0.5 h-4 w-4" /> {p}
+          </li>
+        ))}
+      </ul>
+    </li>
+  );
+}
 
-      {/* Value props */}
-      <section className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-14 grid gap-6 sm:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 p-6">
-            <h3 className="font-semibold">Real sources only</h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Crawls gov sites, hansard, regulator releases, MP pages, registers.
-            </p>
+function Card({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="card p-5">
+      <h4 className="mb-1 font-semibold">{title}</h4>
+      <p className="text-sm text-zinc-600">{text}</p>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <>
+      {/* HERO */}
+      <section className="bg-hero">
+        <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mb-6"><span className="badge">Australia · AI-powered political watchdog</span></div>
+          <h1 className="max-w-3xl text-5xl font-extrabold tracking-tight text-zinc-900 sm:text-6xl">
+            Watch the politicians,<br />
+            <span className="text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text">
+              so you don’t have to
+            </span>
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg text-zinc-600">
+            Track bills, votes and speeches across Australia. Ask questions in plain
+            English and get answers with verifiable sources.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link href="/search" className="rounded-lg bg-zinc-900 px-4 py-2 text-white">Try the app</Link>
+            <Link href="/ask" className="rounded-lg border px-4 py-2 text-zinc-900">Live search</Link>
+            <Link href="/demo" className="rounded-lg border px-4 py-2 text-zinc-900">See a 90-sec demo</Link>
           </div>
-          <div className="rounded-2xl border border-slate-200 p-6">
-            <h3 className="font-semibold">Explained in plain English</h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Summaries, timelines, and red-flag callouts. No jargon.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 p-6">
-            <h3 className="font-semibold">Audit trail</h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Every claim links back to the primary source. Verify everything.
-            </p>
+          <form action="/ask" className="mt-8 max-w-xl rounded-xl border bg-white p-2 shadow-sm">
+            <input name="q" placeholder="Ask anything (e.g., What changed in the NSW Bail Act in 2024?)" className="w-full rounded-lg px-3 py-2 outline-none" />
+          </form>
+          <div className="mt-4 flex flex-wrap gap-4 text-sm text-zinc-600">
+            <div className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500" />Live beta</div>
+            <span>Non-partisan</span><span>Cited answers</span><span>All jurisdictions</span>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="bg-slate-50 border-t border-slate-200">
-        <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-2xl font-semibold tracking-tight">How Verity works</h2>
-          <div className="mt-6 grid gap-4 sm:grid-cols-4">
-            {[
-              ["1. Crawl", "Fetch from official sources on schedule."],
-              ["2. Index", "Clean, de-dup, embed to vector search."],
-              ["3. Answer", "RAG over trusted context, cite sources."],
-              ["4. Watch", "Re-index changes, alert you to updates."],
-            ].map(([title, desc], i) => (
-              <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5">
-                <div className="text-xs text-slate-500">Step {i + 1}</div>
-                <div className="mt-1 font-medium">{title}</div>
-                <p className="mt-2 text-sm text-slate-600">{desc}</p>
-              </div>
-            ))}
+      {/* FEATURES */}
+      <section id="features" className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <h2 className="mb-8 text-2xl font-semibold">Everything you need to hold power to account</h2>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Feature icon={<Search />} title="Ask with Sources" text="Ask natural-language questions and get answers with line-item citations you can verify." />
+          <Feature icon={<Bell />} title="Smart Alerts" text="Get notified when a bill changes, hits committee, or is scheduled for debate." />
+          <Feature icon={<Landmark />} title="Parliament & Courts" text="Search Hansard, gazettes, agencies, and selected court bulletins with unified relevance." />
+          <Feature icon={<Users />} title="Member Profiles" text="See offices held, voting records, committees, speeches — with contextual summaries." />
+          <Feature icon={<Vote />} title="Vote History" text="Roll calls & divisions visualised. Track party-line breaks and trends over time." />
+          <Feature icon={<Shield />} title="Audit trail" text="Every answer links to the record; documents are versioned to track changes over time." />
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section id="how" className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <h2 className="mb-8 text-2xl font-semibold">From the record to your screen in three steps</h2>
+        <ol className="grid gap-6 sm:grid-cols-3">
+          <Step n={1} title="Ingest" points={["Hansard, bills, notices", "Gazettes, agencies", "Selected courts"]} />
+          <Step n={2} title="Index" points={["Normalise & deduplicate", "Embed & snapshot versions", "Filter by jurisdiction"]} />
+          <Step n={3} title="Answer" points={["Natural-language queries", "Citations with line numbers", "Links to the record"]} />
+        </ol>
+      </section>
+
+      {/* SECURITY */}
+      <section id="security" className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <h2 className="mb-8 text-2xl font-semibold">Security, privacy, and governance</h2>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <Card title="Account & Auth" text="Email magic links / SSO for teams. Role-based access controls in app." />
+          <Card title="Data Handling" text="Minimal PII; source documents stored with checksums & version history." />
+          <Card title="Infrastructure" text="Isolated environments, regional hosting options, daily backups." />
+          <Card title="Compliance" text="GDPR-style export/delete; enterprise DPA; private cloud options." />
+        </div>
+      </section>
+
+      {/* COVERAGE */}
+      <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <h2 className="mb-6 text-2xl font-semibold">Built for every Australian jurisdiction</h2>
+        <div className="flex flex-wrap gap-2 text-sm">
+          {["Commonwealth","NSW","VIC","QLD","WA","SA","TAS","ACT","NT"].map((j)=>(
+            <span key={j} className="badge">{j}</span>
+          ))}
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section id="pricing" className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <h2 className="mb-8 text-2xl font-semibold">Simple plans for citizens, advocates, and teams</h2>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold">Citizen</h3>
+            <p className="mt-1 text-sm text-zinc-600">For staying informed.</p>
+            <div className="my-4 text-4xl font-bold">$0 <span className="text-base font-normal">/ forever</span></div>
+            <ul className="space-y-2 text-sm text-zinc-700">
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> Ask with citations</li>
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> Basic alerts</li>
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> 1 jurisdiction</li>
+            </ul>
+            <Link href="/account" className="mt-6 inline-flex w-full justify-center rounded-lg bg-zinc-900 px-4 py-2 text-white">Start free</Link>
           </div>
+          <div className="card p-6 ring-2 ring-zinc-900">
+            <div className="mb-2 inline-block rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-medium text-white">Most Popular</div>
+            <h3 className="text-lg font-semibold">Pro</h3>
+            <p className="mt-1 text-sm text-zinc-600">For power users and advocates.</p>
+            <div className="my-4 text-4xl font-bold">$15 <span className="text-base font-normal">/mo</span></div>
+            <ul className="space-y-2 text-sm text-zinc-700">
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> Priority indexing</li>
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> Advanced alert rules</li>
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> All jurisdictions</li>
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> Export & share</li>
+            </ul>
+            <Link href="/upgrade" className="mt-6 inline-flex w-full justify-center rounded-lg border px-4 py-2">Upgrade</Link>
+          </div>
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold">Teams</h3>
+            <p className="mt-1 text-sm text-zinc-600">For orgs, media, and research.</p>
+            <div className="my-4 text-4xl font-bold">$39 <span className="text-base font-normal">/user/mo</span></div>
+            <ul className="space-y-2 text-sm text-zinc-700">
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> Shared workspaces</li>
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> SSO & roles</li>
+              <li className="flex items-start gap-2"><Check className="h-4 w-4" /> Private cloud options</li>
+            </ul>
+            <Link href="/contact" className="mt-6 inline-flex w-full justify-center rounded-lg border px-4 py-2">Contact sales</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <h2 className="mb-6 text-2xl font-semibold">Everything else people ask</h2>
+        <div className="space-y-3">
+          {[
+            ["Is Verity non-partisan?","Yes. We index the public record and show citations for every answer."],
+            ["What jurisdictions are supported?","Commonwealth + every state/territory; coverage varies per source."],
+            ["Where does the data come from?","Hansard, legislation, gazettes, agencies, and selected courts."],
+            ["Is my usage private?","We store minimal PII and don’t sell data. See Privacy for details."],
+            ["How much does it cost?","Citizen is free. Pro and Teams add collaboration & scale."],
+          ].map(([q,a])=>(
+            <details key={q} className="card p-4">
+              <summary className="cursor-pointer list-none font-medium">{q}</summary>
+              <p className="mt-2 text-sm text-zinc-600">{a}</p>
+            </details>
+          ))}
         </div>
       </section>
 
       {/* CTA */}
-      <section className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-16 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <section className="mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="card flex flex-col items-center justify-between gap-6 p-6 sm:flex-row">
           <div>
-            <h3 className="text-xl font-semibold">Get started now</h3>
-            <p className="mt-1 text-sm text-slate-600">
-              Search the record, ask a question, or add your first source.
-            </p>
+            <h3 className="text-lg font-semibold">Ready to hold power to account?</h3>
+            <p className="mt-1 text-sm text-zinc-600">Join the waitlist for early access, or jump into the live demo.</p>
           </div>
           <div className="flex gap-3">
-            <Link
-              href="/crawl"
-              className="rounded-xl border border-slate-300 px-4 py-2.5 hover:bg-slate-50"
-            >
-              Add Sources
-            </Link>
-            <Link
-              href="/search"
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-white hover:opacity-90"
-            >
-              Start Searching
-            </Link>
+            <Link href="/ask" className="rounded-lg bg-zinc-900 px-4 py-2 text-white">Open Verity</Link>
+            <Link href="/demo" className="rounded-lg border px-4 py-2">Watch demo</Link>
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-10 text-sm text-slate-500 flex items-center justify-between">
-          <span>© {new Date().getFullYear()} Verity</span>
-          <div className="flex items-center gap-4">
-            <Link href="/(app)/account" className="hover:opacity-80">Account</Link>
-            <Link href="/ask" className="hover:opacity-80">AI</Link>
-            <a
-              className="hover:opacity-80"
-              href="mailto:founder@useverity.app"
-              rel="noopener noreferrer"
-            >
-              Contact
-            </a>
-          </div>
-        </div>
-      </footer>
-    </main>
+    </>
   );
 }

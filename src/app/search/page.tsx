@@ -1,39 +1,77 @@
-'use client';
-import { useState } from 'react';
+// app/search/page.tsx
+import Link from "next/link";
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
 
-export default function Search() {
-  const [q,setQ]=useState('');
-  const [loading,setL]=useState(false);
-  const [results,setR]=useState<any[]>([]);
-  const [jur,setJur]=useState('');
+function ensureStr(v: unknown): string | null {
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+}
 
-  async function go(){
-    setL(true);
-    const params = new URLSearchParams({ q, ...(jur?{jurisdiction:jur}:{}) });
-    const res = await fetch('/api/search?'+params.toString());
-    const j = await res.json();
-    setR(j.results || []);
-    setL(false);
+async function Results({ q }: { q: string }) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/search?q=${encodeURIComponent(q)}`, {
+    method: "GET",
+    cache: "no-store",
+    next: { revalidate: 0 },
+  });
+  if (!res.ok) {
+    throw new Error(`search failed: ${res.status}`);
+  }
+  const data = await res.json() as {
+    hits: Array<{ id: string; title: string; url: string; snippet?: string; score?: number; published_at?: string }>;
+  };
+  if (!data?.hits) return <div className="text-sm text-gray-500">No results.</div>;
+
+  return (
+    <ul className="space-y-3">
+      {data.hits.map((h) => (
+        <li key={h.id} className="rounded-xl border border-gray-200/70 dark:border-gray-800/70 p-4">
+          <div className="space-y-1.5">
+            <a href={h.url} target="_blank" rel="noreferrer" className="text-lg font-medium hover:underline">
+              {h.title || h.url}
+            </a>
+            {h.published_at && (
+              <div className="text-xs text-gray-500">{new Date(h.published_at).toLocaleString()}</div>
+            )}
+            {h.snippet && <p className="text-sm text-gray-700 dark:text-gray-200">{h.snippet}</p>}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export default async function SearchPage(props: { searchParams?: Record<string, string | string[]> }) {
+  const q = ensureStr(props.searchParams?.q);
+  if (!q) {
+    return (
+      <div className="p-6 space-y-4">
+        <h1 className="text-2xl font-semibold">Search</h1>
+        <p className="text-gray-600">Add a query via <code>?q=</code> or use the search box.</p>
+        <form action="/search" className="flex gap-2 pt-2">
+          <input
+            name="q"
+            placeholder="Search government media, Hansard, gazettes…"
+            className="flex-1 h-10 px-3 rounded-md border bg-background"
+          />
+          <button className="h-10 px-4 rounded-md border">Search</button>
+        </form>
+      </div>
+    );
   }
 
   return (
-    <main className="max-w-2xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Semantic Search</h1>
-      <div className="flex gap-2">
-        <input className="border rounded-lg px-3 py-2 w-full" placeholder="e.g., safeguard mechanism changes" value={q} onChange={e=>setQ(e.target.value)} />
-        <input className="border rounded-lg px-3 py-2 w-40" placeholder="jurisdiction (optional)" value={jur} onChange={e=>setJur(e.target.value)} />
-        <button onClick={go} className="px-4 py-2 bg-blue-600 text-white rounded-lg">{loading?'Searching…':'Search'}</button>
-      </div>
-      <div className="grid gap-3">
-        {results.map((d:any)=>(
-          <a key={d.id} href={d.url || '#'} target="_blank" className="block rounded-lg border bg-white p-4 hover:shadow">
-            <div className="font-medium">{d.title}</div>
-            {d.url && <div className="text-sm text-slate-500 truncate">{d.url}</div>}
-            <div className="text-xs text-slate-400">{new Date(d.created_at).toLocaleString()}</div>
-          </a>
-        ))}
-        {(!results || results.length===0) && <div className="text-slate-500">No results yet. Add a source first in <a className="underline" href="/crawl">/crawl</a>.</div>}
-      </div>
-    </main>
+    <div className="p-6 space-y-4">
+      <form action="/search" className="flex gap-2">
+        <input name="q" defaultValue={q} className="flex-1 h-10 px-3 rounded-md border bg-background" />
+        <button className="h-10 px-4 rounded-md border">Search</button>
+      </form>
+      <Suspense fallback={<div className="text-sm text-gray-500">Loading results…</div>}>
+        {/* server component fetch */}
+        {/* @ts-expect-error Async Server Component */}
+        <Results q={q} />
+      </Suspense>
+      <div className="pt-2 text-xs text-gray-500">Tip: link directly like <Link href={`/search?q=${encodeURIComponent(q)}`} className="underline">/search?q=…</Link></div>
+    </div>
   );
 }
+

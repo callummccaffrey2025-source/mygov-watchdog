@@ -1,49 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { openai } from '@/lib/openai';
-import { pineconeIndex } from '@/lib/pinecone';
-import { supaAdmin } from '@/lib/supabaseAdmin';
+// app/api/ask/route.ts
+import { NextRequest } from "next/server";
+import { openai } from "@/lib/openai";
+import { retrieve, buildPrompt } from "@/lib/rag";
+
+export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
-  try {
-    const { question, jurisdiction } = await req.json();
-    if (!question) return NextResponse.json({ error: 'question required' }, { status: 400 });
-
-    const emb = await openai.embeddings.create({ model: 'text-embedding-3-small', input: question });
-
-    // v6: flat options, no queryRequest wrapper
-    const res = await pineconeIndex.query({
-      topK: 8,
-      vector: emb.data[0].embedding,
-      includeMetadata: true,
-      filter: jurisdiction ? { jurisdiction: { $eq: jurisdiction } } : undefined,
-    });
-
-    const matches = res.matches ?? [];
-    const docIds = Array.from(new Set(matches.map(m => (m.metadata as any)?.doc_id).filter(Boolean)));
-
-    const { data: docs } = await supaAdmin
-      .from('document')
-      .select('id,title,content,url')
-      .in('id', docIds);
-
-    const context = (docs ?? [])
-      .map(d => `TITLE: ${d.title}\nURL: ${d.url ?? 'N/A'}\n${d.content.slice(0, 2000)}\n---`)
-      .join('\n');
-
-    const system = `You are Verity, an Australian political watchdog. Use only the provided CONTEXT. Be concise, then list 'Key sources' as URLs.`;
-    const user = `QUESTION: ${question}\n\nCONTEXT:\n${context}`;
-
-    const chat = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
-      temperature: 0.2,
-    });
-
-    return NextResponse.json({
-      answer: chat.choices[0]?.message?.content ?? 'No answer.',
-      references: (docs ?? []).map(d => d.url).filter(Boolean),
-    });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? 'ask failed' }, { status: 500 });
+  const { question, jurisdiction } = await req.json().catch(() => ({}));
+  if (!question || typeof question !== "string") {
+    return new Response(JSON.stringify({ error: "question required" }), { status: 400 });
   }
+
+  // RAG retrieve
+  const docs = await retrieve(question, { jurisdiction, topK: 8 });
+  const messages = buildPrompt(question, docs);
+
+  // Stream response
+  const stream = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages,
+    stream: true,
+    temperature: 0.1,
+  });
+
+  const encoder = new TextEncoder();
+  const readable = new ReadableStream({
+    async start(controller) {
+      try {
+        for await (const chunk of stream) {
+          const token = chunk.choices?.[0]?.delta?.content ?? "";
+          if (token) controller.enqueue(encoder.encode(token));
+        }
+        // Append sources footer once
+        if (docs.length) {
+          const src = "\n\nSources: " + docs.slice(0, 6).map((d, i) => `[${i + 1}] ${d.title || d.url}`).join("  ");
+          controller.enqueue(encoder.encode(src));
+        }
+        controller.close();
+      } catch (e) {
+        controller.error(e);
+      }
+    },
+  });
+
+  return new Response(readable, {
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
 }
+
+
