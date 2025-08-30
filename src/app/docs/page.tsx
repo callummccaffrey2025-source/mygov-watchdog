@@ -1,11 +1,12 @@
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
-
-import React from 'react';
-export default function Docs() {
-  return <div className="p-6">
-    <h1 className="text-2xl font-semibold">Verity Docs</h1>
-    <p className="mt-2 text-sm opacity-80">Loaded at runtime.</p>
-  </div>;
-}
+export default function DocsIndex(){return(<div className="space-y-8"><div className="space-y-4"><span className="inline-block rounded-full border border-white/10 px-2.5 py-1 text-xs text-white/70">Documentation · SDK & API</span><h1 className="text-4xl md:text-5xl font-semibold tracking-[-0.02em]">Verity Docs</h1><p className="text-white/70 max-w-2xl">Build on Verity: query government records, subscribe to alerts, and integrate citations into your workflows.</p><div className="flex gap-3"><a href="#" className="rounded-md bg-white text-black px-3 py-2 text-sm">Quickstart</a><a href="#" className="rounded-md border border-white/15 px-3 py-2 text-sm">API Reference</a></div><input placeholder="Search guides, SDKs, endpoints…" className="w-full md:w-[480px] rounded-md border border-white/10 bg-black px-3 py-2 outline-none"/></div><div className="grid md:grid-cols-2 gap-4">{[["Get started",["Overview","Install & auth","Your first query"]],["Core concepts",["Sources & jurisdictions","Citations & freshness","Ranking & recall"]],["API reference",["Ask API","Search API","Alerts API"]],["Security & compliance",["Robots & crawl policy","Privacy & data handling","Auditability"]],["Integrations",["Supabase & Postgres","Pinecone","Zapier/Make"]]].map(([title,items],i)=>(<div key={i as number} className="rounded-xl border border-white/10 p-4 bg-white/5"><div className="font-medium mb-2">{title as string}</div><ul className="text-sm text-white/70 space-y-1">{(items as string[]).map((t,j)=><li key={j}>• {t}</li>)}</ul></div>))}</div><div className="grid md:grid-cols-2 gap-4"><div className="rounded-xl border border-white/10 p-4 bg-white/5"><div className="font-medium mb-2">TypeScript quickstart</div><pre className="text-xs overflow-auto rounded-md bg-black/80 p-3 border border-white/10">{`// /lib/verity.ts
+export async function ask(question: string) {
+  const res = await fetch("/api/ask", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ question }),
+  });
+  if (!res.ok) throw new Error("Ask failed");
+  return res.json();
+}`}</pre></div><div className="rounded-xl border border-white/10 p-4 bg-white/5"><div className="font-medium mb-2">cURL</div><pre className="text-xs overflow-auto rounded-md bg-black/80 p-3 border border-white/10">{`curl -s -N -H "content-type: application/json" \\
+  -d '{"question":"What changed in the 2024–25 Federal Budget?"}' \\
+  http://localhost:3000/api/ask | head -n 40`}</pre></div></div></div>);}
