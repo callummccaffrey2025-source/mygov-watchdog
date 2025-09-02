@@ -9,16 +9,19 @@ importers:
   .:
     dependencies:
       '@pinecone-database/pinecone':
-        specifier: ^2.2.2
+        specifier: ^2.2.1
         version: 2.2.2
       '@supabase/auth-helpers-nextjs':
         specifier: ^0.10.0
         version: 0.10.0(@supabase/supabase-js@2.56.1)
+      '@supabase/ssr':
+        specifier: ^0.7.0
+        version: 0.7.0(@supabase/supabase-js@2.56.1)
       '@supabase/supabase-js':
-        specifier: ^2.56.1
+        specifier: ^2.44.0
         version: 2.56.1
       clsx:
-        specifier: ^2.1.1
+        specifier: ^2.1.0
         version: 2.1.1
       lucide-react:
         specifier: ^0.428.0
@@ -27,7 +30,7 @@ importers:
         specifier: 15.0.0
         version: 15.0.0(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       openai:
-        specifier: ^4.104.0
+        specifier: ^4.56.0
         version: 4.104.0(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)
       react:
         specifier: 18.3.1
@@ -36,10 +39,10 @@ importers:
         specifier: 18.3.1
         version: 18.3.1(react@18.3.1)
       stripe:
-        specifier: ^16.12.0
+        specifier: ^16.5.0
         version: 16.12.0
       zod:
-        specifier: ^3.25.76
+        specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
       '@types/node':
@@ -386,6 +389,11 @@ packages:
 
   '@supabase/realtime-js@2.15.4':
     resolution: {integrity: sha512-e/FYIWjvQJHOCNACWehnKvg26zosju3694k0NMUNb+JGLdvHJzEa29ZVVLmawd2kvx4hdbv8mxSqfttRnH3+DA==}
+
+  '@supabase/ssr@0.7.0':
+    resolution: {integrity: sha512-G65t5EhLSJ5c8hTCcXifSL9Q/ZRXvqgXeNo+d3P56f4U1IxwTqjB64UfmfixvmMcjuxnq2yGqEWVJqUcO+AzAg==}
+    peerDependencies:
+      '@supabase/supabase-js': ^2.43.4
 
   '@supabase/storage-js@2.11.0':
     resolution: {integrity: sha512-Y+kx/wDgd4oasAgoAq0bsbQojwQ+ejIif8uczZ9qufRHWFLMU5cODT+ApHsSrDufqUcVKt+eyxtOXSkeh2v9ww==}
@@ -797,6 +805,10 @@ packages:
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+
+  cookie@1.0.2:
+    resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
+    engines: {node: '>=18'}
 
   cross-fetch@3.2.0:
     resolution: {integrity: sha512-Q+xVJLoGOeIMXZmbUK4HYk+69cQH6LudR0Vu/pRm2YlU/hDV9CiS0gKUMaWY5f2NeUH9C1nV3bsTlCo0FsTV1Q==}
@@ -2373,6 +2385,11 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@supabase/ssr@0.7.0(@supabase/supabase-js@2.56.1)':
+    dependencies:
+      '@supabase/supabase-js': 2.56.1
+      cookie: 1.0.2
+
   '@supabase/storage-js@2.11.0':
     dependencies:
       '@supabase/node-fetch': 2.6.15
@@ -2827,6 +2844,8 @@ snapshots:
   commander@4.1.1: {}
 
   concat-map@0.0.1: {}
+
+  cookie@1.0.2: {}
 
   cross-fetch@3.2.0(encoding@0.1.13):
     dependencies:
