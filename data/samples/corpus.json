@@ -1,42 +1,7 @@
 [
-  {
-    "id": "bill-cc-2022",
-    "kind": "bill",
-    "title": "Climate Change Bill 2022",
-    "date": "2022-09-08",
-    "url": "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Search_Results/Result?bId=r6900",
-    "body": "Sets emissions reduction targets and reporting obligations. Debate covered safeguards and industry impacts."
-  },
-  {
-    "id": "hansard-migration-2023",
-    "kind": "hansard",
-    "title": "Hansard: Migration Amendment Bill debate",
-    "date": "2023-11-20",
-    "url": "https://www.aph.gov.au/Parliamentary_Business/Hansard",
-    "body": "Members discussed character test provisions and community safety. Amendments proposed by the opposition."
-  },
-  {
-    "id": "vote-treasury-2023-08-10",
-    "kind": "vote",
-    "title": "Division: Treasury Laws Amendment",
-    "date": "2023-08-10",
-    "url": "https://theyvoteforyou.org.au/divisions/representatives/2023-08-10/1",
-    "body": "House division on second reading; majority voted Aye."
-  },
-  {
-    "id": "budget-2024-25",
-    "kind": "budget",
-    "title": "Budget 2024–25: Treasurer's Statement",
-    "date": "2024-05-14",
-    "url": "https://budget.gov.au/",
-    "body": "Outlines cost-of-living relief and energy rebates; MYEFO revisions flagged."
-  },
-  {
-    "id": "interests-j-citizen-2024",
-    "kind": "interests",
-    "title": "Members’ Interests Register — John Citizen",
-    "date": "2024-02-01",
-    "url": "https://www.aph.gov.au/Parliamentary_Business/Registers",
-    "body": "Declared shareholdings in diversified ETFs and directorship of a family trust."
-  }
+  { "id":"bill-cc-2022","kind":"bill","title":"Climate Change Bill 2022","date":"2022-09-08","url":"https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Search_Results/Result?bId=r6900","body":"Sets emissions reduction targets and reporting obligations. Debate covered safeguards and industry impacts." },
+  { "id":"hansard-migration-2023","kind":"hansard","title":"Hansard: Migration Amendment Bill debate","date":"2023-11-20","url":"https://www.aph.gov.au/Parliamentary_Business/Hansard","body":"Members discussed character test provisions and community safety. Amendments proposed by the opposition." },
+  { "id":"vote-treasury-2023-08-10","kind":"vote","title":"Division: Treasury Laws Amendment","date":"2023-08-10","url":"https://theyvoteforyou.org.au/divisions/representatives/2023-08-10/1","body":"House division on second reading; majority voted Aye." },
+  { "id":"budget-2024-25","kind":"budget","title":"Budget 2024–25: Treasurer's Statement","date":"2024-05-14","url":"https://budget.gov.au/","body":"Outlines cost-of-living relief and energy rebates; MYEFO revisions flagged." },
+  { "id":"interests-j-citizen-2024","kind":"interests","title":"Members’ Interests Register — John Citizen","date":"2024-02-01","url":"https://www.aph.gov.au/Parliamentary_Business/Registers","body":"Declared shareholdings in diversified ETFs and directorship of a family trust." }
 ]

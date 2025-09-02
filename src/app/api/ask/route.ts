@@ -1,25 +1,25 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 
 export async function POST(req: Request) {
-  try {
-    const { q } = await req.json();
-    if (!q || typeof q !== "string" || !q.trim()) {
-      return NextResponse.json({ error: "Provide q:string" }, { status: 400 });
-    }
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
-    const r = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.3,
-      messages: [
-        { role: "system", content: "You are Verity, an Australian political watchdog. Be concise and neutral. If unsure, say so." },
-        { role: "user", content: q }
-      ],
-      max_tokens: 320
+  const { q } = await req.json().catch(() => ({ q: "" }));
+  const query = String(q || "").trim();
+
+  if (!query || query.split(/\s+/).length < 3) {
+    return NextResponse.json({
+      type: "clarify",
+      answer: "Which budget do you mean? Try one of these:",
+      clarify: [
+        { text: "Federal Budget 2024–25", append: " federal budget 2024–25" },
+        { text: "NSW State Budget 2024–25", append: " NSW state budget 2024–25" },
+        { text: "Program-specific budget (name it)", append: " program budget <program name>" }
+      ]
     });
-    const answer = r.choices?.[0]?.message?.content?.trim() ?? "";
-    return NextResponse.json({ answer });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Ask failed" }, { status: 500 });
   }
+
+  // Later: call LLM + citations. Deterministic placeholder for now.
+  return NextResponse.json({
+    type: "answer",
+    answer: "Demo answer. Specify year/jurisdiction for precise figures.",
+    citations: []
+  });
 }

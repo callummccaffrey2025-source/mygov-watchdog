@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { supabaseBrowser } from "@/lib/supabase";
+import { supabaseBrowser } from "@/lib/supabase.client";
 
 export default function OpenPage() {
   const [email, setEmail] = useState("");

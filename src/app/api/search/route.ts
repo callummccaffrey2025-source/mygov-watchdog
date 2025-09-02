@@ -1,53 +1,52 @@
-// app/api/search/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-
-export const dynamic = "force-dynamic"; // always fresh
 export const runtime = "nodejs";
+import { NextResponse } from "next/server";
+import fs from "node:fs";
+import path from "node:path";
 
-function snippet(text: string, q: string, len = 240) {
-  const i = text.toLowerCase().indexOf(q.toLowerCase());
-  if (i < 0) return text.slice(0, len) + (text.length > len ? "…" : "");
-  const start = Math.max(0, i - Math.floor(len / 3));
-  const end = Math.min(text.length, start + len);
-  return (start > 0 ? "…" : "") + text.slice(start, end) + (end < text.length ? "…" : "");
+type Item = {
+  id: string;
+  kind: "bill" | "hansard" | "vote" | "budget" | "interests";
+  title: string; date: string; url: string; body: string;
+};
+
+function loadCorpus(): Item[] {
+  const p = path.join(process.cwd(), "data", "samples", "corpus.json");
+  if (!fs.existsSync(p)) return [];
+  return JSON.parse(fs.readFileSync(p, "utf8"));
 }
+const toks = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
 
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const q = (url.searchParams.get("q") || "").trim();
-  if (!q) return NextResponse.json({ error: "q required" }, { status: 400 });
+export async function GET(req: Request) {
+  const u = new URL(req.url);
+  const q = (u.searchParams.get("q") || "").trim();
+  const kinds = (u.searchParams.getAll("kind") || []) as Item["kind"][];
+  const from = u.searchParams.get("from") || "";
+  const to = u.searchParams.get("to") || "";
+  const page = Math.max(1, Number(u.searchParams.get("page") || 1));
+  const pageSize = Math.min(50, Math.max(1, Number(u.searchParams.get("pageSize") || 10)));
 
-  // Basic full-text search using generated tsvector column `content_tsv`
-  // Falls back to ILIKE if tsv not present
-  const { data, error } = await supabaseAdmin
-    .rpc("verity_search_docs", { query: q })
-    .select()
-    .limit(25);
+  let items = loadCorpus();
+  if (kinds.length) items = items.filter(i => kinds.includes(i.kind));
+  if (from) items = items.filter(i => i.date >= from);
+  if (to) items = items.filter(i => i.date <= to);
 
-  // If RPC not installed, try direct query
-  let hits: any[] = [];
-  if (!error && Array.isArray(data)) {
-    hits = data;
-  } else {
-    const { data: likeData, error: likeErr } = await supabaseAdmin
-      .from("document")
-      .select("id,title,url,content,published_at")
-      .or(`title.ilike.%${q}%,content.ilike.%${q}%`)
-      .order("published_at", { ascending: false })
-      .limit(25);
-    if (likeErr) return NextResponse.json({ error: likeErr.message }, { status: 500 });
-    hits = likeData ?? [];
+  let scored = items.map(i => ({ item: i, score: 0 }));
+  if (q) {
+    const qTokens = toks(q);
+    scored = scored.map(({ item }) => {
+      const hay = (item.title + " " + item.body).toLowerCase();
+      const titleTokens = toks(item.title);
+      let score = 0;
+      for (const t of qTokens) {
+        if (hay.includes(t)) score += 1;
+        if (titleTokens.includes(t)) score += 1;
+      }
+      return { item, score };
+    });
   }
+  scored.sort((a, b) => (b.score - a.score) || b.item.date.localeCompare(a.item.date));
 
-  const mapped = hits.map((d: any) => ({
-    id: String(d.id),
-    title: d.title ?? "",
-    url: d.url ?? "",
-    published_at: d.published_at ?? null,
-    snippet: d.content ? snippet(d.content, q) : undefined,
-  }));
-
-  return NextResponse.json({ hits: mapped });
+  const start = (page - 1) * pageSize;
+  const results = scored.slice(start, start + pageSize).map(x => x.item);
+  return NextResponse.json({ q, kinds, from, to, page, pageSize, total: scored.length, results });
 }
-
