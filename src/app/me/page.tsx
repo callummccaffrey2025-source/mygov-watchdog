@@ -11,7 +11,7 @@ export default function MePage() {
         if (supabase) {
           const { data } = await supabase.auth.getUser();
           if (mounted) setUser((data as any)?.user ?? null);
-          supabase.auth.onAuthStateChange((_evt, session) => mounted && setUser((session as any)?.user ?? null));
+          supabase.auth.onAuthStateChange((_evt: string, session: any) => mounted && setUser((session as any)?.user ?? null));
         }
       } catch {}
     })();
