@@ -1,5 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 # Block committing real env files; allow the template .env.example
 if git diff --cached --name-only \
