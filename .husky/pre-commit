@@ -1,5 +1,5 @@
-. "$(dirname "$0")/_/husky.sh"
+# Block committing .env files; use .env.example for sharable config.
 if git diff --cached --name-only | grep -E '(^|/)\.env(\..*)?$' >/dev/null; then
-  echo "✗ Refusing to commit .env* files. Use .env.example for sharable config." >&2
+  echo "✖ Refusing to commit .env* files. Use .env.example for sharable config." >&2
   exit 1
 fi
