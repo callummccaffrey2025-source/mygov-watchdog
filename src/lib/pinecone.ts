@@ -1,8 +1,11 @@
-import 'server-only';
-import { Pinecone } from '@pinecone-database/pinecone';
+import { Pinecone } from "@pinecone-database/pinecone";
+const apiKey = process.env.PINECONE_API_KEY!;
+if (!apiKey) throw new Error("Missing PINECONE_API_KEY");
 
-const indexName = (process.env.PINECONE_INDEX || '').trim();
-if (!indexName) throw new Error('PINECONE_INDEX is empty (check env var; no trailing newline)');
+export function pinecone() {
+  return new Pinecone({ apiKey });
+}
 
-const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! });
-export const pineconeIndex = pc.index(indexName);
+export function indexName() {
+  return process.env.PINECONE_INDEX || "verity";
+}
