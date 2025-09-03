@@ -44,3 +44,16 @@ next-env.d.ts
 !.env.example
 verity-mobile/.env
 verity-mobile/.env.*
+
+# other secrets
+*.pem
+*.p8
+*.key
+*.crt
+*.pfx
+.env
+.env.*
+verity-mobile/.env
+verity-mobile/.env.*
+!.env.example
+!verity-mobile/.env.example

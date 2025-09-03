@@ -1,5 +1,10 @@
-# Block committing .env files; use .env.example for sharable config.
-if git diff --cached --name-only | grep -E '(^|/)\.env(\..*)?$' >/dev/null; then
-  echo "✖ Refusing to commit .env* files. Use .env.example for sharable config." >&2
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Block committing real env files; allow the template .env.example
+if git diff --cached --name-only \
+  | grep -E '(^|/)\.env($|\.)' \
+  | grep -Ev '(^|/)\.env\.example$' >/dev/null; then
+  echo "Refusing to commit real .env files. Commit .env.example only." >&2
   exit 1
 fi
