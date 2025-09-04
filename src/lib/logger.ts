@@ -1,13 +1,30 @@
-import { supabaseAdmin } from "./supabaseAdmin";
-type Level = "debug"|"info"|"warn"|"error";
+import { supabase } from './supabase.server';
 
-export async function log(level: Level, message: string, meta?: any) {
-  try {
-    await supabaseAdmin.from("app_log").insert({ level, message, meta });
-  } catch (e) {
-    // swallow to avoid log loops
+type Source = { rank:number; score?:number|null; title?:string; url?:string; snippet?:string };
+
+export async function logQuery(opts: {
+  userId?: string | null;
+  question: string;
+  answer?: string;
+  sources?: Source[];
+}) {
+  if (!supabase) return; // logging disabled if env missing
+  const { data: q, error } = await supabase
+    .from('queries')
+    .insert({ user_id: opts.userId ?? null, question: opts.question, answer: opts.answer ?? null })
+    .select('id')
+    .single();
+  if (error || !q) return;
+
+  const srcs = (opts.sources ?? []).map(s => ({
+    query_id: q.id,
+    rank: s.rank,
+    score: s.score ?? null,
+    title: s.title ?? null,
+    url: s.url ?? null,
+    snippet: s.snippet ?? null
+  }));
+  if (srcs.length) {
+    await supabase.from('query_sources').insert(srcs);
   }
-  const line = `[${level.toUpperCase()}] ${message}`;
-  if (level === "error") console.error(line, meta);
-  else console.log(line, meta);
 }

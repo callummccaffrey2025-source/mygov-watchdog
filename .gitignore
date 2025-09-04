@@ -57,3 +57,12 @@ verity-mobile/.env
 verity-mobile/.env.*
 !.env.example
 !verity-mobile/.env.example
+
+# local noise
+.vscode/
+logs/
+*.pid
+*.bak
+
+# dev-only scratch
+/tools/
