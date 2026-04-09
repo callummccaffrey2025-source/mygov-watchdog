@@ -1,0 +1,37 @@
+name: data-backfill
+description: |
+  Runs weekly to fill data gaps across the Verity stack:
+    - Articles missing image_url (fetch og:image)
+    - Sources missing bias_score (re-run seed_news_sources.py)
+    - Stories missing avg_factuality / blindspot / owner_count metrics
+    - Bills missing arguments (run generate_bill_arguments.py)
+    - Stories with article_count >= 5 missing AI summaries
+schedule: "0 15 * * 6"  # 1am AEST Sunday (low-traffic window)
+runtime: python:3.14
+entrypoint: scripts/data_backfill.sh
+working_directory: /Users/callummccaffrey/verity/mobile
+timeout: 3600  # 1 hour
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+steps:
+  - name: backfill_images
+    script: scripts/backfill_news_images.py
+  - name: seed_sources
+    script: scripts/seed_news_sources.py
+  - name: backfill_metrics
+    script: scripts/ingest_news.py --no-fetch --backfill-only
+  - name: ai_summaries
+    script: scripts/generate_ai_summaries.py
+  - name: bill_arguments
+    script: scripts/generate_bill_arguments.py
+notifications:
+  on_failure:
+    - log_to: pipeline_runs
+      pipeline: data-backfill
+      status: error
+  on_success:
+    - log_to: pipeline_runs
+      pipeline: data-backfill
+      status: success

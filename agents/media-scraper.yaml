@@ -1,0 +1,46 @@
+name: media-scraper
+description: |
+  Scrapes official Australian government websites for new media releases and
+  inserts them into official_posts. Targets pm.gov.au, Treasurer, Foreign
+  Minister, Defence, Health and other Cabinet portfolios. Only inserts posts
+  where the source URL was successfully fetched and parsed — never fabricates
+  content. Stores the source URL in media_urls[0] for traceability.
+schedule: "0 19 * * *"  # 5am AEST daily (before news pipeline at 6am)
+runtime: python:3.14
+entrypoint: scripts/scrape_real_media_releases.py
+working_directory: /Users/callummccaffrey/verity/mobile
+timeout: 600  # 10 min
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+dependencies:
+  python_packages:
+    - python-dotenv
+    - supabase
+    - requests
+    - beautifulsoup4
+    - lxml
+sources:
+  - name: Anthony Albanese
+    url: https://www.pm.gov.au/media
+    portfolio: Prime Minister
+  - name: Jim Chalmers
+    url: https://ministers.treasury.gov.au/ministers/jim-chalmers-2022/media-releases
+    portfolio: Treasurer
+  - name: Penny Wong
+    url: https://www.foreignminister.gov.au/minister/penny-wong/media-releases
+    portfolio: Foreign Affairs
+  - name: Richard Marles
+    url: https://www.minister.defence.gov.au/media-releases
+    portfolio: Defence
+  - name: Mark Butler
+    url: https://www.health.gov.au/ministers/the-hon-mark-butler-mp/media
+    portfolio: Health
+guarantees:
+  - never_fabricates: true  # Only inserts content with verified source URL
+  - dedupes_by_url: true    # Skip insert if media_urls already contains the link
+notifications:
+  on_failure:
+    - log_to: pipeline_runs
+      pipeline: media-scraper
+      status: error

@@ -1,0 +1,42 @@
+name: content-filter
+description: |
+  Runs after every news ingestion to filter out non-political content,
+  detect spam/duplicate stories, and validate article quality. Marks
+  flagged stories with `is_civic=false` so the mobile feed hooks can
+  exclude them. Operates against news_articles + news_stories tables.
+schedule: "30 20 * * *"  # 6:30am AEST — 30 min after news pipeline
+runtime: python:3.14
+entrypoint: scripts/content_filter.py
+working_directory: /Users/callummccaffrey/verity/mobile
+timeout: 300
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+dependencies:
+  python_packages:
+    - python-dotenv
+    - supabase
+filters:
+  political_keywords:
+    # Source of truth lives in mobile/hooks/usePersonalisedFeed.ts (POLITICAL_KEYWORDS)
+    sync_from: hooks/usePersonalisedFeed.ts
+  exclude_categories:
+    - crime
+    - sport
+    - lifestyle
+    - entertainment
+    - celebrity
+    - weather
+  duplicate_detection:
+    method: headline_similarity
+    threshold: 0.85
+  quality_checks:
+    - min_headline_length: 20
+    - require_source_url: true
+    - exclude_stories_under_3_articles: true
+upstream_dependency: news-pipeline
+notifications:
+  on_failure:
+    - log_to: pipeline_runs
+      pipeline: content-filter
+      status: error

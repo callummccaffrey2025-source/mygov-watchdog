@@ -1,0 +1,40 @@
+name: weekly-digest
+description: |
+  Runs every Sunday evening AEST to generate a "This Week in Australian
+  Politics" digest. Aggregates the week's top news stories, key parliamentary
+  votes, and bill status changes into a single weekly brief stored in
+  daily_briefs with electorate='__weekly__'. Sends a push notification on
+  Monday morning.
+schedule: "0 9 * * 0"  # 7pm AEST Sunday (9 UTC Sunday)
+runtime: edge_function
+endpoint: https://zmmglikiryuftqmoprqm.supabase.co/functions/v1/generate-weekly-digest
+method: POST
+auth:
+  type: bearer
+  token: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+body:
+  type: weekly
+  lookback_days: 7
+timeout: 600
+env_required_in_function:
+  - ANTHROPIC_API_KEY
+sections:
+  - top_stories: 5  # By article_count over the past 7 days
+  - key_votes: 5    # By rebellion_count or party-line breaks
+  - bill_changes: 5 # Bills that changed status this week
+  - data_nugget: 1  # One surprising stat from the week
+ai_model: claude-haiku-4-5-20251001
+notifications:
+  on_success:
+    - log_to: pipeline_runs
+      pipeline: weekly-digest
+      status: success
+    - send_push:
+        title: "This Week in Australian Politics"
+        body: "{{ai_text.top_stories[0]}}"
+        data: { screen: 'DailyBrief', mode: 'weekly' }
+        send_at_local: "Monday 07:00"
+  on_failure:
+    - log_to: pipeline_runs
+      pipeline: weekly-digest
+      status: error
