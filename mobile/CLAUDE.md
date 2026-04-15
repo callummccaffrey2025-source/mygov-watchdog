@@ -133,3 +133,10 @@
 2. Top up Anthropic API credits → re-run `scripts/_backfill_metrics.py` to populate AI summaries for 33 eligible stories
 3. Create Supabase tables: `user_saves`, `user_reads`, `user_notifications` (hooks are ready, tables needed)
 4. Push notifications: test DailyBrief deep link end-to-end
+
+## Autopilot Mode
+- Task queue: AUTOPILOT_TASKS.md
+- Run: ./scripts/autopilot.sh [max_tasks]
+- Each task is atomic — complete one fully before starting next
+- Max 3 tasks per session to prevent context degradation
+- Logs written to autopilot_log_*.md files

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Linking, Share, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Linking, Share, Platform, RefreshControl } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +23,10 @@ import { captureAndShare } from '../utils/shareContent';
 import { DivisionVote } from '../hooks/useVotes';
 import { useFollow } from '../hooks/useFollow';
 import { useTheme } from '../context/ThemeContext';
-import { SHADOWS } from '../constants/design';
+import { AuthPromptSheet } from '../components/AuthPromptSheet';
+import { useAuthGate } from '../hooks/useAuthGate';
+import { track } from '../lib/analytics';
+import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { supabase } from '../lib/supabase';
 import { decodeHtml } from '../utils/decodeHtml';
 import { timeAgo } from '../lib/timeAgo';
@@ -58,7 +61,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const [visibleCount, setVisibleCount] = useState(20);
   const { votes, loading: votesLoading } = useVotes(member?.id ?? null);
 
-  useEffect(() => { setVisibleCount(20); }, [member?.id]);
+  useEffect(() => {
+    setVisibleCount(20);
+    if (member) track('mp_profile_view', { member_id: member.id, name: `${member.first_name} ${member.last_name}` }, 'MemberProfile');
+  }, [member?.id]);
   const { posts, loading: postsLoading } = usePostsByMember(member?.id);
   const { official } = useVerifiedOfficial(member?.id);
   const { user } = useUser();
@@ -109,6 +115,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
   const { following: followingMP, toggle: toggleFollow } = useFollow('member', member?.id ?? '');
   const { colors } = useTheme();
+  const { requireAuth, authSheetProps } = useAuthGate();
 
   const handleShare = () => {
     const ayeRate = totalVotes > 0 ? `${Math.round((ayeCount / totalVotes) * 100)}% aye rate` : '';
@@ -127,7 +134,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={false} onRefresh={() => { if (memberId) { supabase.from('members').select('*, party:parties(name,short_name,colour,abbreviation), electorate:electorates(name,state)').eq('id', memberId).single().then(({ data }) => { if (data) setMember(data as Member); }); } }} tintColor="#00843D" />}>
 
         {/* Back button + share */}
         <View style={styles.navRow}>
@@ -157,10 +164,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
             <Ionicons name="checkmark-circle" size={20} color="#1D9BF0" />
           </View>
           {member.ministerial_role && (
-            <View style={styles.ministerialBadge}>
-              <Ionicons name="briefcase-outline" size={12} color="#5a6a7a" />
-              <Text style={styles.ministerialBadgeText}>{member.ministerial_role}</Text>
-            </View>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: partyColour, marginTop: 2, textAlign: 'center', paddingHorizontal: 20 }} numberOfLines={2}>
+              {member.ministerial_role}
+            </Text>
           )}
           {party && <PartyBadge name={party.name} colour={party.colour} />}
           {member.electorate && (
@@ -195,7 +201,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
           </Pressable>
           <Pressable
             style={[styles.followBtn, { backgroundColor: followingMP ? '#00843D' : colors.background }, followingMP && styles.followBtnActive]}
-            onPress={toggleFollow}
+            onPress={() => requireAuth('follow this MP', toggleFollow)}
           >
             <Ionicons
               name={followingMP ? 'heart' : 'heart-outline'}
@@ -211,7 +217,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
         {/* Write to MP */}
         <Pressable
           style={[styles.writeBtn, { borderColor: '#00843D' }]}
-          onPress={() => navigation.navigate('WriteToMP', { member })}
+          onPress={() => requireAuth('write to your MP', () => navigation.navigate('WriteToMP', { member }))}
         >
           <Ionicons name="mail-outline" size={16} color="#00843D" />
           <Text style={styles.writeBtnText}>Write to {member.first_name}</Text>
@@ -219,8 +225,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
         {/* Advanced Analytics (Pro) */}
         {isPro ? (
-          <View style={styles.proCard}>
-            <Text style={styles.proCardText}>Advanced Analytics coming soon for this MP.</Text>
+          <View style={[styles.proCard, { backgroundColor: colors.greenBg }]}>
+            <Text style={[styles.proCardText, { color: colors.textMuted }]}>Advanced Analytics coming soon for this MP.</Text>
           </View>
         ) : (
           <View style={styles.proGate}>
@@ -254,19 +260,19 @@ export function MemberProfileScreen({ route, navigation }: any) {
         {/* Tabs */}
         <View style={[styles.tabs, { borderBottomColor: colors.border }]}>
           <Pressable style={[styles.tab, activeTab === 'posts' && styles.activeTab]} onPress={() => setActiveTab('posts')}>
-            <Text style={[styles.tabText, activeTab === 'posts' && styles.activeTabText]}>Posts</Text>
+            <Text style={[styles.tabText, { color: activeTab === 'posts' ? colors.green : colors.textMuted }]}>Posts</Text>
           </Pressable>
           <Pressable style={[styles.tab, activeTab === 'votes' && styles.activeTab]} onPress={() => setActiveTab('votes')}>
-            <Text style={[styles.tabText, activeTab === 'votes' && styles.activeTabText]}>Votes</Text>
+            <Text style={[styles.tabText, { color: activeTab === 'votes' ? colors.green : colors.textMuted }]}>Votes</Text>
           </Pressable>
           <Pressable style={[styles.tab, activeTab === 'about' && styles.activeTab]} onPress={() => setActiveTab('about')}>
-            <Text style={[styles.tabText, activeTab === 'about' && styles.activeTabText]}>About</Text>
+            <Text style={[styles.tabText, { color: activeTab === 'about' ? colors.green : colors.textMuted }]}>About</Text>
           </Pressable>
           <Pressable style={[styles.tab, activeTab === 'funding' && styles.activeTab]} onPress={() => setActiveTab('funding')}>
-            <Text style={[styles.tabText, activeTab === 'funding' && styles.activeTabText]}>Funding</Text>
+            <Text style={[styles.tabText, { color: activeTab === 'funding' ? colors.green : colors.textMuted }]}>Funding</Text>
           </Pressable>
           <Pressable style={[styles.tab, activeTab === 'speeches' && styles.activeTab]} onPress={() => setActiveTab('speeches')}>
-            <Text style={[styles.tabText, activeTab === 'speeches' && styles.activeTabText]}>Speeches</Text>
+            <Text style={[styles.tabText, { color: activeTab === 'speeches' ? colors.green : colors.textMuted }]}>Speeches</Text>
           </Pressable>
         </View>
 
@@ -275,7 +281,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
             postsLoading
               ? [1, 2, 3].map(i => <SkeletonLoader key={i} height={120} borderRadius={14} style={{ marginBottom: 10 }} />)
               : posts.length === 0
-                ? <Text style={styles.empty}>This MP hasn't posted yet.</Text>
+                ? <Text style={[styles.empty, { color: colors.textMuted }]}>This MP hasn't posted yet.</Text>
                 : posts.map(post => (
                     <PostCard
                       key={post.id}
@@ -287,7 +293,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
             votesLoading ? (
               [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={8} style={{ marginBottom: 8 }} />)
             ) : votes.length === 0 ? (
-              <Text style={styles.empty}>No voting records available yet.</Text>
+              <Text style={[styles.empty, { color: colors.textMuted }]}>No voting records available yet.</Text>
             ) : (
               <>
                 <View style={[styles.voteSummaryCard, { backgroundColor: colors.greenBg }]}>
@@ -314,7 +320,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                       <View style={styles.voteInfo}>
                         <Text style={[procedural ? styles.voteProceduralTitle : styles.voteBillTitle, procedural ? { color: colors.textMuted } : { color: colors.text }]} numberOfLines={2}>{title}</Text>
                         <View style={styles.voteMeta}>
-                          <Text style={styles.voteDate}>
+                          <Text style={[styles.voteDate, { color: colors.textMuted }]}>
                             {v.division?.date ? timeAgo(v.division.date) : ''}
                           </Text>
                           {v.rebelled && (
@@ -334,7 +340,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 })}
                 {votes.length > visibleCount && (
                   <Pressable style={styles.showMoreBtn} onPress={() => setVisibleCount(c => c + 20)}>
-                    <Text style={styles.showMoreText}>
+                    <Text style={[styles.showMoreText, { color: colors.green }]}>
                       Show {Math.min(20, votes.length - visibleCount)} more votes
                     </Text>
                   </Pressable>
@@ -349,7 +355,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   style={[styles.fundingToggleBtn, fundingView === 'party' && styles.fundingToggleBtnActive, fundingView === 'party' && { backgroundColor: colors.card }]}
                   onPress={() => setFundingView('party')}
                 >
-                  <Text style={[styles.fundingToggleBtnText, fundingView === 'party' && styles.fundingToggleBtnTextActive, fundingView === 'party' && { color: colors.text }]}>
+                  <Text style={[styles.fundingToggleBtnText, { color: fundingView === 'party' ? colors.text : colors.textMuted }]}>
                     Party Funding
                   </Text>
                 </Pressable>
@@ -357,7 +363,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   style={[styles.fundingToggleBtn, fundingView === 'personal' && styles.fundingToggleBtnActive, fundingView === 'personal' && { backgroundColor: colors.card }]}
                   onPress={() => setFundingView('personal')}
                 >
-                  <Text style={[styles.fundingToggleBtnText, fundingView === 'personal' && styles.fundingToggleBtnTextActive, fundingView === 'personal' && { color: colors.text }]}>
+                  <Text style={[styles.fundingToggleBtnText, { color: fundingView === 'personal' ? colors.text : colors.textMuted }]}>
                     Personal Donations
                   </Text>
                 </Pressable>
@@ -368,18 +374,18 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={8} style={{ marginBottom: 8 }} />)
                 ) : (
                   <View>
-                    <Text style={styles.fundingSubhead}>
+                    <Text style={[styles.fundingSubhead, { color: colors.textMuted }]}>
                       Party donations — {member.party?.short_name || member.party?.name || ''}
                     </Text>
                     {donations.length === 0 ? (
-                      <Text style={styles.empty}>No donation data available.</Text>
+                      <Text style={[styles.empty, { color: colors.textMuted }]}>No donation data available.</Text>
                     ) : (
                       <>
                         {donations.map(d => (
                           <View key={d.id} style={[styles.donationRow, { borderBottomColor: colors.border }]}>
                             <View style={styles.donationLeft}>
                               <Text style={[styles.donorName, { color: colors.text }]} numberOfLines={2}>{d.donor_name}</Text>
-                              <Text style={styles.donorFY}>{d.financial_year}</Text>
+                              <Text style={[styles.donorFY, { color: colors.textMuted }]}>{d.financial_year}</Text>
                             </View>
                             <View style={styles.donationRight}>
                               <View style={[styles.donorTypeBadge, { backgroundColor: d.donor_type === 'union' ? '#e8f0fe' : d.donor_type === 'corporation' ? colors.cardAlt : colors.greenBg }]}>
@@ -391,7 +397,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             </View>
                           </View>
                         ))}
-                        <Text style={styles.fundingFooter}>
+                        <Text style={[styles.fundingFooter, { color: colors.textMuted }]}>
                           Total declared: ${totalAmount.toLocaleString('en-AU')} · Source: AEC
                         </Text>
                       </>
@@ -403,14 +409,14 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={8} style={{ marginBottom: 8 }} />)
                 ) : (
                   <View>
-                    <Text style={styles.fundingSubhead}>
+                    <Text style={[styles.fundingSubhead, { color: colors.textMuted }]}>
                       Donations to {member.first_name} {member.last_name}
                     </Text>
                     {indDonations.length === 0 ? (
                       <View style={styles.fundingEmptyState}>
-                        <Ionicons name="receipt-outline" size={24} color="#c4cdd5" />
-                        <Text style={styles.fundingEmptyText}>No personal donation records found.</Text>
-                        <Text style={styles.fundingEmptySubtext}>
+                        <Ionicons name="receipt-outline" size={24} color={colors.borderStrong} />
+                        <Text style={[styles.fundingEmptyText, { color: colors.textMuted }]}>No personal donation records found.</Text>
+                        <Text style={[styles.fundingEmptySubtext, { color: colors.textMuted }]}>
                           Most donations are made directly to parties. Individual disclosures appear when donors report donations to a specific candidate or MP.
                         </Text>
                       </View>
@@ -420,7 +426,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                           <View key={d.id} style={[styles.donationRow, { borderBottomColor: colors.border }]}>
                             <View style={styles.donationLeft}>
                               <Text style={[styles.donorName, { color: colors.text }]} numberOfLines={2}>{d.donor_name}</Text>
-                              <Text style={styles.donorFY}>{d.financial_year}</Text>
+                              <Text style={[styles.donorFY, { color: colors.textMuted }]}>{d.financial_year}</Text>
                             </View>
                             <View style={styles.donationRight}>
                               <View style={[styles.donorTypeBadge, { backgroundColor: d.donor_type === 'union' ? '#e8f0fe' : d.donor_type === 'corporation' ? colors.cardAlt : colors.greenBg }]}>
@@ -446,24 +452,24 @@ export function MemberProfileScreen({ route, navigation }: any) {
               [1, 2, 3].map(i => <SkeletonLoader key={i} height={80} borderRadius={10} style={{ marginBottom: 10 }} />)
             ) : hansardEntries.length === 0 ? (
               <View style={styles.speechEmptyState}>
-                <Ionicons name="mic-outline" size={28} color="#c4cdd5" />
-                <Text style={styles.speechEmptyText}>No recent speeches found.</Text>
-                <Text style={styles.speechEmptySubtext}>Speeches appear once Hansard data is loaded for this MP.</Text>
+                <Ionicons name="mic-outline" size={28} color={colors.borderStrong} />
+                <Text style={[styles.speechEmptyText, { color: colors.textMuted }]}>No recent speeches found.</Text>
+                <Text style={[styles.speechEmptySubtext, { color: colors.textMuted }]}>Speeches appear once Hansard data is loaded for this MP.</Text>
               </View>
             ) : (
               <>
-                <Text style={styles.fundingSubhead}>Recent Speeches</Text>
+                <Text style={[styles.fundingSubhead, { color: colors.textMuted }]}>Recent Speeches</Text>
                 {hansardEntries.map(entry => (
                   <Pressable
                     key={entry.id}
-                    style={[styles.speechCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                    style={[styles.speechCard, { backgroundColor: colors.card }]}
                     onPress={() => entry.source_url && Linking.openURL(entry.source_url)}
                   >
                     <View style={styles.speechHeader}>
-                      <Text style={styles.speechDate}>
+                      <Text style={[styles.speechDate, { color: colors.textMuted }]}>
                         {timeAgo(entry.date)}
                       </Text>
-                      {entry.source_url && <Ionicons name="open-outline" size={13} color="#9aabb8" />}
+                      {entry.source_url && <Ionicons name="open-outline" size={13} color={colors.textMuted} />}
                     </View>
                     {entry.debate_topic ? (
                       <Text style={[styles.speechTopic, { color: colors.text }]} numberOfLines={1}>{entry.debate_topic}</Text>
@@ -473,34 +479,34 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     ) : null}
                   </Pressable>
                 ))}
-                <Text style={styles.fundingFooter}>Source: OpenAustralia / APH Hansard</Text>
+                <Text style={[styles.fundingFooter, { color: colors.textMuted }]}>Source: OpenAustralia / APH Hansard</Text>
               </>
             )
           ) : (
             <View style={styles.aboutSection}>
-              <Text style={styles.aboutLabel}>Chamber</Text>
+              <Text style={[styles.aboutLabel, { color: colors.textMuted }]}>Chamber</Text>
               <Text style={[styles.aboutValue, { color: colors.text }]}>{member.chamber === 'senate' ? 'Senate' : 'House of Representatives'}</Text>
               {member.electorate && (
                 <>
-                  <Text style={styles.aboutLabel}>Electorate</Text>
+                  <Text style={[styles.aboutLabel, { color: colors.textMuted }]}>Electorate</Text>
                   <Text style={[styles.aboutValue, { color: colors.text }]}>{member.electorate.name}, {member.electorate.state}</Text>
                 </>
               )}
               {member.ministerial_role && (
                 <>
-                  <Text style={styles.aboutLabel}>Current Role</Text>
+                  <Text style={[styles.aboutLabel, { color: colors.textMuted }]}>Current Role</Text>
                   <Text style={[styles.aboutValue, { color: colors.text }]}>{member.ministerial_role}</Text>
                 </>
               )}
               {member.email && (
                 <>
-                  <Text style={styles.aboutLabel}>Email</Text>
-                  <Text style={[styles.aboutValue, styles.link]} onPress={() => Linking.openURL(`mailto:${member.email}`)} >{member.email}</Text>
+                  <Text style={[styles.aboutLabel, { color: colors.textMuted }]}>Email</Text>
+                  <Text style={[styles.aboutValue, styles.link, { color: colors.green }]} onPress={() => Linking.openURL(`mailto:${member.email}`)} >{member.email}</Text>
                 </>
               )}
               {member.phone && (
                 <>
-                  <Text style={styles.aboutLabel}>Phone</Text>
+                  <Text style={[styles.aboutLabel, { color: colors.textMuted }]}>Phone</Text>
                   <Text style={[styles.aboutValue, { color: colors.text }]}>{member.phone}</Text>
                 </>
               )}
@@ -510,13 +516,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 <SkeletonLoader height={20} borderRadius={4} style={{ marginTop: 16 }} />
               ) : committees.length > 0 ? (
                 <>
-                  <Text style={[styles.aboutLabel, { marginTop: 16 }]}>Current Committees</Text>
+                  <Text style={[styles.aboutLabel, { marginTop: 16, color: colors.textMuted }]}>Current Committees</Text>
                   {committees.map(c => (
                     <View key={c.id} style={[styles.committeeRow, { borderBottomColor: colors.border }]}>
                       <View style={styles.committeeLeft}>
                         <Text style={[styles.committeeName, { color: colors.text }]}>{c.committee_name}</Text>
                         {c.committee_type && (
-                          <Text style={styles.committeeType}>
+                          <Text style={[styles.committeeType, { color: colors.textMuted }]}>
                             {c.committee_type.charAt(0).toUpperCase() + c.committee_type.slice(1)}
                           </Text>
                         )}
@@ -540,8 +546,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
               style={styles.claimLink}
               onPress={() => navigation.navigate('ClaimProfile', { member })}
             >
-              <Ionicons name="shield-checkmark-outline" size={14} color="#9aabb8" />
-              <Text style={styles.claimLinkText}>Are you this MP? Claim your verified profile</Text>
+              <Ionicons name="shield-checkmark-outline" size={14} color={colors.textMuted} />
+              <Text style={[styles.claimLinkText, { color: colors.textMuted }]}>Are you this MP? Claim your verified profile</Text>
             </Pressable>
           )}
         </View>
@@ -589,93 +595,89 @@ export function MemberProfileScreen({ route, navigation }: any) {
           <Ionicons name="create" size={24} color="#ffffff" />
         </Pressable>
       )}
+      <AuthPromptSheet {...authSheetProps} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#ffffff' },
-  navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 20 },
+  safe: { flex: 1 },
+  navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.lg + 4, paddingTop: SPACING.lg + 4 },
   back: { padding: 0 },
-  shareBtn: { padding: 4 },
-  hero: { alignItems: 'center', padding: 24, paddingBottom: 32, gap: 10, position: 'relative' },
+  shareBtn: { padding: SPACING.xs },
+  hero: { alignItems: 'center', padding: SPACING.xl, paddingBottom: SPACING.xxl, gap: SPACING.sm + 2, position: 'relative' },
   heroFade: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 24,
+    height: SPACING.xl,
     flexDirection: 'column',
   },
   photoContainer: { borderRadius: 50, borderWidth: 3, overflow: 'hidden' },
   photo: { width: 96, height: 96 },
   photoPlaceholder: { width: 96, height: 96, justifyContent: 'center', alignItems: 'center' },
-  initials: { fontSize: 32, fontWeight: '700' },
-  nameVerifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  name: { fontSize: 22, fontWeight: '800', color: '#1a2332' },
-  electorate: { fontSize: 13, color: '#5a6a7a' },
+  initials: { fontSize: 32, fontWeight: FONT_WEIGHT.bold },
+  nameVerifiedRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2 },
+  name: { fontSize: 22, fontWeight: FONT_WEIGHT.bold },
+  electorate: { fontSize: FONT_SIZE.small },
   statsRow: {
     flexDirection: 'row',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: '#f8f9fa',
-    marginHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.lg + 4,
+    marginHorizontal: SPACING.lg + 4,
+    borderRadius: BORDER_RADIUS.md + 2,
+    marginBottom: SPACING.lg,
   },
-  statDivider: { width: 1, backgroundColor: '#E5E7EB', marginVertical: 4 },
+  statDivider: { width: 1, marginVertical: SPACING.xs },
   actionRow: {
-    flexDirection: 'row', justifyContent: 'center', gap: 10,
-    marginBottom: 16, paddingHorizontal: 20,
+    flexDirection: 'row', justifyContent: 'center', gap: SPACING.sm + 2,
+    marginBottom: SPACING.lg, paddingHorizontal: SPACING.lg + 4,
   },
   reportCardBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 16, paddingVertical: 8,
-    borderRadius: 20, borderWidth: 1, borderColor: '#00843D',
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2,
+    paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.xl, borderWidth: 1, borderColor: '#00843D',
   },
-  reportCardBtnText: { fontSize: 13, fontWeight: '700', color: '#00843D' },
+  reportCardBtnText: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: '#00843D' },
   followBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 16, paddingVertical: 8,
-    borderRadius: 20, borderWidth: 1, borderColor: '#00843D',
-    backgroundColor: '#ffffff',
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2,
+    paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.xl, borderWidth: 1, borderColor: '#00843D',
   },
   followBtnActive: { backgroundColor: '#00843D' },
-  followBtnText: { fontSize: 13, fontWeight: '700', color: '#00843D' },
+  followBtnText: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: '#00843D' },
   followBtnTextActive: { color: '#ffffff' },
   writeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    borderRadius: 10,
+    gap: SPACING.xs + 2,
+    marginHorizontal: SPACING.lg + 4,
+    marginBottom: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
     borderWidth: 1.5,
-    paddingVertical: 10,
+    paddingVertical: SPACING.sm + 2,
   },
-  writeBtnText: { fontSize: 14, fontWeight: '700', color: '#00843D' },
-  voteShareBtn: { padding: 4, marginLeft: 4 },
+  writeBtnText: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.bold, color: '#00843D' },
+  voteShareBtn: { padding: SPACING.xs, marginLeft: SPACING.xs },
   offscreen: { position: 'absolute', left: -9999, top: 0 },
-  contactRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginBottom: 20 },
-  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e8f5ee', borderRadius: 10, padding: 12, justifyContent: 'center' },
-  contactLabel: { fontSize: 14, color: '#00843D', fontWeight: '600' },
-  tabs: { flexDirection: 'row', paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#e8ecf0' },
-  tab: { flex: 1, paddingVertical: 14, alignItems: 'center' },
+  contactRow: { flexDirection: 'row', gap: SPACING.sm + 2, paddingHorizontal: SPACING.lg + 4, marginBottom: SPACING.lg + 4 },
+  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2, backgroundColor: '#e8f5ee', borderRadius: BORDER_RADIUS.md, padding: SPACING.md, justifyContent: 'center' },
+  contactLabel: { fontSize: FONT_SIZE.small + 1, color: '#00843D', fontWeight: FONT_WEIGHT.semibold },
+  tabs: { flexDirection: 'row', paddingHorizontal: SPACING.lg + 4, borderBottomWidth: 1 },
+  tab: { flex: 1, paddingVertical: SPACING.md + 2, alignItems: 'center' },
   activeTab: { borderBottomWidth: 2, borderBottomColor: '#00843D' },
-  tabText: { fontSize: 14, color: '#9aabb8', fontWeight: '500' },
-  activeTabText: { color: '#00843D', fontWeight: '700' },
-  tabContent: { padding: 20 },
+  tabText: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.medium },
+  activeTabText: { fontWeight: FONT_WEIGHT.bold },
+  tabContent: { padding: SPACING.lg + 4 },
   voteCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: BORDER_RADIUS.md + 2,
+    padding: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 10,
+    gap: SPACING.md,
+    marginBottom: SPACING.sm + 2,
     ...SHADOWS.sm,
   },
   voteCardIcon: {
@@ -687,83 +689,82 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   voteInfo: { flex: 1 },
-  voteBillTitle: { fontSize: 13, color: '#1a2332', lineHeight: 18 },
-  voteMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
-  voteDate: { fontSize: 11, color: '#9aabb8' },
-  rebelBadge: { fontSize: 10, color: '#b45309', backgroundColor: '#fef3c7', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1, fontWeight: '700' },
-  voteProceduralTitle: { fontSize: 12, color: '#9aabb8', lineHeight: 17 },
-  showMoreBtn: { alignItems: 'center', paddingVertical: 12, marginTop: 4 },
-  showMoreText: { fontSize: 13, color: '#00843D', fontWeight: '600' },
-  empty: { textAlign: 'center', color: '#9aabb8', fontSize: 14, marginTop: 20 },
+  voteBillTitle: { fontSize: FONT_SIZE.small, lineHeight: 18 },
+  voteMeta: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: 2 },
+  voteDate: { fontSize: FONT_SIZE.caption },
+  rebelBadge: { fontSize: 10, color: '#b45309', backgroundColor: '#fef3c7', borderRadius: BORDER_RADIUS.sm - 2, paddingHorizontal: SPACING.xs + 2, paddingVertical: 1, fontWeight: FONT_WEIGHT.bold },
+  voteProceduralTitle: { fontSize: FONT_SIZE.small - 1, lineHeight: 17 },
+  showMoreBtn: { alignItems: 'center', paddingVertical: SPACING.md, marginTop: SPACING.xs },
+  showMoreText: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold },
+  empty: { textAlign: 'center', fontSize: FONT_SIZE.small + 1, marginTop: SPACING.lg + 4 },
   proGate: {
-    marginHorizontal: 20, marginBottom: 16, backgroundColor: '#fffbeb', borderRadius: 14,
-    padding: 20, alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#fde68a',
+    marginHorizontal: SPACING.lg + 4, marginBottom: SPACING.lg, backgroundColor: '#fffbeb', borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg + 4, alignItems: 'center', gap: SPACING.sm, borderWidth: 1, borderColor: '#fde68a',
   },
   proGateIcon: { fontSize: 28 },
-  proGateTitle: { fontSize: 16, fontWeight: '800', color: '#1a2332' },
-  proGateBody: { fontSize: 13, color: '#5a6a7a', textAlign: 'center', lineHeight: 19 },
-  proGateBtn: { marginTop: 4, backgroundColor: '#00843D', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 },
-  proGateBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 14 },
-  proCard: { marginHorizontal: 20, marginBottom: 16, backgroundColor: '#f0faf4', borderRadius: 12, padding: 16 },
-  proCardText: { fontSize: 14, color: '#9aabb8', fontStyle: 'italic' },
-  aboutSection: { gap: 4 },
-  aboutLabel: { fontSize: 12, color: '#9aabb8', fontWeight: '600', textTransform: 'uppercase', marginTop: 12 },
-  aboutValue: { fontSize: 15, color: '#1a2332' },
-  link: { color: '#00843D' },
-  ministerialBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#f0f2f5', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, maxWidth: '90%' },
-  ministerialBadgeText: { fontSize: 12, color: '#5a6a7a', fontWeight: '600', flexShrink: 1 },
-  committeeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  committeeLeft: { flex: 1, marginRight: 8 },
-  committeeName: { fontSize: 13, color: '#1a2332', lineHeight: 18 },
-  committeeType: { fontSize: 11, color: '#9aabb8', marginTop: 1 },
-  committeeRoleBadge: { backgroundColor: '#e8f5ee', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  committeeRoleText: { fontSize: 10, fontWeight: '700', color: '#00843D' },
-  fundingToggle: { flexDirection: 'row', backgroundColor: '#f0f2f5', borderRadius: 10, padding: 3, marginBottom: 16 },
-  fundingToggleBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8 },
-  fundingToggleBtnActive: { backgroundColor: '#ffffff', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 2 },
-  fundingToggleBtnText: { fontSize: 13, fontWeight: '600', color: '#9aabb8' },
-  fundingToggleBtnTextActive: { color: '#1a2332' },
-  fundingEmptyState: { alignItems: 'center', paddingVertical: 24, gap: 8 },
-  fundingEmptyText: { fontSize: 14, color: '#9aabb8', fontWeight: '600' },
-  fundingEmptySubtext: { fontSize: 12, color: '#c4cdd5', textAlign: 'center', lineHeight: 17, paddingHorizontal: 8 },
-  fundingSubhead: { fontSize: 13, fontWeight: '700', color: '#9aabb8', textTransform: 'uppercase', marginBottom: 12 },
-  donationRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  donationLeft: { flex: 1, marginRight: 10 },
-  donorName: { fontSize: 13, color: '#1a2332', lineHeight: 18 },
-  donorFY: { fontSize: 11, color: '#9aabb8', marginTop: 2 },
-  donationRight: { alignItems: 'flex-end', gap: 4 },
-  donorTypeBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  donorTypeText: { fontSize: 10, fontWeight: '700' },
-  donorAmount: { fontSize: 14, fontWeight: '700', color: '#1a2332' },
-  fundingFooter: { fontSize: 11, color: '#9aabb8', marginTop: 16, textAlign: 'center' },
+  proGateTitle: { fontSize: FONT_SIZE.subtitle - 1, fontWeight: FONT_WEIGHT.bold },
+  proGateBody: { fontSize: FONT_SIZE.small, textAlign: 'center', lineHeight: 19 },
+  proGateBtn: { marginTop: SPACING.xs, backgroundColor: '#00843D', borderRadius: BORDER_RADIUS.md, paddingHorizontal: SPACING.lg + 4, paddingVertical: SPACING.sm + 2 },
+  proGateBtnText: { color: '#ffffff', fontWeight: FONT_WEIGHT.bold, fontSize: FONT_SIZE.small + 1 },
+  proCard: { marginHorizontal: SPACING.lg + 4, marginBottom: SPACING.lg, borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.lg },
+  proCardText: { fontSize: FONT_SIZE.small + 1, fontStyle: 'italic' },
+  aboutSection: { gap: SPACING.xs },
+  aboutLabel: { fontSize: FONT_SIZE.small - 1, fontWeight: FONT_WEIGHT.semibold, textTransform: 'uppercase', marginTop: SPACING.md },
+  aboutValue: { fontSize: FONT_SIZE.body },
+  link: {},
+  ministerialBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: BORDER_RADIUS.sm + 2, paddingHorizontal: SPACING.sm + 2, paddingVertical: 5, maxWidth: '90%' },
+  ministerialBadgeText: { fontSize: FONT_SIZE.small - 1, fontWeight: FONT_WEIGHT.semibold, flexShrink: 1 },
+  committeeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: SPACING.sm, borderBottomWidth: 1 },
+  committeeLeft: { flex: 1, marginRight: SPACING.sm },
+  committeeName: { fontSize: FONT_SIZE.small, lineHeight: 18 },
+  committeeType: { fontSize: FONT_SIZE.caption, marginTop: 1 },
+  committeeRoleBadge: { backgroundColor: '#e8f5ee', borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 3 },
+  committeeRoleText: { fontSize: 10, fontWeight: FONT_WEIGHT.bold, color: '#00843D' },
+  fundingToggle: { flexDirection: 'row', borderRadius: BORDER_RADIUS.md, padding: 3, marginBottom: SPACING.lg },
+  fundingToggleBtn: { flex: 1, paddingVertical: SPACING.sm, alignItems: 'center', borderRadius: BORDER_RADIUS.sm + 2 },
+  fundingToggleBtnActive: { ...SHADOWS.sm },
+  fundingToggleBtnText: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold },
+  fundingToggleBtnTextActive: {},
+  fundingEmptyState: { alignItems: 'center', paddingVertical: SPACING.xl, gap: SPACING.sm },
+  fundingEmptyText: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold },
+  fundingEmptySubtext: { fontSize: FONT_SIZE.small - 1, textAlign: 'center', lineHeight: 17, paddingHorizontal: SPACING.sm },
+  fundingSubhead: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, textTransform: 'uppercase', marginBottom: SPACING.md },
+  donationRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: SPACING.sm + 2, borderBottomWidth: 1 },
+  donationLeft: { flex: 1, marginRight: SPACING.sm + 2 },
+  donorName: { fontSize: FONT_SIZE.small, lineHeight: 18 },
+  donorFY: { fontSize: FONT_SIZE.caption, marginTop: 2 },
+  donationRight: { alignItems: 'flex-end', gap: SPACING.xs },
+  donorTypeBadge: { borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 3 },
+  donorTypeText: { fontSize: 10, fontWeight: FONT_WEIGHT.bold },
+  donorAmount: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.bold },
+  fundingFooter: { fontSize: FONT_SIZE.caption, marginTop: SPACING.lg, textAlign: 'center' },
   voteSummaryCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#e8f5ee', borderRadius: 10, padding: 12, marginBottom: 12,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md, padding: SPACING.md, marginBottom: SPACING.md,
   },
-  voteSummaryText: { fontSize: 13, fontWeight: '600', color: '#1a2332' },
-  speechEmptyState: { alignItems: 'center', paddingVertical: 28, gap: 8 },
-  speechEmptyText: { fontSize: 14, color: '#9aabb8', fontWeight: '600' },
-  speechEmptySubtext: { fontSize: 12, color: '#c4cdd5', textAlign: 'center', lineHeight: 17, paddingHorizontal: 8 },
+  voteSummaryText: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold },
+  speechEmptyState: { alignItems: 'center', paddingVertical: SPACING.xxl - 4, gap: SPACING.sm },
+  speechEmptyText: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold },
+  speechEmptySubtext: { fontSize: FONT_SIZE.small - 1, textAlign: 'center', lineHeight: 17, paddingHorizontal: SPACING.sm },
   speechCard: {
-    backgroundColor: '#ffffff', borderRadius: 12, padding: 14,
-    marginBottom: 10, borderWidth: 1, borderColor: '#f0f2f5',
+    borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.md + 2,
+    marginBottom: SPACING.sm + 2,
     ...SHADOWS.sm,
   },
-  speechHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  speechDate: { fontSize: 11, color: '#9aabb8', fontWeight: '600' },
-  speechTopic: { fontSize: 13, fontWeight: '700', color: '#1a2332', marginBottom: 4 },
-  speechExcerpt: { fontSize: 12, color: '#5a6a7a', lineHeight: 18 },
+  speechHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.xs },
+  speechDate: { fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold },
+  speechTopic: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, marginBottom: SPACING.xs },
+  speechExcerpt: { fontSize: FONT_SIZE.small - 1, lineHeight: 18 },
   claimLink: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    justifyContent: 'center', paddingVertical: 24,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2,
+    justifyContent: 'center', paddingVertical: SPACING.xl,
   },
-  claimLinkText: { fontSize: 13, color: '#9aabb8' },
+  claimLinkText: { fontSize: FONT_SIZE.small },
   fab: {
-    position: 'absolute', bottom: 24, right: 24,
+    position: 'absolute', bottom: SPACING.xl, right: SPACING.xl,
     width: 56, height: 56, borderRadius: 28,
     backgroundColor: '#00843D',
     justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2, shadowRadius: 8, elevation: 8,
+    ...SHADOWS.lg,
   },
 });

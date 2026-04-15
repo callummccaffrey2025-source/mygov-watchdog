@@ -17,7 +17,9 @@ import { useSubscription } from '../hooks/useSubscription';
 import { useCouncils } from '../hooks/useCouncils';
 import { useStateMembers, useStateBills } from '../hooks/useStateParliament';
 import { useTheme } from '../context/ThemeContext';
-import { SHADOWS } from '../constants/design';
+import { EmptyState } from '../components/EmptyState';
+import { track } from '../lib/analytics';
+import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { useNewsStories, NewsStory } from '../hooks/useNewsStories';
 import { supabase } from '../lib/supabase';
 import { timeAgo } from '../lib/timeAgo';
@@ -276,66 +278,65 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
 }
 
 const verifyStyles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#ffffff' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: '#e8ecf0' },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { fontSize: 18, fontWeight: '700', color: '#1a2332' },
-  content: { flex: 1, padding: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: '#5a6a7a', marginBottom: 10 },
-  input: { backgroundColor: '#f8f9fa', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#1a2332', marginBottom: 12, borderWidth: 1, borderColor: '#e8ecf0' },
-  memberRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
+  safe: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: SPACING.lg + 4, borderBottomWidth: 1 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  title: { fontSize: FONT_SIZE.subtitle + 1, fontWeight: FONT_WEIGHT.bold },
+  content: { flex: 1, padding: SPACING.lg },
+  label: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, marginBottom: SPACING.sm + 2 },
+  input: { borderRadius: BORDER_RADIUS.md + 2, paddingHorizontal: SPACING.md + 2, paddingVertical: SPACING.md, fontSize: FONT_SIZE.body, marginBottom: SPACING.md, borderWidth: 1 },
+  memberRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingVertical: SPACING.md, borderBottomWidth: 1 },
   dot: { width: 10, height: 10, borderRadius: 5 },
-  memberName: { fontSize: 15, fontWeight: '600', color: '#1a2332' },
-  memberSub: { fontSize: 12, color: '#9aabb8', marginTop: 1 },
-  backRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
-  backText: { fontSize: 14, color: '#00843D', fontWeight: '600' },
-  mpName: { fontSize: 18, fontWeight: '800', color: '#1a2332', marginBottom: 12 },
-  loading: { fontSize: 14, color: '#9aabb8', textAlign: 'center', marginTop: 20 },
-  empty: { fontSize: 14, color: '#9aabb8', textAlign: 'center', marginTop: 20 },
-  voteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
-  voteBadge: { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, minWidth: 48, alignItems: 'center', marginTop: 2 },
-  voteLabel: { fontSize: 11, fontWeight: '800', color: '#ffffff' },
-  billTitle: { fontSize: 14, color: '#1a2332', lineHeight: 19 },
-  voteDate: { fontSize: 11, color: '#9aabb8', marginTop: 2 },
+  memberName: { fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold },
+  memberSub: { fontSize: FONT_SIZE.small - 1, marginTop: 1 },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2, marginBottom: SPACING.md },
+  backText: { fontSize: FONT_SIZE.small + 1, color: '#00843D', fontWeight: FONT_WEIGHT.semibold },
+  mpName: { fontSize: FONT_SIZE.subtitle + 1, fontWeight: FONT_WEIGHT.bold, marginBottom: SPACING.md },
+  loading: { fontSize: FONT_SIZE.small + 1, textAlign: 'center', marginTop: SPACING.lg + 4 },
+  empty: { fontSize: FONT_SIZE.small + 1, textAlign: 'center', marginTop: SPACING.lg + 4 },
+  voteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.md, paddingVertical: SPACING.sm + 2, borderBottomWidth: 1 },
+  voteBadge: { borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.sm + 2, paddingVertical: SPACING.xs, minWidth: 48, alignItems: 'center', marginTop: 2 },
+  voteLabel: { fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' },
+  billTitle: { fontSize: FONT_SIZE.small + 1, lineHeight: 19 },
+  voteDate: { fontSize: FONT_SIZE.caption, marginTop: 2 },
   verdictCard: {
-    borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 12,
-    backgroundColor: '#f8f9fb', borderColor: '#e8ecf0',
+    borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.md + 2, marginBottom: SPACING.md,
   },
-  verdictMpRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  verdictMpRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm + 2, marginBottom: SPACING.sm + 2 },
   verdictInitials: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: '#00843D18', justifyContent: 'center', alignItems: 'center',
   },
-  verdictInitialsText: { fontSize: 14, fontWeight: '700', color: '#00843D' },
-  verdictMpName: { fontSize: 15, fontWeight: '700', color: '#1a2332' },
-  verdictMpSub: { fontSize: 12, color: '#9aabb8', marginTop: 1 },
-  verdictSummary: { fontSize: 14, color: '#5a6a7a', marginBottom: 8 },
-  verdictBarRow: { marginBottom: 10 },
-  verdictBarTrack: { flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', backgroundColor: '#e8ecf0', marginBottom: 4 },
+  verdictInitialsText: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.bold, color: '#00843D' },
+  verdictMpName: { fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold },
+  verdictMpSub: { fontSize: FONT_SIZE.small - 1, marginTop: 1 },
+  verdictSummary: { fontSize: FONT_SIZE.small + 1, marginBottom: SPACING.sm },
+  verdictBarRow: { marginBottom: SPACING.sm + 2 },
+  verdictBarTrack: { flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: SPACING.xs },
   verdictBarAye: { backgroundColor: '#00843D' },
   verdictBarNo: { backgroundColor: '#DC3545' },
-  verdictBarLabel: { fontSize: 13, fontWeight: '600', color: '#5a6a7a' },
-  verdictTopLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', color: '#9aabb8', marginBottom: 6 },
-  verdictVoteRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  verdictVotePill: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  verdictVotePillText: { fontSize: 11, fontWeight: '700' },
-  verdictVoteTitle: { flex: 1, fontSize: 13, color: '#5a6a7a' },
-  verdictDisclaimer: { fontSize: 12, color: '#9aabb8', marginTop: 8, lineHeight: 16 },
-  // AI verdict card
+  verdictBarLabel: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold },
+  verdictTopLabel: { fontSize: FONT_SIZE.small - 1, fontWeight: FONT_WEIGHT.semibold, textTransform: 'uppercase', marginBottom: SPACING.xs + 2 },
+  verdictVoteRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.xs },
+  verdictVotePill: { borderRadius: BORDER_RADIUS.sm - 2, paddingHorizontal: SPACING.xs + 2, paddingVertical: 2 },
+  verdictVotePillText: { fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold },
+  verdictVoteTitle: { flex: 1, fontSize: FONT_SIZE.small },
+  verdictDisclaimer: { fontSize: FONT_SIZE.small - 1, marginTop: SPACING.sm, lineHeight: 16 },
+  // AI verdict card — green accent kept intentionally
   aiCard: {
     backgroundColor: '#E8F5EE',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md + 2,
+    marginBottom: SPACING.md,
     borderLeftWidth: 3,
     borderLeftColor: '#00843D',
   },
-  aiCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  aiCardHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  aiCardLabel: { fontSize: 11, fontWeight: '700', color: '#00843D', letterSpacing: 0.8 },
-  aiCardThinking: { fontSize: 11, color: '#5a6a7a', fontStyle: 'italic' },
-  aiCardVerdict: { fontSize: 14, lineHeight: 21 },
-  aiCardFooter: { fontSize: 10, color: '#5a6a7a', marginTop: 8 },
+  aiCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.sm },
+  aiCardHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2 },
+  aiCardLabel: { fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, color: '#00843D', letterSpacing: 0.8 },
+  aiCardThinking: { fontSize: FONT_SIZE.caption, fontStyle: 'italic' },
+  aiCardVerdict: { fontSize: FONT_SIZE.small + 1, lineHeight: 21 },
+  aiCardFooter: { fontSize: 10, marginTop: SPACING.sm },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -357,6 +358,23 @@ const CATEGORIES = [
   { key: 'justice',         label: 'Justice',             icon: '⚖️' },
 ];
 
+const TOPIC_BORDER_COLORS: Record<string, string> = {
+  housing: '#712B13',
+  healthcare: '#DC2626',
+  economy: '#2563EB',
+  climate: '#059669',
+  immigration: '#72243E',
+  defence: '#7C3AED',
+  education: '#EA580C',
+  cost_of_living: '#633806',
+  indigenous: '#712B13',
+  technology: '#0891B2',
+  agriculture: '#27500A',
+  infrastructure: '#444441',
+  foreign_policy: '#0C447C',
+  justice: '#444441',
+};
+
 const STATES = ['Federal', 'NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
 
 export function ExploreScreen({ navigation }: any) {
@@ -375,7 +393,10 @@ export function ExploreScreen({ navigation }: any) {
   const { councils } = useCouncils();
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query), 300);
+    const t = setTimeout(() => {
+      setDebouncedQuery(query);
+      if (query.length > 1) track('search_performed', { query }, 'Explore');
+    }, 300);
     return () => clearTimeout(t);
   }, [query]);
 
@@ -437,17 +458,20 @@ export function ExploreScreen({ navigation }: any) {
         <Text style={[styles.title, { color: colors.text }]}>Explore</Text>
 
         {/* Verify a Claim card */}
-        <Pressable style={[styles.verifyCard, { backgroundColor: colors.greenBg }]} onPress={() => setVerifyVisible(true)}>
-          <View style={styles.verifyLeft}>
-            <View style={styles.verifyIconWrap}>
-              <Ionicons name="shield-checkmark" size={20} color="#00843D" />
+        <Pressable
+          style={{ backgroundColor: '#00843D', borderRadius: 14, padding: 16, marginBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          onPress={() => setVerifyVisible(true)}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#ffffff25', justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="shield-checkmark" size={20} color="#ffffff" />
             </View>
             <View>
-              <Text style={[styles.verifyTitle, { color: colors.text }]}>Verify a Claim</Text>
-              <Text style={[styles.verifySub, { color: colors.textBody }]}>Search any MP's actual voting record</Text>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: '#ffffff' }}>Verify a Claim</Text>
+              <Text style={{ fontSize: 12, color: '#ffffffcc', marginTop: 2 }}>Search any MP's actual voting record</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          <Ionicons name="arrow-forward" size={18} color="#ffffff" />
         </Pressable>
 
         <VerifyModal visible={verifyVisible} onClose={() => setVerifyVisible(false)} />
@@ -579,7 +603,11 @@ export function ExploreScreen({ navigation }: any) {
               </View>
             )}
             {filteredParties.length === 0 && members.length === 0 && bills.length === 0 && newsStories.length === 0 && !membersLoading && !billsLoading && !newsLoading && (
-              <Text style={[styles.empty, { color: colors.textMuted }]}>No results for "{debouncedQuery}"</Text>
+              <EmptyState
+                icon="🔍"
+                title="No results found"
+                subtitle={`Try a different search term`}
+              />
             )}
           </View>
         ) : (
@@ -605,7 +633,7 @@ export function ExploreScreen({ navigation }: any) {
                 {CATEGORIES.map(cat => (
                   <Pressable
                     key={cat.key}
-                    style={[styles.catCard, { backgroundColor: colors.surface }]}
+                    style={[styles.catCard, { backgroundColor: colors.surface, borderLeftWidth: 4, borderLeftColor: TOPIC_BORDER_COLORS[cat.key] || '#6C757D' }]}
                     onPress={() => navigation.navigate('TopicBills', { category: cat.key, label: cat.label })}
                   >
                     <Text style={styles.catIcon}>{cat.icon}</Text>
@@ -665,104 +693,103 @@ export function ExploreScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#ffffff' },
+  safe: { flex: 1 },
   scroll: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 28, fontWeight: '800', color: '#1a2332', marginBottom: 16 },
-  filters: { marginTop: 12, marginBottom: 20 },
-  filtersContent: { paddingBottom: 4 },
-  section: { marginBottom: 28 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1a2332', marginBottom: 12 },
-  partyRow: { gap: 10 },
-  partyCard: { width: 92, borderRadius: 14, overflow: 'hidden', ...SHADOWS.sm },
+  content: { padding: SPACING.lg + 4, paddingBottom: 40 },
+  title: { fontSize: 28, fontWeight: FONT_WEIGHT.bold, marginBottom: SPACING.lg },
+  filters: { marginTop: SPACING.md, marginBottom: SPACING.lg + 4 },
+  filtersContent: { paddingBottom: SPACING.xs },
+  section: { marginBottom: SPACING.xxl - 4 },
+  sectionTitle: { fontSize: FONT_SIZE.subtitle + 1, fontWeight: FONT_WEIGHT.bold, marginBottom: SPACING.md },
+  partyRow: { gap: SPACING.sm + 2 },
+  partyCard: { width: 92, borderRadius: BORDER_RADIUS.lg, overflow: 'hidden', ...SHADOWS.sm },
   partyBand: { height: 56, alignItems: 'center', justifyContent: 'center' },
-  partyInitials: { fontSize: 18, fontWeight: '800', color: '#ffffff', letterSpacing: 1 },
-  partyName: { fontSize: 11, fontWeight: '700', textAlign: 'center', paddingHorizontal: 8, paddingVertical: 8 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  partyInitials: { fontSize: FONT_SIZE.subtitle + 1, fontWeight: FONT_WEIGHT.bold, color: '#ffffff', letterSpacing: 1 },
+  partyName: { fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, textAlign: 'center', paddingHorizontal: SPACING.sm, paddingVertical: SPACING.sm },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm + 2 },
   catCard: {
     width: '47%',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: BORDER_RADIUS.md + 2,
+    padding: SPACING.lg,
     alignItems: 'center',
-    gap: 8,
+    gap: SPACING.sm,
     ...SHADOWS.sm,
   },
   catIcon: { fontSize: 28 },
-  catLabel: { fontSize: 13, fontWeight: '600', color: '#1a2332' },
-  empty: { textAlign: 'center', color: '#9aabb8', marginTop: 40, fontSize: 15 },
+  catLabel: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold },
+  empty: { textAlign: 'center', marginTop: 40, fontSize: FONT_SIZE.body },
 
   // News search results
   newsResultRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: 10, padding: 12, marginBottom: 8,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+    borderRadius: BORDER_RADIUS.md, padding: SPACING.md, marginBottom: SPACING.sm,
   },
-  newsResultHeadline: { fontSize: 14, fontWeight: '600', lineHeight: 19 },
-  newsResultMeta: { fontSize: 12, marginTop: 3 },
-  seeAll: { fontSize: 13, fontWeight: '700', color: '#00843D', textAlign: 'center', marginTop: 8 },
+  newsResultHeadline: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold, lineHeight: 19 },
+  newsResultMeta: { fontSize: FONT_SIZE.small - 1, marginTop: 3 },
+  seeAll: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: '#00843D', textAlign: 'center', marginTop: SPACING.sm },
 
   // Pro gating
   proGate: {
-    backgroundColor: '#fffbeb', borderRadius: 14, padding: 20, alignItems: 'center',
-    gap: 8, borderWidth: 1, borderColor: '#fde68a', marginBottom: 8,
+    backgroundColor: '#fffbeb', borderRadius: BORDER_RADIUS.lg, padding: SPACING.lg + 4, alignItems: 'center',
+    gap: SPACING.sm, borderWidth: 1, borderColor: '#fde68a', marginBottom: SPACING.sm,
   },
   proGateIcon: { fontSize: 28 },
-  proGateTitle: { fontSize: 16, fontWeight: '800', color: '#1a2332' },
-  proGateBody: { fontSize: 13, color: '#5a6a7a', textAlign: 'center', lineHeight: 19 },
-  proGateBtn: { marginTop: 4, backgroundColor: '#00843D', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 },
-  proGateBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 14 },
-  proCard: { backgroundColor: '#f0faf4', borderRadius: 12, padding: 16, marginBottom: 8 },
-  proCardText: { fontSize: 14, color: '#9aabb8', fontStyle: 'italic' },
+  proGateTitle: { fontSize: FONT_SIZE.subtitle - 1, fontWeight: FONT_WEIGHT.bold },
+  proGateBody: { fontSize: FONT_SIZE.small, textAlign: 'center', lineHeight: 19 },
+  proGateBtn: { marginTop: SPACING.xs, backgroundColor: '#00843D', borderRadius: BORDER_RADIUS.md, paddingHorizontal: SPACING.lg + 4, paddingVertical: SPACING.sm + 2 },
+  proGateBtnText: { color: '#ffffff', fontWeight: FONT_WEIGHT.bold, fontSize: FONT_SIZE.small + 1 },
+  proCard: { borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.lg, marginBottom: SPACING.sm },
+  proCardText: { fontSize: FONT_SIZE.small + 1, fontStyle: 'italic' },
   councilCard: {
-    width: 130, backgroundColor: '#f5f7fa', borderRadius: 12, padding: 12, gap: 8,
-    borderWidth: 1, borderColor: '#e8ecf0',
+    width: 130, borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.md, gap: SPACING.sm,
+    ...SHADOWS.sm,
   },
-  councilStateBadge: { alignSelf: 'flex-start', backgroundColor: '#e8ecf0', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  councilStateText: { fontSize: 11, fontWeight: '700', color: '#5a6a7a' },
-  councilName: { fontSize: 13, fontWeight: '600', color: '#1a2332', lineHeight: 18 },
+  councilStateBadge: { alignSelf: 'flex-start', borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 3 },
+  councilStateText: { fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold },
+  councilName: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, lineHeight: 18 },
 
   // Coming soon
   comingSoonCard: {
-    alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: '#f8f9fa', borderRadius: 16, padding: 36, marginTop: 8,
-    borderWidth: 1, borderColor: '#e8ecf0',
+    alignItems: 'center', justifyContent: 'center', gap: SPACING.sm + 2,
+    borderRadius: BORDER_RADIUS.lg + 2, padding: 36, marginTop: SPACING.sm,
+    ...SHADOWS.sm,
   },
-  comingSoonTitle: { fontSize: 17, fontWeight: '700', color: '#1a2332' },
-  comingSoonText: { fontSize: 14, color: '#9aabb8', textAlign: 'center', lineHeight: 20 },
+  comingSoonTitle: { fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.bold },
+  comingSoonText: { fontSize: FONT_SIZE.small + 1, textAlign: 'center', lineHeight: 20 },
 
   // State member rows
   stateMemberRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f5f7fa',
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+    paddingVertical: SPACING.sm + 2, borderBottomWidth: 1,
   },
   stateMemberAvatar: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: '#e8f5ee', alignItems: 'center', justifyContent: 'center',
   },
-  stateMemberInitial: { fontSize: 14, fontWeight: '700', color: '#00843D' },
-  stateMemberName: { fontSize: 14, fontWeight: '600', color: '#1a2332' },
-  stateMemberSub: { fontSize: 12, color: '#9aabb8', marginTop: 1 },
+  stateMemberInitial: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.bold, color: '#00843D' },
+  stateMemberName: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold },
+  stateMemberSub: { fontSize: FONT_SIZE.small - 1, marginTop: 1 },
 
   // State bill rows
   stateBillRow: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f5f7fa',
+    flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm + 2,
+    paddingVertical: SPACING.sm + 2, borderBottomWidth: 1,
   },
   stateBillChamberBadge: {
-    backgroundColor: '#e8ecf0', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3,
+    borderRadius: BORDER_RADIUS.sm, paddingHorizontal: 7, paddingVertical: 3,
     marginTop: 1, minWidth: 30, alignItems: 'center',
   },
-  stateBillChamberText: { fontSize: 10, fontWeight: '700', color: '#5a6a7a' },
-  stateBillTitle: { fontSize: 13, fontWeight: '600', color: '#1a2332', lineHeight: 18 },
-  stateBillStatus: { fontSize: 11, color: '#9aabb8', marginTop: 2 },
+  stateBillChamberText: { fontSize: 10, fontWeight: FONT_WEIGHT.bold },
+  stateBillTitle: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, lineHeight: 18 },
+  stateBillStatus: { fontSize: FONT_SIZE.caption, marginTop: 2 },
 
   // Verify card
   verifyCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#e8f5ee', borderRadius: 14, padding: 16, marginBottom: 16,
+    borderRadius: BORDER_RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.lg,
   },
-  verifyLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  verifyIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center' },
-  verifyTitle: { fontSize: 15, fontWeight: '700', color: '#1a2332' },
-  verifySub: { fontSize: 12, color: '#5a6a7a', marginTop: 1 },
+  verifyLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
+  verifyIconWrap: { width: 40, height: 40, borderRadius: BORDER_RADIUS.md + 2, justifyContent: 'center', alignItems: 'center' },
+  verifyTitle: { fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold },
+  verifySub: { fontSize: FONT_SIZE.small - 1, marginTop: 1 },
 });

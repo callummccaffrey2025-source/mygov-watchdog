@@ -7,9 +7,11 @@ import {
   Pressable,
   Linking,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Image as ExpoImage } from 'expo-image';
 import { NewsStory } from '../hooks/useNewsStories';
 import { useNewsStoryArticles, StoryArticle } from '../hooks/useNewsStoryArticles';
 import { CoverageBar } from '../components/CoverageBar';
@@ -23,6 +25,10 @@ import { captureAndShare } from '../utils/shareContent';
 import { decodeHtml } from '../utils/decodeHtml';
 import { useTheme } from '../context/ThemeContext';
 import { useSave } from '../hooks/useSaves';
+import { AuthPromptSheet } from '../components/AuthPromptSheet';
+import { useAuthGate } from '../hooks/useAuthGate';
+import { track } from '../lib/analytics';
+import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 
 // ── Leaning config ─────────────────────────────────────────────────────────────
 
@@ -103,15 +109,34 @@ function findRelatedVote(votes: DivisionVote[], headline: string): DivisionVote 
   return null;
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function extractDomain(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname;
+  } catch {
+    return null;
+  }
+}
+
 // ── Article card ───────────────────────────────────────────────────────────────
 
 function ArticleCard({ article }: { article: StoryArticle }) {
   const { colors } = useTheme();
+  const [faviconFailed, setFaviconFailed] = useState(false);
   const leaning = article.source?.leaning ?? 'center';
   const dotColor = LEANING_DOT_COLOR[leaning] ?? '#9aabb8';
   const leaningLabel = LEANING_LABEL[leaning] ?? leaning;
   const factNum = article.source?.factuality_numeric ?? null;
   const owner = article.source?.owner ?? null;
+
+  const sourceDomain = extractDomain(article.source?.website_url) ?? extractDomain(article.url);
+  const sourceName = article.source?.name ?? 'Unknown';
+  const faviconUrl = sourceDomain
+    ? `https://www.google.com/s2/favicons?domain=${sourceDomain}&sz=32`
+    : null;
 
   const handleOpen = async () => {
     try {
@@ -126,7 +151,24 @@ function ArticleCard({ article }: { article: StoryArticle }) {
         <View style={[styles.leaningDot, { backgroundColor: dotColor }]} />
         <View style={{ flex: 1 }}>
           <View style={styles.sourceNameRow}>
-            <Text style={[styles.sourceName, { color: colors.text }]}>{article.source?.name ?? 'Unknown'}</Text>
+            {faviconUrl && !faviconFailed ? (
+              <ExpoImage
+                source={{ uri: faviconUrl }}
+                style={{ width: 16, height: 16, borderRadius: 3 }}
+                onError={() => setFaviconFailed(true)}
+              />
+            ) : (
+              <View style={{
+                width: 16, height: 16, borderRadius: 8,
+                backgroundColor: '#D1D5DB',
+                justifyContent: 'center', alignItems: 'center',
+              }}>
+                <Text style={{ fontSize: 9, fontWeight: '700', color: '#6B7280' }}>
+                  {sourceName.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <Text style={[styles.sourceName, { color: colors.text }]}>{sourceName}</Text>
             <Text style={[styles.leaningLabel, { color: colors.textMuted }]}>{leaningLabel}</Text>
           </View>
           {(owner || factNum) ? (
@@ -171,8 +213,13 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
     }
   }, [storyId]);
 
+  useEffect(() => {
+    if (story) track('news_story_view', { story_id: story.id, headline: story.headline, category: story.category }, 'NewsStoryDetail');
+  }, [story?.id]);
+
   const { articles, loading } = useNewsStoryArticles(story?.id ?? 0);
   const { saved: bookmarked, toggle: toggleBookmark } = useSave('news_story', String(story?.id ?? ''));
+  const { requireAuth, authSheetProps } = useAuthGate();
 
   const { postcode, user } = useUser();
 
@@ -238,7 +285,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={toggleBookmark} hitSlop={8}>
+          <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={() => requireAuth('save this story', toggleBookmark)} hitSlop={8}>
             <Ionicons name={bookmarked ? 'bookmark' : 'bookmark-outline'} size={20} color={bookmarked ? '#00843D' : colors.text} />
           </Pressable>
           <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={() => setCapturing(true)} hitSlop={8}>
@@ -251,6 +298,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => { if (story?.id) { supabase.from('news_stories').select('*').eq('id', story.id).single().then(({ data }) => { if (data) setStory(data as NewsStory); }); } }} tintColor="#00843D" />}
       >
         {/* Headline */}
         <Text style={[styles.headline, { color: colors.text }]}>{story.headline}</Text>
@@ -263,7 +311,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
               <Text style={styles.summaryLabel}>AI SUMMARY</Text>
             </View>
             <Text style={[styles.summaryText, { color: colors.text }]}>{story.ai_summary}</Text>
-            <Text style={styles.summaryFooter}>Powered by Verity AI</Text>
+            <Text style={[styles.summaryFooter, { color: colors.textBody }]}>Powered by Verity AI</Text>
           </View>
         ) : null}
 
@@ -326,7 +374,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
 
         {/* Blindspot alert */}
         {blindspotSide ? (
-          <View style={styles.blindspotCard}>
+          <View style={[styles.blindspotCard, { backgroundColor: colors.cardAlt }]}>
             <Ionicons name="warning-outline" size={16} color="#D97706" />
             <Text style={[styles.blindspotText, { color: colors.textBody }]}>
               <Text style={styles.blindspotBold}>Blindspot: </Text>
@@ -429,6 +477,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
           )}
         </View>
       </View>
+      <AuthPromptSheet {...authSheetProps} />
     </SafeAreaView>
   );
 }
@@ -436,131 +485,119 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FAFBFC' },
+  safe: { flex: 1 },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 20 },
+  content: { paddingHorizontal: SPACING.lg + 4, paddingBottom: SPACING.lg + 4 },
 
   navBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.lg + 4,
+    paddingVertical: SPACING.md,
   },
   navBtn: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center', alignItems: 'center',
   },
 
   headline: {
-    fontSize: 22, fontWeight: '800', color: '#1a2332',
-    lineHeight: 30, marginBottom: 16,
+    fontSize: 22, fontWeight: FONT_WEIGHT.bold,
+    lineHeight: 30, marginBottom: SPACING.lg,
   },
 
   summaryCard: {
-    borderRadius: 14, padding: 16, marginBottom: 16,
+    borderRadius: BORDER_RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.lg,
     borderLeftWidth: 3, borderLeftColor: '#00843D',
-    gap: 8,
+    gap: SPACING.sm,
   },
-  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  summaryLabel: { fontSize: 11, fontWeight: '700', color: '#00843D', letterSpacing: 0.8 },
-  summaryText: { fontSize: 15, lineHeight: 22 },
-  summaryFooter: { fontSize: 11, color: '#5a6a7a', marginTop: 4 },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2 },
+  summaryLabel: { fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, color: '#00843D', letterSpacing: 0.8 },
+  summaryText: { fontSize: FONT_SIZE.body, lineHeight: 22 },
+  summaryFooter: { fontSize: FONT_SIZE.caption, marginTop: SPACING.xs },
 
-  barWrap: { marginBottom: 10 },
-  breakdownRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' },
-  breakdownCount: { fontSize: 13, fontWeight: '700' },
-  breakdownSep: { fontSize: 13, color: '#9aabb8' },
-  breakdownTotal: { fontSize: 13, color: '#9aabb8' },
+  barWrap: { marginBottom: SPACING.sm + 2 },
+  breakdownRow: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.md, flexWrap: 'wrap' },
+  breakdownCount: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold },
+  breakdownSep: { fontSize: FONT_SIZE.small },
+  breakdownTotal: { fontSize: FONT_SIZE.small },
 
   legend: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 16,
+    gap: SPACING.lg,
+    marginBottom: SPACING.lg,
   },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendLabel: { fontSize: 12, color: '#5a6a7a' },
+  legendLabel: { fontSize: FONT_SIZE.small - 1 },
 
-  divider: { height: 1, backgroundColor: '#E5E7EB', marginBottom: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1a2332', marginBottom: 12 },
+  divider: { height: 1, marginBottom: SPACING.lg },
+  sectionTitle: { fontSize: FONT_SIZE.subtitle - 1, fontWeight: FONT_WEIGHT.bold, marginBottom: SPACING.md },
 
   groupHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-    marginTop: 4,
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm,
+    marginTop: SPACING.xs,
   },
   groupDot: { width: 8, height: 8, borderRadius: 4 },
-  groupLabel: { fontSize: 12, fontWeight: '700', flex: 1 },
-  groupCount: { borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 },
-  groupCountText: { fontSize: 11, fontWeight: '700' },
+  groupLabel: { fontSize: FONT_SIZE.small - 1, fontWeight: FONT_WEIGHT.bold, flex: 1 },
+  groupCount: { borderRadius: BORDER_RADIUS.md, paddingHorizontal: 7, paddingVertical: 2 },
+  groupCountText: { fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold },
 
   articleCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 3,
-    elevation: 1,
-    gap: 6,
+    borderRadius: BORDER_RADIUS.md + 2,
+    padding: SPACING.md + 2,
+    marginBottom: SPACING.sm + 2,
+    ...SHADOWS.sm,
+    gap: SPACING.xs + 2,
   },
   articleSourceRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: SPACING.sm,
   },
-  leaningDot: { width: 8, height: 8, borderRadius: 4, flexShrink: 0, marginTop: 4 },
-  sourceNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  sourceName: { fontSize: 12, fontWeight: '700', color: '#1a2332' },
-  leaningLabel: { fontSize: 11, color: '#9aabb8' },
-  sourceMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2, flexWrap: 'wrap' },
-  ownerText: { fontSize: 11, color: '#9aabb8' },
-  factBadge: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  factBadgeText: { fontSize: 10, fontWeight: '700' },
-  articleTitle: { fontSize: 14, fontWeight: '600', color: '#1a2332', lineHeight: 20 },
-  articleDesc: { fontSize: 13, color: '#5a6a7a', lineHeight: 19 },
+  leaningDot: { width: 8, height: 8, borderRadius: 4, flexShrink: 0, marginTop: SPACING.xs },
+  sourceNameRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2, flexWrap: 'wrap' },
+  sourceName: { fontSize: FONT_SIZE.small - 1, fontWeight: FONT_WEIGHT.bold },
+  leaningLabel: { fontSize: FONT_SIZE.caption },
+  sourceMeta: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: 2, flexWrap: 'wrap' },
+  ownerText: { fontSize: FONT_SIZE.caption },
+  factBadge: { borderRadius: BORDER_RADIUS.sm - 2, paddingHorizontal: SPACING.xs + 2, paddingVertical: 2 },
+  factBadgeText: { fontSize: 10, fontWeight: FONT_WEIGHT.bold },
+  articleTitle: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold, lineHeight: 20 },
+  articleDesc: { fontSize: FONT_SIZE.small, lineHeight: 19 },
   readLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: SPACING.xs,
     marginTop: 2,
   },
-  readLinkText: { fontSize: 13, fontWeight: '600', color: '#00843D' },
+  readLinkText: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' },
 
-  emptyState: { padding: 16, alignItems: 'center' },
-  emptyText: { fontSize: 14, color: '#9aabb8' },
+  emptyState: { padding: SPACING.lg, alignItems: 'center' },
+  emptyText: { fontSize: FONT_SIZE.small + 1 },
 
   blindspotCard: {
-    backgroundColor: '#FFFBEB',
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#FCD34D',
-    marginBottom: 16,
+    gap: SPACING.sm,
+    marginBottom: SPACING.lg,
   },
-  blindspotText: { flex: 1, fontSize: 13, lineHeight: 18 },
-  blindspotBold: { fontWeight: '700' },
+  blindspotText: { flex: 1, fontSize: FONT_SIZE.small, lineHeight: 18 },
+  blindspotBold: { fontWeight: FONT_WEIGHT.bold },
 
   affectsCard: {
-    backgroundColor: '#F0FFF4',
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: BORDER_RADIUS.md + 2,
+    padding: SPACING.md + 2,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#C6F0D8',
+    gap: SPACING.sm + 2,
   },
-  affectsText: { fontSize: 13, color: '#1a2332', lineHeight: 20 },
-  affectsBold: { fontWeight: '700' },
-  affectsVote: { fontWeight: '800' },
+  affectsText: { fontSize: FONT_SIZE.small, lineHeight: 20 },
+  affectsBold: { fontWeight: FONT_WEIGHT.bold },
+  affectsVote: { fontWeight: FONT_WEIGHT.bold },
 });

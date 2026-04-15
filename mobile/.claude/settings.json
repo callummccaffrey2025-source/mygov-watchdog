@@ -1,0 +1,35 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '--- Verity Status ---' && git -C ~/verity/mobile status --short | head -5 && echo '--- Last 3 commits ---' && git -C ~/verity/mobile log --oneline -3 && echo '--- TypeScript ---' && cd ~/verity/mobile && npx tsc --noEmit 2>&1 | tail -1"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json, sys; d=json.load(sys.stdin); p=d.get('tool_input',{}).get('file_path',''); sys.exit(2 if any(x in p for x in ['.env','supabase/migrations/','package-lock.json']) else 0)\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude Code session finished\" with title \"Verity Build\"'"
+          }
+        ]
+      }
+    ]
+  }
+}

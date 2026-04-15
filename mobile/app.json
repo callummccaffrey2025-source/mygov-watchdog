@@ -1,0 +1,82 @@
+{
+  "expo": {
+    "name": "Verity",
+    "slug": "verity-au",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "verity",
+    "intentFilters": [
+      {
+        "action": "VIEW",
+        "autoVerify": true,
+        "data": [
+          {
+            "scheme": "https",
+            "host": "verity.au",
+            "pathPrefix": "/mp"
+          },
+          {
+            "scheme": "https",
+            "host": "verity.au",
+            "pathPrefix": "/bill"
+          },
+          {
+            "scheme": "https",
+            "host": "verity.au",
+            "pathPrefix": "/news"
+          }
+        ],
+        "category": [
+          "BROWSABLE",
+          "DEFAULT"
+        ]
+      }
+    ],
+    "icon": "./assets/icon-appstore.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "au.com.verity.app",
+      "buildNumber": "1",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "au.com.verity.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#00843D"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8eaaf404-09a5-47b6-93d6-8bb60f56595d"
+      }
+    },
+    "plugins": [
+      "expo-sharing",
+      "expo-web-browser",
+      "expo-image",
+      "expo-secure-store"
+    ],
+    "owner": "callummccaffrey",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8eaaf404-09a5-47b6-93d6-8bb60f56595d"
+    }
+  }
+}

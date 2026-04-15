@@ -7,6 +7,7 @@ import {
   Pressable,
   Share,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +30,9 @@ import { BillShareCard } from '../components/ShareCards';
 import { captureAndShare } from '../utils/shareContent';
 import { useFollow } from '../hooks/useFollow';
 import { useTheme } from '../context/ThemeContext';
+import { AuthPromptSheet } from '../components/AuthPromptSheet';
+import { useAuthGate } from '../hooks/useAuthGate';
+import { track } from '../lib/analytics';
 import { SHADOWS } from '../constants/design';
 
 interface Argument {
@@ -116,8 +120,9 @@ export function BillDetailScreen({ route, navigation }: any) {
 
   // Track engagement on mount
   useEffect(() => {
-    if (user && bill) {
-      trackEngagement(user.id, 'bill_read', bill.categories?.[0]);
+    if (bill) {
+      track('bill_detail_view', { bill_id: bill.id, title: bill.short_title || bill.title }, 'BillDetail');
+      if (user) trackEngagement(user.id, 'bill_read', bill.categories?.[0]);
     }
   }, [bill?.id, user?.id]);
 
@@ -127,6 +132,7 @@ export function BillDetailScreen({ route, navigation }: any) {
   const { member: myMP } = useElectorateByPostcode(postcode);
   const { following: bookmarked, toggle: toggleBookmark } = useFollow('bill', bill?.id ?? '');
   const { colors } = useTheme();
+  const { requireAuth, authSheetProps } = useAuthGate();
 
   if (!bill) {
     return (
@@ -208,7 +214,7 @@ export function BillDetailScreen({ route, navigation }: any) {
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <View style={styles.navRight}>
-          <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={toggleBookmark} hitSlop={8}>
+          <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={() => requireAuth('save this bill', toggleBookmark)} hitSlop={8}>
             <Ionicons
               name={bookmarked ? 'bookmark' : 'bookmark-outline'}
               size={22}
@@ -229,6 +235,7 @@ export function BillDetailScreen({ route, navigation }: any) {
         style={[styles.scroll, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={() => { if (billId) { supabase.from('bills').select('*').eq('id', billId).single().then(({ data }) => { if (data) setBill(data as Bill); }); } }} tintColor="#00843D" />}
       >
         {/* ── Title block ────────────────────────────────── */}
         <View style={styles.titleBlock}>
@@ -259,6 +266,73 @@ export function BillDetailScreen({ route, navigation }: any) {
           </View>
         </View>
 
+        {/* ── Lifecycle Timeline ───────────────────────────── */}
+        {(() => {
+          const STAGES = [
+            { key: 'introduced', label: 'Introduced' },
+            { key: 'committee', label: 'Committee' },
+            { key: 'debate', label: 'Debate' },
+            { key: 'voted', label: 'Voted' },
+            { key: 'outcome', label: 'Outcome' },
+          ];
+          const status = (bill.current_status || bill.status || '').toLowerCase();
+          const getStageIndex = (): number => {
+            if (status.includes('assent') || status.includes('act')) return 5;
+            if (status.includes('passed') || status.includes('defeated') || status.includes('withdrawn') || status.includes('lapsed')) return 4;
+            if (status.includes('third') || status.includes('vote') || status.includes('division')) return 3;
+            if (status.includes('second') || status.includes('debate') || status.includes('reading')) return 2;
+            if (status.includes('committee') || status.includes('referred') || status.includes('inquiry')) return 1;
+            if (status.includes('introduced') || status.includes('first')) return 0;
+            return 0;
+          };
+          const currentStage = getStageIndex();
+          const isFinal = currentStage >= 4;
+          const isPassed = status.includes('passed') || status.includes('assent') || status.includes('act');
+
+          return (
+            <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                {STAGES.map((stage, i) => {
+                  const isActive = i <= currentStage;
+                  const isCurrent = i === currentStage || (isFinal && i === 4);
+                  const dotColor = isFinal && i === 4
+                    ? (isPassed ? '#00843D' : '#DC3545')
+                    : isActive ? '#00843D' : '#E5E7EB';
+                  return (
+                    <View key={stage.key} style={{ alignItems: 'center', flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                        {i > 0 && (
+                          <View style={{ flex: 1, height: 3, backgroundColor: isActive ? '#00843D' : '#E5E7EB', borderRadius: 2 }} />
+                        )}
+                        <View style={{
+                          width: isCurrent ? 14 : 10,
+                          height: isCurrent ? 14 : 10,
+                          borderRadius: 7,
+                          backgroundColor: dotColor,
+                          borderWidth: isCurrent ? 2 : 0,
+                          borderColor: isFinal && i === 4 ? (isPassed ? '#00843D' : '#DC3545') : '#00843D',
+                        }} />
+                        {i < STAGES.length - 1 && (
+                          <View style={{ flex: 1, height: 3, backgroundColor: i < currentStage ? '#00843D' : '#E5E7EB', borderRadius: 2 }} />
+                        )}
+                      </View>
+                      <Text style={{
+                        fontSize: 10,
+                        fontWeight: isCurrent ? '700' : '500',
+                        color: isActive ? '#1A1A1A' : '#9CA3AF',
+                        marginTop: 4,
+                        textAlign: 'center',
+                      }}>
+                        {i === 4 && isFinal ? (isPassed ? 'Passed' : 'Failed') : stage.label}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })()}
+
         {/* ── Plain English Summary ──────────────────────── */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={[styles.cardInner, styles.summaryCard]}>
@@ -286,6 +360,42 @@ export function BillDetailScreen({ route, navigation }: any) {
           </View>
         </View>
 
+        {/* ── Who This Affects ─────────────────────────────── */}
+        {(() => {
+          const IMPACT_TAGS: Record<string, { keywords: string[]; label: string; icon: string }> = {
+            renters: { keywords: ['rent', 'tenant', 'lease', 'housing', 'build-to-rent'], label: 'Renters', icon: 'home-outline' },
+            homeowners: { keywords: ['mortgage', 'property', 'stamp duty', 'home owner', 'homeowner'], label: 'Homeowners', icon: 'business-outline' },
+            parents: { keywords: ['child', 'parent', 'family', 'childcare', 'school', 'parental'], label: 'Parents & Families', icon: 'people-outline' },
+            students: { keywords: ['student', 'university', 'tafe', 'education', 'hecs', 'scholarship'], label: 'Students', icon: 'school-outline' },
+            retirees: { keywords: ['pension', 'superannuation', 'super', 'retire', 'aged care', 'elder'], label: 'Retirees', icon: 'heart-outline' },
+            workers: { keywords: ['wage', 'worker', 'employment', 'workplace', 'industrial', 'union', 'fair work'], label: 'Workers', icon: 'hammer-outline' },
+            smallbiz: { keywords: ['small business', 'startup', 'entrepreneur', 'sme', 'gst', 'abn'], label: 'Small Business', icon: 'storefront-outline' },
+            environment: { keywords: ['climate', 'emission', 'environment', 'renewable', 'carbon', 'pollution'], label: 'Environment', icon: 'leaf-outline' },
+            health: { keywords: ['health', 'medical', 'hospital', 'medicare', 'pharmaceutical', 'mental health'], label: 'Healthcare', icon: 'medkit-outline' },
+            veterans: { keywords: ['veteran', 'defence', 'military', 'service member', 'dva'], label: 'Veterans', icon: 'shield-outline' },
+          };
+          const text = ((bill.title || '') + ' ' + (bill.summary_plain || '') + ' ' + (bill.summary_full || '')).toLowerCase();
+          const matched = Object.entries(IMPACT_TAGS)
+            .filter(([_, tag]) => tag.keywords.some(kw => text.includes(kw)))
+            .map(([_, tag]) => tag);
+
+          if (matched.length === 0) return null;
+
+          return (
+            <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#6B7280', marginBottom: 10, letterSpacing: 0.3 }}>WHO THIS AFFECTS</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {matched.map(tag => (
+                  <View key={tag.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#F0FDF4', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 }}>
+                    <Ionicons name={tag.icon as any} size={14} color="#00843D" />
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#166534' }}>{tag.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          );
+        })()}
+
         {/* ── Key Arguments ──────────────────────────────── */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Key Arguments</Text>
@@ -304,21 +414,21 @@ export function BillDetailScreen({ route, navigation }: any) {
           ) : (
             <>
               {forArgs.map((a, i) => (
-                <View key={a.id ?? i} style={[styles.argCard, styles.forCard, { backgroundColor: colors.greenBg }]}>
-                  <View style={styles.argLabelRow}>
-                    <Ionicons name="checkmark-circle" size={14} color="#00843D" />
-                    <Text style={[styles.argLabel, styles.forLabel]}>FOR</Text>
+                <View key={a.id ?? i} style={{ flexDirection: 'row', gap: 12, backgroundColor: '#E8F5EE', borderRadius: 10, padding: 14, marginBottom: 8, borderLeftWidth: 4, borderLeftColor: '#00843D' }}>
+                  <Ionicons name="checkmark-circle" size={18} color="#00843D" style={{ marginTop: 2 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: '#00843D', letterSpacing: 0.5, marginBottom: 4 }}>FOR</Text>
+                    <Text style={{ fontSize: 14, color: colors.text, lineHeight: 21 }}>{a.argument_text}</Text>
                   </View>
-                  <Text style={[styles.argText, { color: colors.text }]}>{a.argument_text}</Text>
                 </View>
               ))}
               {againstArgs.map((a, i) => (
-                <View key={a.id ?? i} style={[styles.argCard, styles.againstCard, { backgroundColor: colors.redBg }]}>
-                  <View style={styles.argLabelRow}>
-                    <Ionicons name="close-circle" size={14} color="#DC3545" />
-                    <Text style={[styles.argLabel, styles.againstLabel]}>AGAINST</Text>
+                <View key={a.id ?? i} style={{ flexDirection: 'row', gap: 12, backgroundColor: '#FDECEA', borderRadius: 10, padding: 14, marginBottom: 8, borderLeftWidth: 4, borderLeftColor: '#DC3545' }}>
+                  <Ionicons name="close-circle" size={18} color="#DC3545" style={{ marginTop: 2 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: '#DC3545', letterSpacing: 0.5, marginBottom: 4 }}>AGAINST</Text>
+                    <Text style={{ fontSize: 14, color: colors.text, lineHeight: 21 }}>{a.argument_text}</Text>
                   </View>
-                  <Text style={[styles.argText, { color: colors.text }]}>{a.argument_text}</Text>
                 </View>
               ))}
             </>
@@ -502,8 +612,8 @@ export function BillDetailScreen({ route, navigation }: any) {
             likes={likes}
             dislikes={dislikes}
             userReaction={userReaction}
-            onLike={() => react('like')}
-            onDislike={() => react('dislike')}
+            onLike={() => requireAuth('react to this bill', () => react('like'))}
+            onDislike={() => requireAuth('react to this bill', () => react('dislike'))}
           />
         </View>
 
@@ -524,6 +634,7 @@ export function BillDetailScreen({ route, navigation }: any) {
           )}
         </View>
       </View>
+      <AuthPromptSheet {...authSheetProps} />
     </SafeAreaView>
   );
 }
