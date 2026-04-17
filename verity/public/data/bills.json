@@ -1,0 +1,17 @@
+{
+  "items":[
+    {
+      "id":"housing-bill-2025",
+      "title":"Housing Affordability Bill 2025",
+      "stage":"Senate • Second Reading",
+      "registerUrl":"#",
+      "notes":"Aims to accelerate supply and improve rental standards.",
+      "v1":"Section 12: Establishes a National Housing Fund with $8b initial capital.\nSection 17: Sets minimum rental quality standards.",
+      "v2":"Section 12: Establishes a National Housing Fund with $10b initial capital.\nSection 17: Sets minimum rental quality standards.\nSection 22: Introduces incentives for build-to-rent projects.",
+      "receipts":[
+        {"label":"Explanatory memorandum","url":"#"},
+        {"label":"Parliamentary register","url":"#"}
+      ]
+    }
+  ]
+}

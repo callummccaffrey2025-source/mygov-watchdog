@@ -1,0 +1,22 @@
+{
+  "clusters": ["For you", "Australia", "World", "Politics", "Economy"],
+  "stories": [
+    {
+      "cluster": "Australia",
+      "title": "Climate risk report splits Coalition",
+      "excerpt": "Frontbench tensions; motives differ by outlet.",
+      "published_at": "2025-09-14T12:00:00+10:00",
+      "coverageMix": { "left": 38, "center": 34, "right": 28 },
+      "primary": { "name": "The Australian", "owner": "News Corp Australia", "url": "#", "stance": "right" },
+      "others": [{ "name": "Guardian Australia", "owner": "Guardian Media Group", "url": "#", "stance": "left" }]
+    },
+    {
+      "cluster": "World",
+      "title": "PNG Parliament extension gift",
+      "excerpt": "Treaty context varies by outlet.",
+      "published_at": "2025-09-14T09:45:00+10:00",
+      "coverageMix": { "left": 31, "center": 49, "right": 20 },
+      "primary": { "name": "AP News", "owner": "The Associated Press", "url": "#", "stance": "center" }
+    }
+  ]
+}

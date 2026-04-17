@@ -24,17 +24,20 @@ from urllib.parse import urljoin
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env'))
 
-import requests
 from bs4 import BeautifulSoup
 from supabase import create_client
+
+# Shared byline parser — keeps reattribute_treasury_posts.py and the live scraper
+# in sync. If the parser changes, both pipelines get the fix.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mp_author_parser import build_members_index, resolve_primary_author  # noqa: E402
+# Responsible-scraping helpers — robots.txt, rate limit, identifying UA.
+from scraper_etiquette import polite_get  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 TIMEOUT = 20
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; VerityScraper/1.0; +https://verity.au)"
-}
 
 
 # ── Target list ────────────────────────────────────────────────────────────────
@@ -70,16 +73,14 @@ TARGETS: list[dict] = [
 
 
 def fetch(url: str) -> BeautifulSoup | None:
-    """Fetch a URL and return parsed HTML, or None on failure."""
-    try:
-        resp = requests.get(url, timeout=TIMEOUT, headers=HEADERS, allow_redirects=True)
-        if resp.status_code != 200:
-            log.warning("HTTP %d on %s", resp.status_code, url)
-            return None
-        return BeautifulSoup(resp.text, "lxml")
-    except Exception as e:
-        log.warning("Fetch failed for %s: %s", url, e)
+    """Polite HTML fetch. Returns None if robots.txt disallows or on error."""
+    resp = polite_get(url, timeout=TIMEOUT)
+    if resp is None:
         return None
+    if resp.status_code != 200:
+        log.warning("HTTP %d on %s", resp.status_code, url)
+        return None
+    return BeautifulSoup(resp.text, "lxml")
 
 
 def find_release_links(soup: BeautifulSoup, base_url: str, max_links: int = 10) -> list[str]:
@@ -165,37 +166,33 @@ def parse_release(soup: BeautifulSoup) -> dict | None:
     return {"title": title, "body": body, "date": date_iso}
 
 
-def find_member(sb, full_name: str) -> dict | None:
-    """Find a member by full name. Returns the row or None."""
-    parts = full_name.strip().split()
-    if len(parts) < 2:
-        return None
-    first, last = parts[0], parts[-1]
-    r = (
-        sb.table("members")
-        .select("id, first_name, last_name")
-        .eq("first_name", first)
-        .eq("last_name", last)
-        .limit(1)
-        .execute()
-    )
-    if r.data:
-        return r.data[0]
-    return None
+def queue_for_review(sb, proposed: dict, reason: str) -> None:
+    """Write an unattributable release to ingestion_review_queue."""
+    try:
+        sb.table("ingestion_review_queue").insert(
+            {
+                "source_table": "official_posts",
+                "proposed_data": proposed,
+                "reason": reason,
+            }
+        ).execute()
+    except Exception as e:
+        log.warning("Failed to queue for review: %s", e)
 
 
-def post_already_exists(sb, author_id: str, link: str) -> bool:
-    """Avoid duplicates by matching media_urls[0] = link."""
-    # Use textual contains since media_urls is array
-    r = (
-        sb.table("official_posts")
-        .select("id")
-        .eq("author_id", author_id)
-        .contains("media_urls", [link])
-        .limit(1)
-        .execute()
-    )
-    return len(r.data or []) > 0
+def post_already_exists_by_url(sb, link: str) -> bool:
+    """Dedup by link without knowing the author (since author is parsed, not assumed)."""
+    try:
+        r = (
+            sb.table("official_posts")
+            .select("id")
+            .contains("media_urls", [link])
+            .limit(1)
+            .execute()
+        )
+        return len(r.data or []) > 0
+    except Exception:
+        return False
 
 
 def main() -> None:
@@ -206,42 +203,43 @@ def main() -> None:
 
     sb = create_client(url, key)
 
+    # Build the (first_lower, last_lower) → member lookup once so byline resolution
+    # across every release is O(1) and never re-queries per row.
+    members_index = build_members_index(sb)
+    if not members_index:
+        raise SystemExit("No members loaded — byline resolution will fail; aborting")
+
     inserted = 0
     skipped = 0
     failed = 0
+    unattributed = 0
     by_mp: dict[str, int] = {}
 
     print()
     print("═══════════════ SCRAPING REAL MEDIA RELEASES ═══════════════")
+    print(f"Members in index: {len(members_index)}")
 
     for target in TARGETS:
-        name = target["name"]
+        target_name = target["name"]
         listing_url = target["url"]
-        print(f"\n→ {name}: {listing_url}")
+        print(f"\n→ {target_name}: {listing_url}")
 
-        member = find_member(sb, name)
-        if not member:
-            print(f"  ✗ Member '{name}' not found in DB, skipping")
-            failed += 1
-            continue
-
-        author_id = member["id"]
         listing = fetch(listing_url)
         if not listing:
-            print(f"  ✗ Could not fetch listing page")
+            print("  ✗ Could not fetch listing page")
             failed += 1
             continue
 
         links = find_release_links(listing, listing_url, max_links=5)
         if not links:
-            print(f"  ✗ No media-release links found on listing page")
+            print("  ✗ No media-release links found on listing page")
             failed += 1
             continue
 
         print(f"  Found {len(links)} candidate links")
 
         for link in links:
-            if post_already_exists(sb, author_id, link):
+            if post_already_exists_by_url(sb, link):
                 skipped += 1
                 continue
 
@@ -252,8 +250,26 @@ def main() -> None:
                 continue
 
             content = f"{release['title']}\n\n{release['body']}"
+
+            # Parse the byline BEFORE inserting. Never default to the page owner —
+            # a release on Chalmers' page can still be authored by Gallagher or Leigh.
+            author_member, matched_name = resolve_primary_author(content, members_index)
+            if not author_member:
+                unattributed += 1
+                queue_for_review(
+                    sb,
+                    proposed={
+                        "source_page_owner": target_name,
+                        "media_urls": [link],
+                        "content_preview": content[:500],
+                    },
+                    reason="No byline resolved to a known member — manual attribution needed",
+                )
+                print(f"  ⚠ {link}: no byline match, queued for review")
+                continue
+
             row = {
-                "author_id": author_id,
+                "author_id": author_member["id"],
                 "author_type": "member",
                 "content": content,
                 "post_type": "announcement",
@@ -262,6 +278,8 @@ def main() -> None:
                 "likes_count": 0,
                 "dislikes_count": 0,
                 "comments_count": 0,
+                # Only flip the flag when byline resolution was confident.
+                "attribution_verified": True,
             }
             # Use the page's published date if we found one
             if release.get("date"):
@@ -270,17 +288,20 @@ def main() -> None:
             try:
                 sb.table("official_posts").insert(row).execute()
                 inserted += 1
-                by_mp[name] = by_mp.get(name, 0) + 1
-                print(f"  ✓ {release['title'][:80]}")
+                attributed_name = f"{author_member.get('first_name','')} {author_member.get('last_name','')}".strip()
+                by_mp[attributed_name] = by_mp.get(attributed_name, 0) + 1
+                mismatch_flag = "" if attributed_name.lower() == target_name.lower() else f"  (page: {target_name})"
+                print(f"  ✓ {release['title'][:70]}  → {matched_name}{mismatch_flag}")
             except Exception as e:
                 failed += 1
                 log.warning("Insert failed for %s: %s", link, e)
 
     print()
     print("═══════════════ SUMMARY ═══════════════")
-    print(f"  Inserted:  {inserted}")
-    print(f"  Skipped (already exists): {skipped}")
-    print(f"  Failed:    {failed}")
+    print(f"  Inserted (attribution verified): {inserted}")
+    print(f"  Skipped (already exists):        {skipped}")
+    print(f"  Queued for review (no byline):   {unattributed}")
+    print(f"  Failed:                          {failed}")
     print()
     if by_mp:
         print("  Posts by MP:")

@@ -1,0 +1,41 @@
+name: data-monitor
+description: |
+  Daily health check on data freshness across the Verity stack.
+  Verifies article freshness, story activity, brief presence, bias coverage,
+  and member completeness. Logs results to health_check_runs and alerts on
+  failure.
+schedule: "0 22 * * *"  # 8:00am AEST daily (1 hour after daily brief)
+runtime: python:3.14
+entrypoint: scripts/data_monitor.py
+working_directory: /Users/callummccaffrey/verity/mobile
+timeout: 120
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+dependencies:
+  python_packages:
+    - python-dotenv
+    - supabase
+checks:
+  - name: articles_fresh
+    description: Latest article published within the last 24 hours
+    threshold: 24h
+  - name: stories_active
+    description: At least 5 new stories created in the last 24 hours
+    threshold: 5
+  - name: brief_present
+    description: Today's national brief exists with ai_text populated
+  - name: bias_coverage
+    description: At least 70% of recent articles map to a source with bias_score
+    threshold: 0.70
+  - name: members_active
+    description: 225 active federal members in DB (149 House + 76 Senate)
+    threshold: 225
+notifications:
+  on_failure:
+    - log_to: health_check_runs
+      status: error
+    - send_email: ops@verity.au
+  on_success:
+    - log_to: health_check_runs
+      status: success

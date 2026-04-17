@@ -16,15 +16,22 @@ export function useParties() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase
-      .from('parties')
-      .select('*')
-      .order('name')
-      .then(({ data, error: err }) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error: err } = await supabase
+          .from('parties')
+          .select('*')
+          .order('name');
+        if (cancelled) return;
         if (err) setError(err.message);
         else setParties(data || []);
-        setLoading(false);
-      });
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message ?? 'Network error');
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   return { parties, loading, error };

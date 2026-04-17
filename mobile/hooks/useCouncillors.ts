@@ -27,17 +27,25 @@ export function useCouncillors(councilId: string | undefined) {
   useEffect(() => {
     if (!councilId) { setLoading(false); return; }
     setLoading(true);
-    supabase
-      .from('councillors')
-      .select('id,name,ward,role')
-      .eq('council_id', councilId)
-      .then(({ data }) => {
-        const sorted = ((data || []) as Councillor[]).sort(
-          (a, b) => roleRank(a.role) - roleRank(b.role) || a.name.localeCompare(b.name)
-        );
-        setCouncillors(sorted);
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('councillors')
+          .select('id,name,ward,role')
+          .eq('council_id', councilId);
+        if (!cancelled) {
+          const sorted = ((data || []) as Councillor[]).sort(
+            (a, b) => roleRank(a.role) - roleRank(b.role) || a.name.localeCompare(b.name)
+          );
+          setCouncillors(sorted);
+        }
+      } catch {
+        // leave empty
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [councilId]);
 
   return { councillors, loading };

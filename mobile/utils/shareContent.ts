@@ -2,6 +2,7 @@ import { RefObject } from 'react';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { supabase } from '../lib/supabase';
+import { trackEvent } from '../lib/engagementTracker';
 
 export type ShareContentType = 'mp_vote' | 'news_story' | 'mp_report_card' | 'bill';
 
@@ -40,6 +41,9 @@ export async function captureAndShare(
       content_id: contentId,
       user_id: userId ?? null,
     }).then(() => {/* no-op */});
+
+    // Track in daily engagement
+    trackEvent('share_created', { content_type: contentType, content_id: contentId });
   } catch {
     // Non-critical — silently ignore capture/share failures
   }

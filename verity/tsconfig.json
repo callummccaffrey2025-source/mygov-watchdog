@@ -1,17 +1,49 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    "target": "ES2020",
+    "lib": [
+      "dom",
+      "es2021"
+    ],
     "jsx": "preserve",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "strict": true,
+    "allowJs": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "resolveJsonModule": true,
+    "incremental": true,
+    "esModuleInterop": true,
     "isolatedModules": true,
-    "strict": true,
-    "baseUrl": "."
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["next-env.d.ts", "src/**/*", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "next.config.js",
+    "src/**/*",
+    "tailwind.config.js",
+    ".next/types/**/*.ts",
+    "tailwind.config.cjs",
+    "src/types/**/*.d.ts",
+    "src/types/**/*"
+  ],
+  "exclude": [
+    "e2e/**",
+    "node_modules",
+    "src/__tests__/**",
+    "src/components/BillCard.tsx",
+    "src/components/bill/BillCard.tsx"
+  ]
 }

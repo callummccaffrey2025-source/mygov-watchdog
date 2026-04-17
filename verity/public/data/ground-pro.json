@@ -1,0 +1,31 @@
+{
+  "topics": ["For you", "Australia", "World", "Politics", "Economy", "Energy", "Justice"],
+  "stories": [
+    {
+      "title": "Coalition splits over net-zero after national climate risk report",
+      "excerpt": "Hastie signals frontbench exit; outlets differ on motives and stakes.",
+      "topic": "Australia",
+      "published_at": "2025-09-14T12:00:00+10:00",
+      "coverageMix": { "left": 38, "center": 34, "right": 28 },
+      "primary": { "name": "The Australian", "owner": "News Corp Australia", "url": "#", "stance": "right" },
+      "others": [{ "name": "Guardian Australia", "owner": "Guardian Media Group", "url": "#", "stance": "left" }]
+    },
+    {
+      "title": "Australia gifts PNG Parliament House extension for 50th independence",
+      "excerpt": "Albanese attends commemorations; defence treaty context varies by outlet.",
+      "topic": "World",
+      "published_at": "2025-09-14T09:45:00+10:00",
+      "coverageMix": { "left": 31, "center": 49, "right": 20 },
+      "primary": { "name": "AP News", "owner": "The Associated Press", "url": "#", "stance": "center" }
+    },
+    {
+      "title": "Why I oppose the Climate Act",
+      "excerpt": "Opinion: modelling, targets, and cost of transition.",
+      "topic": "Politics",
+      "published_at": "2025-09-14T11:20:00+10:00",
+      "coverageMix": { "left": 22, "center": 18, "right": 60 },
+      "primary": { "name": "Spectator Australia", "owner": "Press Holdings", "url": "#", "stance": "right" },
+      "others": [{ "name": "ABC News", "owner": "Australian Broadcasting Corporation", "url": "#", "stance": "center" }]
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import { EmptyState } from '../components/EmptyState';
 import { AuthPromptSheet } from '../components/AuthPromptSheet';
 import { useAuthGate } from '../hooks/useAuthGate';
 import { track } from '../lib/analytics';
+import { trackEvent } from '../lib/engagementTracker';
 import { timeAgo } from '../lib/timeAgo';
 
 const POST_TYPE_COLORS: Record<string, string> = {
@@ -73,9 +74,11 @@ export function CommunityScreen({ navigation }: any) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
         <View style={styles.navBar}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <Ionicons name="chevron-back" size={24} color={colors.text} />
-          </Pressable>
+          {navigation.canGoBack() ? (
+            <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+              <Ionicons name="chevron-back" size={24} color={colors.text} />
+            </Pressable>
+          ) : <View style={{ width: 24 }} />}
           <Text style={[styles.navTitle, { color: colors.text }]}>Community</Text>
           <View style={{ width: 24 }} />
         </View>
@@ -94,9 +97,11 @@ export function CommunityScreen({ navigation }: any) {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Nav */}
       <View style={[styles.navBar, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </Pressable>
+        {navigation.canGoBack() ? (
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
+          </Pressable>
+        ) : <View style={{ width: 24 }} />}
         <Text style={[styles.navTitle, { color: colors.text }]} numberOfLines={1}>
           {electorateName ? `${electorateName} Community` : 'Community'}
         </Text>
@@ -145,7 +150,7 @@ export function CommunityScreen({ navigation }: any) {
       {/* FAB */}
       <Pressable
         style={styles.fab}
-        onPress={() => requireAuth('join the discussion', () => { track('discussion_post_created', { electorate: electorateName }, 'Community'); navigation.navigate('CreateCommunityPost', { electorate: electorateName }); })}
+        onPress={() => requireAuth('join the discussion', () => { track('discussion_post_created', { electorate: electorateName }, 'Community'); trackEvent('discussion_posted', { electorate: electorateName }); navigation.navigate('CreateCommunityPost', { electorate: electorateName }); })}
       >
         <Ionicons name="add" size={28} color="#ffffff" />
       </Pressable>

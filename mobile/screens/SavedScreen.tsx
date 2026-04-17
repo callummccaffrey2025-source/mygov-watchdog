@@ -52,7 +52,7 @@ async function fetchTitles(items: SavedItem[]): Promise<Record<string, string>> 
     fetches.push(
       Promise.resolve(
         supabase
-          .from('news_stories')
+          .from('v_civic_news_stories')
           .select('id, headline')
           .in('id', groups['news_story'])
       ).then(({ data }) => {

@@ -643,6 +643,40 @@ export function ExploreScreen({ navigation }: any) {
               </View>
             </View>
 
+            {/* Compare MPs */}
+            <Pressable
+              style={{ backgroundColor: '#EEF2FF', borderRadius: 14, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+              onPress={() => navigation.navigate('CompareMPs')}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#4338CA20', justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="people-outline" size={20} color="#4338CA" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#4338CA' }}>Compare MPs</Text>
+                  <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>See who's more accountable</Text>
+                </View>
+              </View>
+              <Ionicons name="arrow-forward" size={18} color="#4338CA" />
+            </Pressable>
+
+            {/* Promise Tracker */}
+            <Pressable
+              style={{ backgroundColor: '#00843D', borderRadius: 14, padding: 16, marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+              onPress={() => navigation.navigate('PromiseTracker')}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#ffffff25', justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="clipboard-outline" size={20} color="#ffffff" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#ffffff' }}>Promise Tracker</Text>
+                  <Text style={{ fontSize: 12, color: '#ffffffcc', marginTop: 2 }}>Are they keeping their promises?</Text>
+                </View>
+              </View>
+              <Ionicons name="arrow-forward" size={18} color="#ffffff" />
+            </Pressable>
+
             {/* Export Data (Pro) */}
             {isPro ? (
               <View style={[styles.proCard, { backgroundColor: colors.greenBg }]}>

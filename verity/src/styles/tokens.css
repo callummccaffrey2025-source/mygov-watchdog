@@ -1,0 +1,24 @@
+:root{
+  /* type scale */
+  --step--1: clamp(.88rem,.9vw,.95rem);
+  --step-0:  clamp(1rem,1vw,1.05rem);
+  --step-1:  clamp(1.15rem,1.2vw,1.25rem);
+  --step-2:  clamp(1.35rem,1.8vw,1.5rem);
+  --step-3:  clamp(1.6rem,2.2vw,1.8rem);
+
+  /* radii & elevation */
+  --radius: 14px;
+  --elev-1: 0 0 0 1px rgba(255,255,255,.03) inset, 0 14px 30px -20px rgba(0,0,0,.8);
+
+  /* layout rhythm */
+  --gap-1: .5rem;
+  --gap-2: .75rem;
+  --gap-3: 1rem;
+  --gap-4: 1.25rem;
+}
+
+main h1{font-size:var(--step-3);line-height:1.15}
+main h2{font-size:var(--step-2);line-height:1.2}
+main h3{font-size:var(--step-1);line-height:1.25}
+
+.card{background:color-mix(in oklab, black 85%, transparent); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); box-shadow:var(--elev-1)}

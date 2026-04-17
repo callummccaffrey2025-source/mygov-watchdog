@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Member } from '../hooks/useMembers';
 import { useVotes } from '../hooks/useVotes';
 import { usePostsByMember } from '../hooks/useOfficialPosts';
+import { useMemberStatements, MemberStatement } from '../hooks/useRepresentativeUpdates';
 import { useVerifiedOfficial } from '../hooks/useVerifiedOfficial';
 import { useUser } from '../context/UserContext';
 import { useSubscription } from '../hooks/useSubscription';
@@ -19,6 +20,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { PostCard } from '../components/PostCard';
 import { VoteShareCard, MPReportCard } from '../components/ShareCards';
+import { MPReportShareCard } from '../components/MPReportShareCard';
 import { captureAndShare } from '../utils/shareContent';
 import { DivisionVote } from '../hooks/useVotes';
 import { useFollow } from '../hooks/useFollow';
@@ -26,6 +28,9 @@ import { useTheme } from '../context/ThemeContext';
 import { AuthPromptSheet } from '../components/AuthPromptSheet';
 import { useAuthGate } from '../hooks/useAuthGate';
 import { track } from '../lib/analytics';
+import { trackEvent } from '../lib/engagementTracker';
+import { useAccountabilityScore, useParticipationIndex } from '../hooks/useAccountabilityScore';
+import { AccountabilityScoreCard } from '../components/AccountabilityScore';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { supabase } from '../lib/supabase';
 import { decodeHtml } from '../utils/decodeHtml';
@@ -47,23 +52,33 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
   useEffect(() => {
     if (!member && memberId) {
-      supabase
-        .from('members')
-        .select('*, party:parties(name,short_name,colour,abbreviation), electorate:electorates(name,state)')
-        .eq('id', memberId)
-        .single()
-        .then(({ data }) => { if (data) setMember(data as Member); });
+      (async () => {
+        try {
+          const { data } = await supabase
+            .from('members')
+            .select('*, party:parties(name,short_name,colour,abbreviation), electorate:electorates(name,state)')
+            .eq('id', memberId)
+            .maybeSingle();
+          if (data) setMember(data as Member);
+        } catch {
+          // Network failure — caller sees initial state
+        }
+      })();
     }
   }, [memberId]);
 
-  const [activeTab, setActiveTab] = useState<'posts' | 'votes' | 'about' | 'funding' | 'speeches'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'votes' | 'statements' | 'about' | 'funding' | 'speeches'>('posts');
+  const [expandedStatements, setExpandedStatements] = useState<Set<number>>(new Set());
   const [fundingView, setFundingView] = useState<'party' | 'personal'>('party');
   const [visibleCount, setVisibleCount] = useState(20);
   const { votes, loading: votesLoading } = useVotes(member?.id ?? null);
 
   useEffect(() => {
     setVisibleCount(20);
-    if (member) track('mp_profile_view', { member_id: member.id, name: `${member.first_name} ${member.last_name}` }, 'MemberProfile');
+    if (member) {
+      track('mp_profile_view', { member_id: member.id, name: `${member.first_name} ${member.last_name}` }, 'MemberProfile');
+      trackEvent('mp_view', { member_id: member.id });
+    }
   }, [member?.id]);
   const { posts, loading: postsLoading } = usePostsByMember(member?.id);
   const { official } = useVerifiedOfficial(member?.id);
@@ -74,6 +89,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const { donations: indDonations, total: indTotal, loading: indLoading } = useIndividualDonations(member?.id);
   const { current: committees, loading: committeesLoading } = useCommittees(member?.id);
   const { entries: hansardEntries, loading: hansardLoading } = useHansard(member?.id);
+  const { statements, loading: statementsLoading } = useMemberStatements(member?.id ?? null);
 
   const party = member?.party;
   const partyColour = party?.colour || '#9aabb8';
@@ -81,6 +97,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
   const ayeCount = votes.filter(v => v.vote_cast === 'aye').length;
   const totalVotes = votes.length;
+  const accountabilityScore = useAccountabilityScore(votes, hansardEntries, committees, party?.name);
+  const participationIndex = useParticipationIndex(votes, hansardEntries, committees);
 
   // Share cards
   const voteCardRef  = useRef<any>(null);
@@ -134,7 +152,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={false} onRefresh={() => { if (memberId) { supabase.from('members').select('*, party:parties(name,short_name,colour,abbreviation), electorate:electorates(name,state)').eq('id', memberId).single().then(({ data }) => { if (data) setMember(data as Member); }); } }} tintColor="#00843D" />}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={false} onRefresh={async () => { if (memberId) { try { const { data } = await supabase.from('members').select('*, party:parties(name,short_name,colour,abbreviation), electorate:electorates(name,state)').eq('id', memberId).maybeSingle(); if (data) setMember(data as Member); } catch {} } }} tintColor="#00843D" />}>
 
         {/* Back button + share */}
         <View style={styles.navRow}>
@@ -193,6 +211,30 @@ export function MemberProfileScreen({ route, navigation }: any) {
           <StatBox value={member.chamber === 'senate' ? 'Senate' : 'House'} label="Chamber" />
         </View>
 
+        {/* Ministerial-role context — read metrics through this lens */}
+        {member.ministerial_role && (
+          <View style={{ marginHorizontal: 20, marginBottom: 10, backgroundColor: '#EEF2FF', borderRadius: 10, padding: 12, flexDirection: 'row', gap: 8 }}>
+            <Ionicons name="briefcase-outline" size={16} color="#4338CA" style={{ marginTop: 1 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#4338CA', marginBottom: 2 }}>
+                Read these numbers with ministerial context
+              </Text>
+              <Text style={{ fontSize: 12, color: '#3730A3', lineHeight: 17 }}>
+                {member.first_name} runs a department as {member.ministerial_role}. Ministers typically give fewer speeches and can miss divisions for cabinet duties. Their "party loyalty" is structural, not voluntary.
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Participation Index — four separate dimensions, not a single score */}
+        {!votesLoading && (
+          <AccountabilityScoreCard
+            score={participationIndex}
+            mpName={displayName}
+            partyColour={partyColour}
+          />
+        )}
+
         {/* Share + Follow row */}
         <View style={styles.actionRow}>
           <Pressable style={styles.reportCardBtn} onPress={() => setShareReport(true)}>
@@ -213,6 +255,15 @@ export function MemberProfileScreen({ route, navigation }: any) {
             </Text>
           </Pressable>
         </View>
+
+        {/* Compare button */}
+        <Pressable
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginHorizontal: 20, marginBottom: 8, borderRadius: 10, paddingVertical: 10, backgroundColor: '#EEF2FF' }}
+          onPress={() => navigation.navigate('CompareMPs', { member })}
+        >
+          <Ionicons name="people-outline" size={16} color="#4338CA" />
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#4338CA' }}>Compare with another MP</Text>
+        </Pressable>
 
         {/* Write to MP */}
         <Pressable
@@ -257,38 +308,54 @@ export function MemberProfileScreen({ route, navigation }: any) {
           )}
         </View>
 
-        {/* Tabs */}
-        <View style={[styles.tabs, { borderBottomColor: colors.border }]}>
-          <Pressable style={[styles.tab, activeTab === 'posts' && styles.activeTab]} onPress={() => setActiveTab('posts')}>
+        {/* Tabs (horizontal scroll — now 6 entries) */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+          contentContainerStyle={{ paddingHorizontal: 4 }}
+        >
+          <Pressable style={[styles.tab, { paddingHorizontal: 16 }, activeTab === 'posts' && styles.activeTab]} onPress={() => setActiveTab('posts')}>
             <Text style={[styles.tabText, { color: activeTab === 'posts' ? colors.green : colors.textMuted }]}>Posts</Text>
           </Pressable>
-          <Pressable style={[styles.tab, activeTab === 'votes' && styles.activeTab]} onPress={() => setActiveTab('votes')}>
+          <Pressable style={[styles.tab, { paddingHorizontal: 16 }, activeTab === 'votes' && styles.activeTab]} onPress={() => setActiveTab('votes')}>
             <Text style={[styles.tabText, { color: activeTab === 'votes' ? colors.green : colors.textMuted }]}>Votes</Text>
           </Pressable>
-          <Pressable style={[styles.tab, activeTab === 'about' && styles.activeTab]} onPress={() => setActiveTab('about')}>
+          <Pressable style={[styles.tab, { paddingHorizontal: 16 }, activeTab === 'statements' && styles.activeTab]} onPress={() => setActiveTab('statements')}>
+            <Text style={[styles.tabText, { color: activeTab === 'statements' ? colors.green : colors.textMuted }]}>Statements</Text>
+          </Pressable>
+          <Pressable style={[styles.tab, { paddingHorizontal: 16 }, activeTab === 'about' && styles.activeTab]} onPress={() => setActiveTab('about')}>
             <Text style={[styles.tabText, { color: activeTab === 'about' ? colors.green : colors.textMuted }]}>About</Text>
           </Pressable>
-          <Pressable style={[styles.tab, activeTab === 'funding' && styles.activeTab]} onPress={() => setActiveTab('funding')}>
+          <Pressable style={[styles.tab, { paddingHorizontal: 16 }, activeTab === 'funding' && styles.activeTab]} onPress={() => setActiveTab('funding')}>
             <Text style={[styles.tabText, { color: activeTab === 'funding' ? colors.green : colors.textMuted }]}>Funding</Text>
           </Pressable>
-          <Pressable style={[styles.tab, activeTab === 'speeches' && styles.activeTab]} onPress={() => setActiveTab('speeches')}>
+          <Pressable style={[styles.tab, { paddingHorizontal: 16 }, activeTab === 'speeches' && styles.activeTab]} onPress={() => setActiveTab('speeches')}>
             <Text style={[styles.tabText, { color: activeTab === 'speeches' ? colors.green : colors.textMuted }]}>Speeches</Text>
           </Pressable>
-        </View>
+        </ScrollView>
 
         <View style={styles.tabContent}>
           {activeTab === 'posts' ? (
-            postsLoading
-              ? [1, 2, 3].map(i => <SkeletonLoader key={i} height={120} borderRadius={14} style={{ marginBottom: 10 }} />)
-              : posts.length === 0
-                ? <Text style={[styles.empty, { color: colors.textMuted }]}>This MP hasn't posted yet.</Text>
-                : posts.map(post => (
-                    <PostCard
-                      key={post.id}
-                      post={post}
-                      onPress={() => navigation.navigate('PostDetail', { post })}
-                    />
-                  ))
+            <>
+              <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingVertical: 8, marginBottom: 4, alignItems: 'flex-start' }}>
+                <Ionicons name="shield-checkmark-outline" size={12} color={colors.textMuted} style={{ marginTop: 2 }} />
+                <Text style={{ flex: 1, fontSize: 11, fontWeight: '500', color: colors.textMuted, lineHeight: 15 }}>
+                  Verity only displays statements where attribution can be verified through the original source. Posts attributed to multiple ministers in scraped feeds are excluded until manually verified.
+                </Text>
+              </View>
+              {postsLoading
+                ? [1, 2, 3].map(i => <SkeletonLoader key={i} height={120} borderRadius={14} style={{ marginBottom: 10 }} />)
+                : posts.length === 0
+                  ? <Text style={[styles.empty, { color: colors.textMuted }]}>This MP hasn't posted yet.</Text>
+                  : posts.map(post => (
+                      <PostCard
+                        key={post.id}
+                        post={post}
+                        onPress={() => navigation.navigate('PostDetail', { post })}
+                      />
+                    ))}
+            </>
           ) : activeTab === 'votes' ? (
             votesLoading ? (
               [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={8} style={{ marginBottom: 8 }} />)
@@ -347,6 +414,110 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 )}
               </>
             )
+          ) : activeTab === 'statements' ? (
+            <>
+              <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingVertical: 8, marginBottom: 4, alignItems: 'flex-start' }}>
+                <Ionicons name="link-outline" size={12} color={colors.textMuted} style={{ marginTop: 2 }} />
+                <Text style={{ flex: 1, fontSize: 11, fontWeight: '500', color: colors.textMuted, lineHeight: 15 }}>
+                  Every statement links to its original source on an official government or party site. Statements without a verified source URL are never displayed.
+                </Text>
+              </View>
+              {statementsLoading ? (
+                [1, 2, 3].map(i => <SkeletonLoader key={i} height={120} borderRadius={14} style={{ marginBottom: 10 }} />)
+              ) : statements.length === 0 ? (
+                <View style={{ alignItems: 'center', paddingVertical: 48, paddingHorizontal: 32, gap: 12 }}>
+                  <Ionicons name="document-text-outline" size={48} color={colors.textMuted} />
+                  <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, textAlign: 'center' }}>
+                    No statements yet
+                  </Text>
+                  <Text style={{ fontSize: 15, color: colors.textBody, textAlign: 'center', lineHeight: 22 }}>
+                    Verity scrapes official media releases daily. Verified statements from {member.first_name} will appear here once published.
+                  </Text>
+                </View>
+              ) : (
+                statements.map((s: MemberStatement) => {
+                  const isExpanded = expandedStatements.has(s.id);
+                  const [firstLine, ...rest] = s.content.split('\n\n');
+                  const title = firstLine.trim();
+                  const body = rest.join('\n\n').trim() || title;
+                  const displayBody = (isExpanded || body.length <= 200)
+                    ? body
+                    : body.slice(0, 200).trimEnd() + '…';
+                  const canExpand = body.length > 200;
+                  const dateStr = s.published_at
+                    ? new Date(s.published_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : '';
+
+                  return (
+                    <View
+                      key={s.id}
+                      style={{
+                        backgroundColor: colors.card,
+                        borderRadius: 14,
+                        padding: 16,
+                        marginHorizontal: 16,
+                        marginBottom: 12,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: 0.04,
+                        shadowRadius: 3,
+                        elevation: 1,
+                      }}
+                    >
+                      {/* Date + source badge row */}
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textMuted }}>{dateStr}</Text>
+                        <View style={{ backgroundColor: colors.greenBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
+                          <Text style={{ fontSize: 10, fontWeight: '700', color: '#00843D', letterSpacing: 0.4 }}>
+                            OFFICIAL RELEASE
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Title */}
+                      {title && title !== body && (
+                        <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, lineHeight: 21, marginBottom: 6 }}>
+                          {title}
+                        </Text>
+                      )}
+
+                      {/* Body (truncated with expand) */}
+                      <Text style={{ fontSize: 14, color: colors.textBody, lineHeight: 20 }}>
+                        {displayBody}
+                      </Text>
+
+                      {canExpand && (
+                        <Pressable
+                          onPress={() => setExpandedStatements(prev => {
+                            const next = new Set(prev);
+                            if (next.has(s.id)) next.delete(s.id); else next.add(s.id);
+                            return next;
+                          })}
+                          style={{ marginTop: 6, alignSelf: 'flex-start' }}
+                          hitSlop={8}
+                        >
+                          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.green }}>
+                            {isExpanded ? 'Show less' : 'Show more'}
+                          </Text>
+                        </Pressable>
+                      )}
+
+                      {/* Source link — always present because DB NOT NULL enforces it */}
+                      <Pressable
+                        onPress={() => Linking.openURL(s.source_url)}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}
+                        hitSlop={8}
+                      >
+                        <Ionicons name="open-outline" size={13} color={colors.green} />
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.green }}>
+                          View original source
+                        </Text>
+                      </Pressable>
+                    </View>
+                  );
+                })
+              )}
+            </>
           ) : activeTab === 'funding' ? (
             <View>
               {/* Funding sub-toggle */}
@@ -438,7 +609,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             </View>
                           </View>
                         ))}
-                        <Text style={styles.fundingFooter}>
+                        <Text style={[styles.fundingFooter, { color: colors.textMuted }]}>
                           Total declared: ${indTotal.toLocaleString('en-AU')} · Source: AEC
                         </Text>
                       </>
@@ -446,6 +617,151 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   </View>
                 )
               )}
+
+              {/* ── Donation vs Voting Analysis ──────────────────── */}
+              {(() => {
+                const INDUSTRY_KEYWORDS: Record<string, string[]> = {
+                  'Mining & Resources': ['mining', 'bhp', 'rio tinto', 'fortescue', 'woodside', 'santos', 'mineral', 'resources', 'coal', 'iron ore'],
+                  'Property & Construction': ['property', 'construction', 'real estate', 'developer', 'lendlease', 'stockland', 'mirvac', 'housing', 'building'],
+                  'Banking & Finance': ['bank', 'financial', 'westpac', 'commonwealth bank', 'anz', 'nab', 'macquarie', 'insurance', 'asx'],
+                  'Unions': ['union', 'awu', 'cfmeu', 'sda', 'hsu', 'nurses', 'teachers', 'workers', 'actu', 'amwu'],
+                  'Pharmaceuticals & Health': ['pharma', 'medical', 'health', 'pfizer', 'csl', 'hospital', 'therapeutic'],
+                  'Technology': ['technology', 'tech', 'software', 'digital', 'data', 'cyber', 'telstra', 'optus'],
+                  'Energy': ['energy', 'gas', 'oil', 'solar', 'wind', 'agl', 'origin energy', 'electricity'],
+                  'Agriculture': ['agriculture', 'farm', 'cattle', 'grain', 'dairy', 'pastoral', 'national farmers'],
+                  'Gambling': ['gambling', 'wagering', 'crown', 'star', 'tabcorp', 'sportsbet', 'gaming'],
+                  'Media': ['media', 'news corp', 'nine', 'seven', 'foxtel', 'broadcast'],
+                };
+
+                const VOTE_KEYWORDS: Record<string, string[]> = {
+                  'Mining & Resources': ['mining', 'mineral', 'resources', 'coal', 'gas', 'petroleum', 'offshore'],
+                  'Property & Construction': ['housing', 'property', 'construction', 'planning', 'building', 'rent', 'home'],
+                  'Banking & Finance': ['banking', 'financial', 'credit', 'superannuation', 'insurance', 'prudential'],
+                  'Unions': ['workplace', 'industrial', 'fair work', 'employment', 'worker', 'bargaining'],
+                  'Pharmaceuticals & Health': ['health', 'medical', 'pharmaceutical', 'therapeutic', 'medicare', 'hospital'],
+                  'Technology': ['technology', 'digital', 'cyber', 'data', 'telecom', 'broadband', 'online'],
+                  'Energy': ['energy', 'electricity', 'renewable', 'emissions', 'carbon', 'climate'],
+                  'Agriculture': ['agriculture', 'farm', 'rural', 'water', 'drought', 'biosecurity'],
+                  'Gambling': ['gambling', 'wagering', 'gaming', 'betting'],
+                  'Media': ['media', 'broadcast', 'press', 'journalism'],
+                };
+
+                // Aggregate donors by name, detect industry
+                const donorSource = indDonations.length > 0 ? indDonations : donations;
+                const donorAgg = new Map<string, { amount: number; type: string | null }>();
+                for (const d of donorSource) {
+                  const existing = donorAgg.get(d.donor_name);
+                  donorAgg.set(d.donor_name, {
+                    amount: (existing?.amount ?? 0) + Number(d.amount),
+                    type: d.donor_type ?? existing?.type ?? null,
+                  });
+                }
+                const topDonorsWithIndustry = Array.from(donorAgg.entries())
+                  .sort((a, b) => b[1].amount - a[1].amount)
+                  .slice(0, 5)
+                  .map(([name, { amount, type }]) => {
+                    const nameLower = name.toLowerCase();
+                    let industry: string | null = null;
+                    for (const [ind, keywords] of Object.entries(INDUSTRY_KEYWORDS)) {
+                      if (keywords.some(kw => nameLower.includes(kw))) {
+                        industry = ind;
+                        break;
+                      }
+                    }
+                    if (!industry && type === 'union') industry = 'Unions';
+                    return { name, amount, industry };
+                  })
+                  .filter(d => d.industry);
+
+                if (topDonorsWithIndustry.length === 0) return null;
+
+                // Find related votes per industry
+                const industryVotes: Record<string, { aye: number; no: number }> = {};
+                for (const donor of topDonorsWithIndustry) {
+                  if (!donor.industry || industryVotes[donor.industry]) continue;
+                  const keywords = VOTE_KEYWORDS[donor.industry] || [];
+                  let aye = 0;
+                  let no = 0;
+                  for (const v of votes) {
+                    const divName = (v.division?.name || '').toLowerCase();
+                    if (keywords.some(kw => divName.includes(kw))) {
+                      if (v.vote_cast === 'aye') aye++;
+                      else if (v.vote_cast === 'no') no++;
+                    }
+                  }
+                  if (aye + no > 0) industryVotes[donor.industry] = { aye, no };
+                }
+
+                return (
+                  <View style={{ marginTop: 24 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                      <Ionicons name="git-compare-outline" size={18} color="#4338CA" />
+                      <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>Donations vs Voting</Text>
+                    </View>
+                    <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 19, marginBottom: 16 }}>
+                      Showing how {member.first_name} {member.last_name} voted on bills related to their donors' industries.
+                    </Text>
+
+                    {topDonorsWithIndustry.map((donor, i) => {
+                      const iv = donor.industry ? industryVotes[donor.industry] : null;
+                      return (
+                        <View key={i} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 10 }}>
+                          {/* Donor info */}
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                            <View style={{ flex: 1, marginRight: 8 }}>
+                              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text }} numberOfLines={1}>{donor.name}</Text>
+                              {donor.industry && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#4338CA' }} />
+                                  <Text style={{ fontSize: 12, color: '#6B7280' }}>{donor.industry}</Text>
+                                </View>
+                              )}
+                            </View>
+                            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>${donor.amount.toLocaleString('en-AU')}</Text>
+                          </View>
+
+                          {/* Voting connection */}
+                          {iv ? (
+                            <View style={{ backgroundColor: '#EEF2FF', borderRadius: 8, padding: 10, marginTop: 4 }}>
+                              <Text style={{ fontSize: 13, color: '#4338CA', lineHeight: 18 }}>
+                                Voted <Text style={{ fontWeight: '700', color: '#059669' }}>YES</Text> on {iv.aye} and{' '}
+                                <Text style={{ fontWeight: '700', color: '#DC2626' }}>NO</Text> on {iv.no}{' '}
+                                {donor.industry?.toLowerCase()}-related bill{iv.aye + iv.no !== 1 ? 's' : ''}
+                              </Text>
+                            </View>
+                          ) : (
+                            <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4, fontStyle: 'italic' }}>
+                              No related votes found
+                            </Text>
+                          )}
+                        </View>
+                      );
+                    })}
+
+                    {/* Share button */}
+                    <Pressable
+                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, paddingVertical: 10 }}
+                      onPress={() => {
+                        const topDonor = topDonorsWithIndustry[0];
+                        const totalFromIndustry = topDonorsWithIndustry
+                          .filter(d => d.industry === topDonor.industry)
+                          .reduce((s, d) => s + d.amount, 0);
+                        Share.share({
+                          message: `${displayName} received $${totalFromIndustry.toLocaleString('en-AU')} from ${topDonor.industry}. See how they voted on related legislation.\n\nTrack every MP's donors and votes on Verity — verity.run`,
+                        });
+                      }}
+                    >
+                      <Ionicons name="share-outline" size={16} color="#00843D" />
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: '#00843D' }}>Share this analysis</Text>
+                    </Pressable>
+
+                    {/* Disclaimer */}
+                    <Text style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16, marginTop: 4, paddingHorizontal: 8 }}>
+                      Correlation between donations and votes does not imply causation. All data from AEC declarations and APH voting records.
+                    </Text>
+                  </View>
+                );
+              })()}
             </View>
           ) : activeTab === 'speeches' ? (
             hansardLoading ? (
@@ -550,6 +866,25 @@ export function MemberProfileScreen({ route, navigation }: any) {
               <Text style={[styles.claimLinkText, { color: colors.textMuted }]}>Are you this MP? Claim your verified profile</Text>
             </Pressable>
           )}
+
+          {/* About the data — what this profile does and doesn't capture */}
+          <View style={{ marginHorizontal: 20, marginTop: 20, marginBottom: 32, backgroundColor: colors.surface, borderRadius: 12, padding: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <Ionicons name="information-circle-outline" size={15} color={colors.textMuted} />
+              <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                About this data
+              </Text>
+            </View>
+            <Text style={{ fontSize: 13, color: colors.textBody, lineHeight: 19 }}>
+              This profile is built from public APH division records, Hansard transcripts, committee listings, and AEC donation returns. It does <Text style={{ fontWeight: '700' }}>not</Text> capture party room decisions, cabinet deliberations, constituency casework, backbench negotiation, or private conversations with colleagues. Roughly 85% of political work happens outside the chamber and is not publicly recorded.
+            </Text>
+            <Text style={{ fontSize: 13, color: colors.textBody, lineHeight: 19, marginTop: 8 }}>
+              Paired absences (where an MP is absent by formal agreement with an opposition MP) are excluded from the attendance rate. Donation data links individual contributions to named politicians through AEC returns — it does not prove causation between a donation and a vote.
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 10, fontStyle: 'italic' }}>
+              Something looks wrong? Tap "Claim profile" above or email corrections@verity.run.
+            </Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -570,17 +905,23 @@ export function MemberProfileScreen({ route, navigation }: any) {
         </View>
         <View ref={reportCardRef}>
           {shareReport && (
-            <MPReportCard
+            <MPReportShareCard
               mpName={displayName}
               mpPhotoUrl={member.photo_url}
               partyName={party?.short_name || party?.name || ''}
               partyColour={partyColour}
               electorateName={member.electorate?.name ?? null}
-              ministerialRole={member.ministerial_role}
+              accountabilityScore={accountabilityScore.overall}
+              attendance={accountabilityScore.attendance}
               totalVotes={totalVotes}
-              ayeRate={totalVotes > 0 ? Math.round((ayeCount / totalVotes) * 100) : null}
-              committeeCount={committees.length}
-              topDonors={topDonors}
+              speeches={hansardEntries.length}
+              partyLoyalty={totalVotes > 0 ? Math.round(((totalVotes - votes.filter(v => v.rebelled).length) / totalVotes) * 100) : 0}
+              topDonors={Array.from(
+                indDonations.reduce((acc, d) => {
+                  acc.set(d.donor_name, (acc.get(d.donor_name) ?? 0) + Number(d.amount));
+                  return acc;
+                }, new Map<string, number>())
+              ).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([name, amount]) => ({ name, amount }))}
             />
           )}
         </View>

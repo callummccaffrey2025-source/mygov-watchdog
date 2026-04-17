@@ -1,0 +1,35 @@
+"use client";
+import Link from "next/link";
+import { useScrollSpy } from "@/lib/hooks/useScrollSpy";
+
+const sections = [
+  { id: "scorecard", label: "At a glance" },
+  { id: "votes", label: "Votes" },
+  { id: "news", label: "News" },
+  { id: "committees", label: "Committees" },
+  { id: "contacts", label: "Contacts" },
+];
+
+export default function SectionNav() {
+  const active = useScrollSpy(sections.map(s => s.id), 88);
+  return (
+    <nav
+      aria-label="Sections"
+      className="sticky top-14 z-30 -mx-3 mb-2 border-b border-white/10 bg-black/40 px-3 backdrop-blur"
+    >
+      <ul className="flex gap-5 overflow-x-auto py-2 text-sm">
+        {sections.map(s => (
+          <li key={s.id}>
+            <Link
+              href={`#${s.id}`}
+              className={`underline-offset-4 ${active===s.id ? "text-white underline" : "text-white/70 hover:text-white"}`}
+              aria-current={active===s.id ? "location" : undefined}
+            >
+              {s.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}

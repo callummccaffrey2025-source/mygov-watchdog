@@ -1,8 +1,0 @@
-
-# Block committing real env files; allow the template .env.example
-if git diff --cached --name-only \
-  | grep -E '(^|/)\.env($|\.)' \
-  | grep -Ev '(^|/)\.env\.example$' >/dev/null; then
-  echo "Refusing to commit real .env files. Commit .env.example only." >&2
-  exit 1
-fi

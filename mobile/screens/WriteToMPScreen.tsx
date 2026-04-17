@@ -103,28 +103,37 @@ export function WriteToMPScreen({ route, navigation }: any) {
     await Linking.openURL(mailto);
     setEmailSent(true);
 
-    // Log intent (not full message — privacy)
-    const { data } = await supabase
-      .from('mp_messages')
-      .insert({
-        user_id: user?.id ?? null,
-        device_id: deviceId,
-        member_id: member.id,
-        subject: effectiveSubject,
-        message_preview: body.slice(0, 100),
-      })
-      .select('id')
-      .single();
-    if (data?.id) insertedIdRef.current = data.id;
+    // Log intent (not full message — privacy). Logging failure must not
+    // affect the user flow — email has already been handed off to their mail app.
+    try {
+      const { data } = await supabase
+        .from('mp_messages')
+        .insert({
+          user_id: user?.id ?? null,
+          device_id: deviceId,
+          member_id: member.id,
+          subject: effectiveSubject,
+          message_preview: body.slice(0, 100),
+        })
+        .select('id')
+        .maybeSingle();
+      if (data?.id) insertedIdRef.current = data.id;
+    } catch {
+      // Non-critical — email was still sent
+    }
   };
 
   const handleSentiment = async (s: string) => {
     setSentiment(s);
     if (insertedIdRef.current) {
-      await supabase
-        .from('mp_messages')
-        .update({ sentiment: s })
-        .eq('id', insertedIdRef.current);
+      try {
+        await supabase
+          .from('mp_messages')
+          .update({ sentiment: s })
+          .eq('id', insertedIdRef.current);
+      } catch {
+        // Non-critical — sentiment is analytics metadata
+      }
     }
   };
 

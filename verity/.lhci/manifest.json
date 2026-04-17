@@ -1,0 +1,26 @@
+[
+  {
+    "url": "http://127.0.0.1:3000/",
+    "isRepresentativeRun": true,
+    "htmlPath": "/Users/callummccaffrey/verity/verity/.lhci/127_0_0_1--2025_09_19_03_49_40.report.html",
+    "jsonPath": "/Users/callummccaffrey/verity/verity/.lhci/127_0_0_1--2025_09_19_03_49_40.report.json",
+    "summary": {
+      "performance": 0.97,
+      "accessibility": 0.96,
+      "best-practices": 1,
+      "seo": 1
+    }
+  },
+  {
+    "url": "http://127.0.0.1:3000/mps",
+    "isRepresentativeRun": true,
+    "htmlPath": "/Users/callummccaffrey/verity/verity/.lhci/127_0_0_1-mps-2025_09_19_03_49_52.report.html",
+    "jsonPath": "/Users/callummccaffrey/verity/verity/.lhci/127_0_0_1-mps-2025_09_19_03_49_52.report.json",
+    "summary": {
+      "performance": 0.98,
+      "accessibility": 0.97,
+      "best-practices": 1,
+      "seo": 1
+    }
+  }
+]

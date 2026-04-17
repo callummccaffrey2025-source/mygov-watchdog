@@ -1,0 +1,229 @@
+import type { Metadata } from "next";
+import { VotePill, LabelValue, Section, SafeLink } from "@/lib/ui";
+import { Mail, Phone, MapPin, Briefcase } from "lucide-react";
+
+type Vote = { bill?: string; billId?: string; stage?: string; date?: string; vote?: string; };
+type MP = {
+  id: string;
+  name: string;
+  party?: string;
+  electorate?: string;
+  state?: string;
+  roles?: string[];
+  email?: string;
+  phone?: string;
+  officeElectorate?: string;
+  officeParliament?: string;
+  votes?: Vote[];
+  avatarUrl?: string;
+  partyCode?: string;
+};
+
+function partyLogoPath(party?: string, partyCode?: string) {
+  const p = (partyCode || party || "").toLowerCase();
+  if (/\balp|labor/.test(p)) return "/party/alp.svg";
+  if (/\bliberal|lib\W/.test(p)) return "/party/lib.svg";
+  if (/\bnational|nat\W/.test(p)) return "/party/nat.svg";
+  if (/\bgreens|grn\W?/.test(p)) return "/party/grn.svg";
+  return undefined;
+}
+
+async function fetchMP(id: string): Promise<MP | null> {
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const r = await fetch(`${base}/api/mps/${id}`, { cache: "no-store" });
+  if (!r.ok) return null;
+  const mp = await r.json();
+  return {
+    id: mp.id || id,
+    name: mp.name || mp.fullName || "Member of Parliament",
+    party: mp.party || mp.party_name,
+    electorate: mp.electorate || mp.seat,
+    state: mp.state,
+    roles: mp.roles || mp.positions || [],
+    email: mp.email,
+    phone: mp.phone,
+    officeElectorate: mp.officeElectorate || mp.electorate_office,
+    officeParliament: mp.officeParliament || mp.parliament_office,
+    avatarUrl: mp.photo || mp.avatarUrl,
+    partyCode: mp.partyCode,
+    votes: Array.isArray(mp.votes) ? mp.votes.map((v:any)=>({
+      bill: v.bill || v.bill_name || v.title,
+      billId: v.billId || v.bill_id || v.id,
+      stage: v.stage,
+      date: v.date,
+      vote: v.vote || v.decision
+    })) : [],
+  };
+}
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const mp = await fetchMP(params.slug);
+  if (!mp) return { title: "MP — Verity" };
+  const title = `${mp.name} — ${mp.party || "MP"} — Verity`;
+  const desc = `${mp.name}${mp.party ? ` — ${mp.party}` : ""}${mp.electorate ? ` — ${mp.electorate}` : ""}`;
+  const img = mp.avatarUrl || `https://api.dicebear.com/8.x/initials/png?seed=${encodeURIComponent(mp.name)}`;
+  return {
+    title,
+    description: desc,
+    openGraph: { title, description: desc, images: [{ url: img }] },
+    twitter: { card: "summary_large_image", title, description: desc, images: [img] }
+  };
+}
+
+export default async function Page({ params }: { params: { id: string } }) {
+  const mp = await fetchMP(params.slug);
+  if (!mp) return notFound();
+
+  const logo = partyLogoPath(mp.party, mp.partyCode);
+  const avatar = mp.avatarUrl || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(mp.name)}`;
+
+  return (
+    <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-start gap-5">
+        <img src={avatar} alt={`${mp.name} portrait`} className="h-20 w-20 rounded-2xl border border-white/10 object-cover bg-zinc-800" />
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-semibold">{mp.name}</h1>
+            {logo && <img src={logo} alt={`${mp.party} logo`} className="h-8 w-8 rounded" />}
+          </div>
+          <div className="mt-1 text-zinc-400">
+            <span>{mp.party || "—"}</span>
+            {mp.electorate && <> · <span>{mp.electorate}</span></>}
+            {mp.state && <> · <span>{mp.state}</span></>}
+          </div>
+        </div>
+        <div className="hidden md:flex gap-2">
+          <a
+            className="rounded-lg border border-white/10 px-3 py-1.5 text-sm"
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(mp.name)}&url=${encodeURIComponent((process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000")+`/mps/${mp.id}`)}`}
+            aria-label="Share on X/Twitter"
+          >Share</a>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 text-sm">
+        <a href="#profile" className="rounded-lg border border-white/10 px-3 py-1.5">Profile</a>
+        <a href="#roles" className="rounded-lg border border-white/10 px-3 py-1.5">Roles</a>
+        <a href="#votes" className="rounded-lg border border-white/10 px-3 py-1.5">Votes</a>
+        <a href="#news" className="rounded-lg border border-white/10 px-3 py-1.5">News</a>
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left */}
+        <div className="space-y-6">
+          <Section title="Current Roles">
+            {mp.roles?.length ? (
+              <ul className="space-y-1">
+                {mp.roles.map((r, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-zinc-400" />
+                    <span className="text-sm">{r}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : <div className="text-sm text-zinc-500">No current roles listed.</div>}
+          </Section>
+
+          <Section title="Contact & Offices">
+            <div className="space-y-3">
+              <LabelValue label="Email" icon={<Mail className="h-4 w-4 text-zinc-400" />}>
+                {mp.email ? <a href={`mailto:${mp.email}`} className="hover:underline">{mp.email}</a> : null}
+              </LabelValue>
+              <LabelValue label="Phone" icon={<Phone className="h-4 w-4 text-zinc-400" />}>
+                {mp.phone ? <a href={`tel:${mp.phone}`} className="hover:underline">{mp.phone}</a> : null}
+              </LabelValue>
+              <LabelValue label="Electorate Office" icon={<MapPin className="h-4 w-4 text-zinc-400" />}>
+                {mp.officeElectorate}
+              </LabelValue>
+              <LabelValue label="Parliament House" icon={<MapPin className="h-4 w-4 text-zinc-400" />}>
+                {mp.officeParliament}
+              </LabelValue>
+            </div>
+          </Section>
+
+          <Section title="Stances">
+            <ul className="list-disc pl-5 text-sm text-zinc-200 space-y-1">
+              <li>Auto-generated stance summaries coming soon.</li>
+              <li>Based on voting patterns and public positions.</li>
+            </ul>
+          </Section>
+
+          <Section title="Electorate">
+            <div className="text-sm text-zinc-400">Electorate overview (map & demographics) — placeholder.</div>
+          </Section>
+        </div>
+
+        {/* Right (spans 2) */}
+        <div className="lg:col-span-2 space-y-6">
+          <div id="votes"></div>
+          <Section title="Votes">
+            {mp.votes?.length ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-zinc-400 border-b border-white/10">
+                    <tr>
+                      <th className="py-2 pr-4">Bill</th>
+                      <th className="py-2 pr-4">Stage</th>
+                      <th className="py-2 pr-4">Date</th>
+                      <th className="py-2">Vote</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {mp.votes.map((v, i) => (
+                      <tr key={i} className="align-top">
+                        <td className="py-2 pr-4">
+                          {v.billId ? (
+                            <SafeLink href={`/legislation/${encodeURIComponent(v.billId)}`}>{v.bill || v.billId}</SafeLink>
+                          ) : (v.bill || "—")}
+                        </td>
+                        <td className="py-2 pr-4">{v.stage || "—"}</td>
+                        <td className="py-2 pr-4">{v.date || "—"}</td>
+                        <td className="py-2"><VotePill vote={v.vote} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : <div className="text-sm text-zinc-500">No recent votes recorded.</div>}
+          </Section>
+
+          <div id="news"></div>
+          <Section title="News mentions">
+            <NewsForMP id={mp.id} name={mp.name} />
+          </Section>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function NewsForMP({ id, name }: { id: string; name: string }) {
+  return (
+    <div suppressHydrationWarning>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (async function(){
+              const box = document.currentScript.parentElement;
+              try{
+                const r = await fetch('/api/news?mp=' + encodeURIComponent('${id}'));
+                if(!r.ok) throw new Error('news fetch');
+                const j = await r.json();
+                const items = (j.items||[]).slice(0,8);
+                if(!items.length){ box.innerHTML='<div class="text-sm text-zinc-500">No recent mentions.</div>'; return; }
+                box.innerHTML = '<ul class="space-y-2">' + items.map(it=>(
+                  '<li><a class="hover:underline" href="'+(it.url||'#')+'" target="_blank" rel="noopener">'+(it.title||'News')+'</a></li>'
+                )).join('') + '</ul>';
+              }catch(e){
+                box.innerHTML='<div class="text-sm text-zinc-500">No recent mentions.</div>';
+              }
+            })();
+          `
+        }}
+      />
+    </div>
+  );
+}

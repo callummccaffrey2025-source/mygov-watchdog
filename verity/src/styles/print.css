@@ -1,0 +1,5 @@
+@media print {
+  nav, header, footer { display: none !important; }
+  a[href^="tel:"], a[href^="mailto:"] { text-decoration: none; }
+  section { break-inside: avoid; }
+}

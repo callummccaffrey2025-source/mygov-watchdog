@@ -1,0 +1,22 @@
+[
+  {
+    "id": "mp-001",
+    "name": "Alex Nguyen",
+    "party": "Independent",
+    "electorate": "Fremantle",
+    "roles": ["Member of Parliament"],
+    "integrity": { "conflicts": ["Shareholding in logistics firm declared 2024"], "gifts": ["Flight upgrade (declared)"] },
+    "votes": [
+      { "billId": "b-privacy-2025", "vote": "aye", "date": "2025-02-12" }
+    ]
+  },
+  {
+    "id": "mp-002",
+    "name": "Sofia King",
+    "party": "Labor",
+    "electorate": "Macnamara",
+    "roles": ["Assistant Minister"],
+    "integrity": { "conflicts": [], "gifts": [] },
+    "votes": []
+  }
+]

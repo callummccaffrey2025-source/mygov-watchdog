@@ -16,16 +16,22 @@ export function useCommittees(memberId: string | undefined) {
 
   useEffect(() => {
     if (!memberId) { setLoading(false); return; }
-    supabase
-      .from('committee_memberships')
-      .select('id,committee_name,committee_type,role,start_date,end_date')
-      .eq('member_id', memberId)
-      .is('end_date', null)
-      .order('role')
-      .then(({ data }) => {
-        setCurrent((data || []) as CommitteeMembership[]);
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('committee_memberships')
+          .select('id,committee_name,committee_type,role,start_date,end_date')
+          .eq('member_id', memberId)
+          .is('end_date', null)
+          .order('role');
+        if (!cancelled) setCurrent((data || []) as CommitteeMembership[]);
+      } catch {
+        // leave empty
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [memberId]);
 
   return { current, loading };

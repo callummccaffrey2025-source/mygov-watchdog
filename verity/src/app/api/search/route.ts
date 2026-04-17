@@ -1,18 +1,34 @@
-export const dynamic = 'force-dynamic';
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextRequest, NextResponse } from "next/server";
-export const runtime = "nodejs";
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const searchSchema = z.object({
+  q: z.string().min(1).max(200),
+  limit: z.number().min(1).max(50).optional()
+});
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const q = searchParams.get("q") ?? "";
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("document")
-    .select("id,title,url,published_at")
-    .filter("content_tsv","fts", q || "*:*")
-    .limit(25);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data ?? []);
+  const query = searchParams.get('q');
+  
+  const validation = searchSchema.safeParse({
+    q: query,
+    limit: parseInt(searchParams.get('limit') || '10')
+  });
+
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: 'Invalid query', details: validation.error },
+      { status: 400 }
+    );
+  }
+
+  // TODO: Implement actual search against Supabase bills table
+  return NextResponse.json(
+    { results: [], query: validation.data.q },
+    { 
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+      }
+    }
+  );
 }

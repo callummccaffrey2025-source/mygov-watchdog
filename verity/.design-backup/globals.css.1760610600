@@ -1,0 +1,71 @@
+:root{
+  --accent:#34d399; /* emerald-400 */
+  --accent-2:#10b981; /* emerald-500 */
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens */
+:root{
+  --bg:#0b0f14;
+  --fg:#e5e7eb;
+  --muted:#9ca3af;
+  --card:rgba(255,255,255,.05);
+  --border:rgba(255,255,255,.10);
+  --accent:#10b981;
+  --accent-2:#15d19a;
+}
+
+/* Base */
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+
+a{ color:var(--accent) }
+h1,h2,h3{ letter-spacing:-.01em }
+
+/* Scrollbar */
+::-webkit-scrollbar{ width:10px; height:10px }
+::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.12); border-radius:9999px }
+
+/* Reusable helpers */
+.container-verity{ @apply mx-auto max-w-6xl px-4 }
+.card{ @apply rounded-2xl border border-white/10 bg-white/5 shadow-card }
+.btn{ @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-500/60 }
+.btn-primary{ @apply bg-[var(--accent)] text-[#0b0f14] hover:bg-[var(--accent-2)] }
+.btn-ghost{ @apply text-[var(--accent)] hover:bg-white/5 }
+.badge{ @apply inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-400 }
+
+.h1{ font-weight:700; font-size:2rem; letter-spacing:-.02em }
+.lead{ font-size:1.05rem; color:rgba(255,255,255,.75) }
+.muted{ color:rgba(255,255,255,.6) }
+
+/* --- verity custom utilities --- */
+@layer utilities {
+  .shadow-card {
+    @apply shadow-xl shadow-black/20;
+  }
+}
+@import "../styles/print.css";
+
+/* insta-polish */
+:root{--card:rgba(18,18,18,.72);--stroke:rgba(255,255,255,.08);--glow:rgba(16,185,129,.18)}
+.canvas-grad{
+  background:
+    radial-gradient(1200px 520px at 8% -12%, rgba(59,130,246,.20), transparent),
+    radial-gradient(900px 340px at 100% -20%, rgba(16,185,129,.18), transparent),
+    linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+}
+.card{@apply rounded-2xl border border-[var(--stroke)] bg-[var(--card)] backdrop-blur px-4 py-3 md:px-5 md:py-4 shadow-[0_0_40px_-20px_var(--glow)];}
+h1,h2{letter-spacing:-.01em}
+.section-anchor{scroll-margin-top:6.5rem}
+.text-balance{ text-wrap: balance }
+.break-anywhere{ overflow-wrap:anywhere; word-break:break-word }
+img{border-radius:1rem}
+
+@import "../styles/ig.css";

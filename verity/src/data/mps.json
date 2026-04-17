@@ -1,0 +1,730 @@
+[
+  {
+    "id": "mp-1",
+    "name": "MP A 100",
+    "party": "Greens",
+    "electorate": "Canberra",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-2",
+    "name": "MP B 101",
+    "party": "Greens",
+    "electorate": "Perth",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-3",
+    "name": "MP C 102",
+    "party": "Labor",
+    "electorate": "Adelaide",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-4",
+    "name": "MP D 103",
+    "party": "Liberal",
+    "electorate": "Mackellar",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-5",
+    "name": "MP E 104",
+    "party": "National",
+    "electorate": "Melbourne",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-6",
+    "name": "MP F 105",
+    "party": "National",
+    "electorate": "Goldstein",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-7",
+    "name": "MP G 106",
+    "party": "Greens",
+    "electorate": "Sydney",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-8",
+    "name": "MP H 107",
+    "party": "National",
+    "electorate": "Adelaide",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-9",
+    "name": "MP I 108",
+    "party": "Independent",
+    "electorate": "Fowler",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-10",
+    "name": "MP J 109",
+    "party": "Greens",
+    "electorate": "Sydney",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-11",
+    "name": "MP K 110",
+    "party": "Independent",
+    "electorate": "Adelaide",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-12",
+    "name": "MP L 111",
+    "party": "Independent",
+    "electorate": "Higgins",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-13",
+    "name": "MP M 112",
+    "party": "Labor",
+    "electorate": "Wentworth",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-14",
+    "name": "MP N 113",
+    "party": "Liberal",
+    "electorate": "Perth",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-15",
+    "name": "MP O 114",
+    "party": "Labor",
+    "electorate": "Warringah",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-16",
+    "name": "MP P 115",
+    "party": "Greens",
+    "electorate": "Perth",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-17",
+    "name": "MP Q 116",
+    "party": "Labor",
+    "electorate": "Mackellar",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-18",
+    "name": "MP R 117",
+    "party": "Independent",
+    "electorate": "Grayndler",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-19",
+    "name": "MP S 118",
+    "party": "Labor",
+    "electorate": "Adelaide",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-20",
+    "name": "MP T 119",
+    "party": "Liberal",
+    "electorate": "Canberra",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-21",
+    "name": "MP U 120",
+    "party": "Liberal",
+    "electorate": "Brisbane",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-22",
+    "name": "MP V 121",
+    "party": "Liberal",
+    "electorate": "Curtin",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-23",
+    "name": "MP W 122",
+    "party": "Labor",
+    "electorate": "Sydney",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-24",
+    "name": "MP X 123",
+    "party": "National",
+    "electorate": "Kooyong",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-25",
+    "name": "MP Y 124",
+    "party": "Greens",
+    "electorate": "Warringah",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-26",
+    "name": "MP Z 125",
+    "party": "Labor",
+    "electorate": "Higgins",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-27",
+    "name": "MP A 126",
+    "party": "National",
+    "electorate": "Ryan",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-28",
+    "name": "MP B 127",
+    "party": "Greens",
+    "electorate": "Fowler",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-29",
+    "name": "MP C 128",
+    "party": "Greens",
+    "electorate": "Wentworth",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-30",
+    "name": "MP D 129",
+    "party": "Independent",
+    "electorate": "Canberra",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-31",
+    "name": "MP E 130",
+    "party": "Liberal",
+    "electorate": "Sydney",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-32",
+    "name": "MP F 131",
+    "party": "Greens",
+    "electorate": "Canberra",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-33",
+    "name": "MP G 132",
+    "party": "Labor",
+    "electorate": "Higgins",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-34",
+    "name": "MP H 133",
+    "party": "Independent",
+    "electorate": "Fowler",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-35",
+    "name": "MP I 134",
+    "party": "Labor",
+    "electorate": "Melbourne",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-36",
+    "name": "MP J 135",
+    "party": "Independent",
+    "electorate": "Wentworth",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-37",
+    "name": "MP K 136",
+    "party": "Independent",
+    "electorate": "Kooyong",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-38",
+    "name": "MP L 137",
+    "party": "National",
+    "electorate": "Curtin",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-39",
+    "name": "MP M 138",
+    "party": "Independent",
+    "electorate": "Melbourne",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-40",
+    "name": "MP N 139",
+    "party": "Liberal",
+    "electorate": "Brisbane",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-41",
+    "name": "MP O 140",
+    "party": "National",
+    "electorate": "Melbourne",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-42",
+    "name": "MP P 141",
+    "party": "National",
+    "electorate": "Grayndler",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-43",
+    "name": "MP Q 142",
+    "party": "Independent",
+    "electorate": "Fowler",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-44",
+    "name": "MP R 143",
+    "party": "Liberal",
+    "electorate": "Warringah",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-45",
+    "name": "MP S 144",
+    "party": "Liberal",
+    "electorate": "Sydney",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-46",
+    "name": "MP T 145",
+    "party": "National",
+    "electorate": "Warringah",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-47",
+    "name": "MP U 146",
+    "party": "Greens",
+    "electorate": "Kooyong",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-48",
+    "name": "MP V 147",
+    "party": "National",
+    "electorate": "Perth",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-49",
+    "name": "MP W 148",
+    "party": "National",
+    "electorate": "Fowler",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-50",
+    "name": "MP X 149",
+    "party": "Liberal",
+    "electorate": "Warringah",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-51",
+    "name": "MP Y 150",
+    "party": "National",
+    "electorate": "Sydney",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  },
+  {
+    "id": "mp-52",
+    "name": "MP Z 151",
+    "party": "National",
+    "electorate": "Sydney",
+    "roles": [
+      "Member of Parliament"
+    ],
+    "integrity": {
+      "conflicts": [],
+      "gifts": []
+    },
+    "votes": []
+  }
+]

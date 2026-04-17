@@ -1,0 +1,54 @@
+import Image from "next/image";
+import FollowButton from "@/components/mps/FollowButton";
+import ShareButtons from "@/components/utility/ShareButtons";
+
+type MP = {
+  slug: string;
+  name: string;
+  headshot_url?: string | null;
+  party?: string | null;
+  electorate?: string | null;
+  state?: string | null;
+  role?: string | null;
+};
+
+export default function MPHero({ mp }: { mp: MP }) {
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(1200px_400px_at_0%_-10%,rgba(59,130,246,.28),transparent),linear-gradient(to_bottom,rgba(255,255,255,.02),transparent)] p-4 md:p-5">
+      <div className="flex items-center gap-4">
+        <div className="relative h-16 w-16 overflow-hidden rounded-full ring-1 ring-white/20 md:h-20 md:w-20">
+          <Image
+            src={mp.headshot_url ?? "/avatar-fallback.png"}
+            alt={mp.name}
+            fill
+            sizes="80px"
+            className="object-cover"
+            priority
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-2xl font-semibold md:text-3xl">{mp.name}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-white/80">
+            {mp.role ? <span className="rounded-full bg-white/10 px-2 py-0.5">{mp.role}</span> : null}
+            {mp.party ? <span className="rounded-full bg-white/10 px-2 py-0.5">{mp.party}</span> : null}
+            {(mp.electorate || mp.state) ? (
+              <span className="rounded-full bg-white/10 px-2 py-0.5">
+                {[mp.electorate, mp.state].filter(Boolean).join(", ")}
+              </span>
+            ) : null}
+          </div>
+        </div>
+        <div className="hidden items-center gap-2 md:flex">
+          <ShareButtons title={mp.name} />
+          <FollowButton slug={mp.slug} name={mp.name} />
+          <button
+            onClick={() => { if (typeof window !== "undefined") window.print(); }}
+            className="rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/15"
+          >
+            Print
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -69,8 +69,15 @@ export function CommunityPostDetailScreen({ route, navigation }: any) {
   }, []);
 
   useEffect(() => {
-    supabase.from('community_posts').select('*').eq('id', postId).single()
-      .then(({ data }) => { setPost(data); setLoadingPost(false); });
+    (async () => {
+      try {
+        const { data } = await supabase.from('community_posts').select('*').eq('id', postId).maybeSingle();
+        setPost(data);
+      } catch {
+        // Network failure
+      }
+      setLoadingPost(false);
+    })();
   }, [postId]);
 
   const handleSubmitComment = async () => {

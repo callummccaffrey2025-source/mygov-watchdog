@@ -1,0 +1,66 @@
+name: Ingest MP Statements
+
+# Scrapes ~20 curated ministerial / shadow media-release pages and upserts
+# verified statements into representative_updates. URL-verification failures
+# are written to ingestion_review_queue.
+
+on:
+  schedule:
+    # 07:30 AEST daily = 21:30 UTC the prior day.
+    # Adjust if you prefer a different slot; avoid the ingest_news window
+    # (05:00-06:30 AEST) to prevent resource contention.
+    - cron: "30 21 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without writing to Supabase"
+        required: false
+        type: boolean
+        default: false
+      targets:
+        description: "Limit to first N MPs (blank = all)"
+        required: false
+        type: string
+
+concurrency:
+  group: ingest-mp-statements
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: mobile/scripts/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Run ingestion
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          if [ -n "${{ inputs.targets }}" ]; then
+            ARGS="$ARGS --targets ${{ inputs.targets }}"
+          fi
+          python scripts/ingest_mp_statements.py $ARGS

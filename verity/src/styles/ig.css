@@ -1,0 +1,89 @@
+/* --- Verity IG Aesthetic (non-invasive) ------------------------------- */
+:root{
+  --ig-bg1:#0b1220; --ig-bg2:#0c1829;
+  --ig-accent:#6ee7b7; --ig-ring:rgba(110,231,183,.35);
+}
+
+html,body{
+  background:
+    radial-gradient(1200px 500px at 10% -10%, #0ea5e930, transparent),
+    radial-gradient(900px 450px at 90% -10%, #a78bfa2b, transparent),
+    linear-gradient(180deg,var(--ig-bg1),var(--ig-bg2));
+}
+
+/* main canvas & rhythm */
+#main{max-width: 900px; margin-inline:auto; padding: 20px 14px;}
+
+/* Card/glass look for all top-level sections */
+#main section{
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  overflow: hidden;
+}
+#main section + section{ margin-top: 18px; }
+
+/* Typography */
+#main h1{
+  font-size: clamp(28px, 3.6vw, 38px);
+  line-height: 1.12;
+  letter-spacing: .2px;
+  font-weight: 800;
+  background: linear-gradient(90deg,#fff,#a7f3d0);
+  -webkit-background-clip: text; color: transparent;
+}
+#main h2{
+  font-size: clamp(16px,2vw,18px);
+  color: #b9c4d0; font-weight: 600; letter-spacing:.15px;
+}
+
+/* Prevent any text/box overlaps anywhere */
+#main h1, #main h2, #main p, #main td, #main th{ overflow-wrap:anywhere; word-break:break-word; }
+
+/* Action rows / chips never overlap: allow wrapping + gaps */
+#main .flex.items-center.gap-3,
+#main .flex.items-center.gap-4,
+#main .actions{ flex-wrap: wrap; gap: 10px !important; }
+
+/* Header gradient halo without disturbing layout (fixes chip overlay on h1) */
+#main .relative:has(h1){ padding-bottom: 6px; }
+#main .relative:has(h1) > *{ position: relative; z-index: 1; }
+#main .relative:has(h1)::after{
+  content:""; position:absolute; inset:0; z-index:0;
+  background:
+    radial-gradient(900px 420px at 0% -15%, #60a5fa26, transparent),
+    radial-gradient(900px 420px at 100% -15%, #34d39924, transparent);
+}
+
+/* Sticky identity / chips never cover content below */
+#main .sticky, #main .top-0{ top: 72px !important; z-index: 20; }
+
+/* Tables: airy pills */
+#main table{ width:100%; border-collapse:separate; border-spacing:0 8px; }
+#main th{ font-weight:600; color:#c8d1da; }
+#main td, #main th{ padding:12px 14px; }
+#main tbody tr{
+  background: rgba(7,10,17,.72);
+  border: 1px solid rgba(255,255,255,.06);
+}
+#main tbody tr:hover{ outline: 1px solid var(--ig-ring); }
+
+/* Mini bars & trend sparkline */
+#main [role="progressbar"]{ height:8px; border-radius:999px; }
+#main [aria-label="trend"], #main .trend{ mix-blend-mode: screen; opacity:.9; }
+
+/* Default link accent */
+#main a{ color: var(--ig-accent); text-underline-offset: 3px; }
+#main a:hover{ text-decoration: underline; }
+
+/* Softer large radii & borders from Tailwind classes already in DOM */
+#main .rounded-2xl{ border-radius: 20px; }
+#main .border-white\/10{ border-color: rgba(255,255,255,.10); }
+
+/* Safety: ensure images do not stretch weirdly */
+#main img{ object-fit: cover; max-width:100%; height:auto; }
+
+/* Compact section anchor row (At a glance / Votes / News / …) */
+#main a[href*="#"]{ white-space: nowrap; }

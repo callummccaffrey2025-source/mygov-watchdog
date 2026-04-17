@@ -7,18 +7,26 @@ export function useSubscription(userId: string | undefined) {
 
   useEffect(() => {
     if (!userId) { setLoading(false); return; }
-    supabase
-      .from('user_preferences')
-      .select('is_pro,pro_expires_at')
-      .eq('user_id', userId)
-      .maybeSingle()
-      .then(({ data }) => {
-        const active =
-          !!data?.is_pro &&
-          (!data.pro_expires_at || new Date(data.pro_expires_at) > new Date());
-        setIsPro(active);
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('user_preferences')
+          .select('is_pro,pro_expires_at')
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (!cancelled) {
+          const active =
+            !!data?.is_pro &&
+            (!data.pro_expires_at || new Date(data.pro_expires_at) > new Date());
+          setIsPro(active);
+        }
+      } catch {
+        // leave isPro as default false
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [userId]);
 
   const subscribe = async () => {

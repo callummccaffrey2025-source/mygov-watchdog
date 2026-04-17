@@ -54,14 +54,19 @@ export function PostDetailScreen({ route, navigation }: any) {
   const submitComment = async () => {
     if (!commentText.trim() || !user) return;
     setSubmitting(true);
-    const { data } = await supabase
-      .from('post_comments')
-      .insert({ post_id: post.id, user_id: user.id, content: commentText.trim() })
-      .select()
-      .single();
-    if (data) setComments(c => [...c, data as Comment]);
-    setCommentText('');
-    setSubmitting(false);
+    try {
+      const { data } = await supabase
+        .from('post_comments')
+        .insert({ post_id: post.id, user_id: user.id, content: commentText.trim() })
+        .select()
+        .single();
+      if (data) setComments(c => [...c, data as Comment]);
+      setCommentText('');
+    } catch {
+      // Insert failed — leave text in input so user can retry
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

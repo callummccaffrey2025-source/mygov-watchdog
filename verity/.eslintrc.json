@@ -1,10 +1,48 @@
 {
   "root": true,
   "extends": [
+    "next/core-web-vitals",
     "next/core-web-vitals"
   ],
   "rules": {
-    "@typescript-eslint/no-explicit-any": "off",
-    "@next/next/no-html-link-for-pages": "off"
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@next/next/no-html-link-for-pages": "warn",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "no-console": [
+      "warn",
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ],
+    "@next/next/no-img-element": "warn",
+    "max-lines": [
+      "warn",
+      {
+        "max": 700,
+        "skipBlankLines": true,
+        "skipComments": true
+      }
+    ],
+    "complexity": [
+      "warn",
+      18
+    ]
+  },
+  "ignorePatterns": [
+    "src/_bak/**"
+  ],
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "node": true
   }
 }

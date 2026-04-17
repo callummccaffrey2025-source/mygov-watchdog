@@ -27,8 +27,9 @@ import { SkeletonLoader } from '../components/SkeletonLoader';
 import { supabase } from '../lib/supabase';
 import { Member } from '../hooks/useMembers';
 import { useRecentDivisions } from '../hooks/useRecentDivisions';
-import { useNewsItems } from '../hooks/useNewsItems';
 import { useNewsStories, NewsStory } from '../hooks/useNewsStories';
+import { useNewsStoryArticles } from '../hooks/useNewsStoryArticles';
+import { TwoRowCoverageBar } from '../components/TwoRowCoverageBar';
 import { NewsShareCard } from '../components/ShareCards';
 import { captureAndShare } from '../utils/shareContent';
 import { decodeHtml } from '../utils/decodeHtml';
@@ -36,6 +37,7 @@ import { CoverageBar } from '../components/CoverageBar';
 import { useVotes } from '../hooks/useVotes';
 import { useDailyBrief } from '../hooks/useDailyBrief';
 import { useRepresentativeUpdates, RepresentativeUpdate } from '../hooks/useRepresentativeUpdates';
+import { useLocalAnnouncements } from '../hooks/useLocalAnnouncements';
 import { Bill } from '../hooks/useBills';
 import { topicBg, topicAccent } from '../constants/topicColors';
 import { Image } from 'expo-image';
@@ -47,7 +49,16 @@ import { hapticLight } from '../lib/haptics';
 import { HomeScreenSkeleton } from '../components/HomeScreenSkeleton';
 import { AuthPromptSheet } from '../components/AuthPromptSheet';
 import { useAuthGate } from '../hooks/useAuthGate';
+import { useWeeklyPoll } from '../hooks/useWeeklyPoll';
+import { WeeklyPollCard } from '../components/WeeklyPollCard';
+import { usePersonalBills } from '../hooks/usePersonalBills';
+import { useSittingCalendar } from '../hooks/useSittingCalendar';
+import { useCivicQuiz } from '../hooks/useCivicQuiz';
+import { CivicQuizCard } from '../components/CivicQuizCard';
+import { useElectorateTrends } from '../hooks/useElectorateTrends';
+import { ElectorateTrendsCard } from '../components/ElectorateTrendsCard';
 import { track } from '../lib/analytics';
+import { trackEvent } from '../lib/engagementTracker';
 
 function cleanDivisionName(raw: string): string {
   return raw
@@ -514,7 +525,6 @@ export function HomeScreen({ navigation }: any) {
   const dateStr = new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
   const { bills: trendingBills, loading: billsLoading } = useBills({ limit: 10, activeOnly: true });
   const { divisions: recentDivisions, loading: divisionsLoading, refresh: refreshDivisions } = useRecentDivisions(5);
-  const { items: newsItems, loading: newsLoading } = useNewsItems(5);
   const { stories: newsStories, loading: newsStoriesLoading, refresh: refreshNews } = useNewsStories(undefined, undefined, undefined, 15);
   const [feedMode, setFeedMode] = useState<'foryou' | 'trending' | 'latest'>('foryou');
   const { polls, loading: pollsLoading } = usePolls();
@@ -538,6 +548,42 @@ export function HomeScreen({ navigation }: any) {
     mpName: myMP ? `${myMP.first_name} ${myMP.last_name}` : null,
     followedTopics: [],
   });
+
+  // ── Hero story + its articles for the Today in the Media card ──
+  const heroStory: NewsStory | null = useMemo(() => {
+    const sorted = feedMode === 'foryou'
+      ? personalised
+      : feedMode === 'latest'
+      ? [...filteredStories].sort((a, b) => new Date(b.first_seen).getTime() - new Date(a.first_seen).getTime())
+      : filteredStories;
+    return sorted[0] ?? null;
+  }, [feedMode, personalised, filteredStories]);
+  const { articles: heroArticles } = useNewsStoryArticles(heroStory?.id);
+
+  // ── Personal bills ──
+  const { bills: personalBills, loading: personalBillsLoading } = usePersonalBills();
+
+  // ── Parliament sitting calendar ──
+  const { isSittingToday, todayInfo, nextSitting } = useSittingCalendar();
+
+  // ── Civic quiz ──
+  const { question: quizQuestion, alreadyAnswered: quizAnswered, dismissed: quizDismissed, submitAnswer: submitQuizAnswer, dismiss: dismissQuiz } = useCivicQuiz();
+
+  // ── Electorate trends ──
+  const { trends: electorateTrends } = useElectorateTrends(electorateResult.electorate?.name ?? null);
+
+  // ── Local Funding (federal announcements in user's electorate) ──
+  const { announcements: localAnnouncements } = useLocalAnnouncements(
+    electorateResult.electorate?.id ?? undefined,
+    electorateResult.electorate?.state ?? undefined,
+  );
+  const latestLocalAnnouncement = localAnnouncements[0] ?? null;
+
+  // ── Weekly poll ──
+  const { poll: weeklyPoll, userVote: weeklyVote, results: weeklyResults, vote: weeklyVoteFn } = useWeeklyPoll(
+    postcode,
+    electorateResult.electorate?.name ?? null,
+  );
 
   const personalBullets = useMemo((): PersonalisedBullet[] => {
     const bullets: PersonalisedBullet[] = [];
@@ -682,6 +728,11 @@ export function HomeScreen({ navigation }: any) {
   // Show full-page skeleton on initial mount while all critical data loads
   const initialLoading = briefLoading && newsStoriesLoading && divisionsLoading && repUpdatesLoading;
 
+  // If every data source returned empty after loading completes, assume network/backend trouble
+  const allDataEmpty =
+    !briefLoading && !newsStoriesLoading && !divisionsLoading && !repUpdatesLoading &&
+    !brief && newsStories.length === 0 && recentDivisions.length === 0 && repUpdates.length === 0;
+
   if (initialLoading && !refreshing) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
@@ -721,8 +772,37 @@ export function HomeScreen({ navigation }: any) {
           <Text style={styles.heroTagline}>
             {briefLoading ? 'Loading your brief…' : 'Your daily brief is ready'}
           </Text>
-          <Text style={styles.heroTrackingLine}>Tracking 225 representatives across 151 electorates</Text>
+          {/* Parliament sitting indicator */}
+          {isSittingToday ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80' }} />
+              <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>
+                Parliament sitting today
+              </Text>
+            </View>
+          ) : nextSitting ? (
+            <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 6 }}>
+              Parliament resumes {new Date(nextSitting + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })}
+            </Text>
+          ) : (
+            <Text style={styles.heroTrackingLine}>Tracking 225 representatives across 151 electorates</Text>
+          )}
         </View>
+
+        {/* ── Network / backend failure fallback ──────────────── */}
+        {allDataEmpty && (
+          <View style={{ marginHorizontal: 20, marginBottom: 16, backgroundColor: '#FEF2F2', borderRadius: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: '#DC2626', flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+            <Ionicons name="cloud-offline-outline" size={20} color="#DC2626" style={{ marginTop: 1 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#991B1B' }}>
+                Couldn't load data
+              </Text>
+              <Text style={{ fontSize: 13, color: '#7F1D1D', marginTop: 2, lineHeight: 18 }}>
+                Check your connection and pull down to refresh.
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* ── "What did I miss" catch-up card ──────────────────── */}
         {showCatchUp && (
@@ -868,29 +948,255 @@ export function HomeScreen({ navigation }: any) {
           </View>
         )}
 
-        {/* ── Daily Brief Card — GREEN HERO ──────────────── */}
-        <Pressable
-          style={{ backgroundColor: '#00843D', marginHorizontal: 20, borderRadius: 14, padding: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3, flexDirection: 'row', alignItems: 'center' }}
-          onPress={() => { hapticLight(); track('daily_brief_read', {}, 'Home'); navigation.navigate('DailyBrief'); }}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '700' }}>
-              {briefLoading ? 'Preparing your brief…' : 'Your daily brief is ready'}
-            </Text>
-            {!briefLoading && brief?.ai_text?.what_happened?.[0] && (
-              <Text style={{ color: '#FFFFFF', fontSize: 14, opacity: 0.9, marginTop: 8 }} numberOfLines={2}>
-                {brief.ai_text.what_happened[0]}
+        {/* ── Today's Brief ──────────────────────────────────── */}
+        <View style={{ marginHorizontal: 20, marginBottom: 24, backgroundColor: colors.card, borderRadius: 12, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 }}>
+          {/* Header row */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>Today's Brief</Text>
+            {brief?.created_at && (
+              <Text style={{ fontSize: 13, color: '#9CA3AF' }}>
+                Updated {new Date(brief.created_at).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' })}
               </Text>
             )}
-            {!briefLoading && !brief?.ai_text && brief?.stories?.[0] && (
-              <Text style={{ color: '#FFFFFF', fontSize: 14, opacity: 0.9, marginTop: 8 }} numberOfLines={2}>
-                {brief.stories[0].headline}
-              </Text>
-            )}
-            <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginTop: 12 }}>Read your brief →</Text>
           </View>
-          <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.7)" style={{ marginLeft: 12 }} />
-        </Pressable>
+
+          {/* Brief bullets */}
+          {briefLoading ? (
+            <View style={{ gap: 10 }}>
+              <SkeletonLoader height={16} borderRadius={4} />
+              <SkeletonLoader height={16} borderRadius={4} />
+              <SkeletonLoader width="70%" height={16} borderRadius={4} />
+            </View>
+          ) : brief?.ai_text?.what_happened ? (
+            <>
+              {brief.ai_text.what_happened.slice(0, 4).map((bullet, i) => (
+                <Pressable
+                  key={i}
+                  style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}
+                  onPress={() => { track('daily_brief_read', { bullet: i }, 'Home'); navigation.navigate('DailyBrief'); }}
+                >
+                  <Text style={{ color: '#00843D', fontSize: 16, lineHeight: 22, marginTop: -1 }}>•</Text>
+                  <Text style={{ flex: 1, fontSize: 15, color: colors.text, lineHeight: 22 }}>{bullet}</Text>
+                </Pressable>
+              ))}
+              <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 8 }} />
+              <Text style={{ fontSize: 13, color: '#9CA3AF', fontStyle: 'italic', textAlign: 'center' }}>That's today's brief.</Text>
+              <Pressable
+                style={{ marginTop: 8, alignSelf: 'center' }}
+                onPress={() => { track('daily_brief_read', {}, 'Home'); navigation.navigate('DailyBrief'); }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#00843D' }}>Read full brief →</Text>
+              </Pressable>
+            </>
+          ) : brief?.stories?.length ? (
+            <>
+              {brief.stories.slice(0, 3).map((s, i) => (
+                <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
+                  <Text style={{ color: '#00843D', fontSize: 16, lineHeight: 22, marginTop: -1 }}>•</Text>
+                  <Text style={{ flex: 1, fontSize: 15, color: colors.text, lineHeight: 22 }}>{s.headline}</Text>
+                </View>
+              ))}
+              <Pressable
+                style={{ marginTop: 4, alignSelf: 'center' }}
+                onPress={() => { track('daily_brief_read', {}, 'Home'); navigation.navigate('DailyBrief'); }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#00843D' }}>Read full brief →</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Text style={{ fontSize: 14, color: '#9CA3AF', textAlign: 'center', paddingVertical: 8 }}>
+              Today's brief is being prepared. Check back soon.
+            </Text>
+          )}
+        </View>
+
+        {/* ── Quick Actions ────────────────────────────────── */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 20, marginBottom: 24 }}>
+          {[
+            { icon: 'search-outline', label: 'Search', screen: 'Explore' },
+            { icon: 'document-text-outline', label: 'Bills', screen: 'Explore' },
+            { icon: 'people-outline', label: 'MPs', screen: 'Explore' },
+            { icon: 'calendar-outline', label: 'Elections', screen: 'Explore' },
+          ].map(action => (
+            <Pressable
+              key={action.label}
+              style={{ alignItems: 'center', gap: 4 }}
+              onPress={() => navigation.navigate(action.screen)}
+            >
+              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name={action.icon as any} size={22} color="#00843D" />
+              </View>
+              <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textBody }}>{action.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* ── Daily Civic Quiz ──────────────────────────────── */}
+        {quizQuestion && !quizDismissed && !quizAnswered && (
+          <CivicQuizCard
+            question={quizQuestion}
+            onAnswer={submitQuizAnswer}
+            onDismiss={dismissQuiz}
+          />
+        )}
+
+        {/* ── Bills That Affect You ────────────────────────── */}
+        {personalBills.length > 0 && (
+          <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 14 }}>Bills That Affect You</Text>
+            {personalBills.slice(0, 3).map(bill => {
+              const topicLabel = {
+                economy: '💰 Economy', healthcare: '🏥 Healthcare', environment: '🌿 Environment',
+                education: '📚 Education', defence: '🛡️ Defence', immigration: '✈️ Immigration',
+                housing: '🏠 Housing', welfare: '❤️ Welfare', indigenous: '🪃 Indigenous Affairs',
+                infrastructure: '🚧 Infrastructure', technology: '💻 Technology',
+                foreign_policy: '🌏 Foreign Policy', agriculture: '🌾 Agriculture', justice: '⚖️ Justice',
+              }[bill.matchedTopic] || bill.matchedTopic;
+
+              const statusText = (bill.current_status || bill.status || 'Active').replace(/In search index/i, 'Active');
+              const statusColor =
+                statusText.toLowerCase().includes('passed') || statusText.toLowerCase().includes('assent') ? '#059669'
+                : statusText.toLowerCase().includes('defeated') || statusText.toLowerCase().includes('withdrawn') ? '#DC2626'
+                : statusText.toLowerCase().includes('introduced') ? '#2563EB'
+                : '#D97706';
+
+              return (
+                <Pressable
+                  key={bill.id}
+                  style={{ backgroundColor: colors.card, borderRadius: 12, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 }}
+                  onPress={() => navigation.navigate('BillDetail', { bill })}
+                >
+                  {/* Tags row */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <View style={{ backgroundColor: '#F0FDF4', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: '#059669' }}>{topicLabel}</Text>
+                    </View>
+                    <View style={{ backgroundColor: statusColor + '15', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: statusColor }}>{statusText}</Text>
+                    </View>
+                  </View>
+
+                  {/* Title */}
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text, lineHeight: 21, marginBottom: 4 }} numberOfLines={2}>
+                    {bill.short_title || bill.title}
+                  </Text>
+
+                  {/* Summary */}
+                  {bill.summary_plain && (
+                    <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 19, marginBottom: 6 }} numberOfLines={2}>
+                      {bill.summary_plain}
+                    </Text>
+                  )}
+
+                  {/* Personal relevance line */}
+                  <Text style={{ fontSize: 12, color: '#9CA3AF', fontStyle: 'italic' }}>
+                    Affects you because you follow {bill.matchedTopic.replace(/_/g, ' ')}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+
+        {/* ── Trending in Your Electorate ──────────────────── */}
+        {electorateResult.electorate?.name && electorateTrends && (
+          <ElectorateTrendsCard
+            electorate={electorateResult.electorate.name}
+            trends={electorateTrends}
+            onBillTap={(billId) => navigation.navigate('BillDetail', { billId })}
+          />
+        )}
+
+        {/* ── Local Funding (federal announcements for user's electorate) ── */}
+        {electorateResult.electorate && (
+          <Pressable
+            style={{
+              marginHorizontal: 20,
+              marginBottom: 16,
+              backgroundColor: colors.card,
+              borderRadius: 14,
+              padding: 16,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.06,
+              shadowRadius: 3,
+              elevation: 2,
+            }}
+            onPress={() => navigation.navigate('LocalAnnouncements')}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: colors.greenBg,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Ionicons name="cash-outline" size={16} color="#00843D" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textMuted, letterSpacing: 0.8 }}>
+                  LOCAL FUNDING
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.textMuted }}>
+                  {electorateResult.electorate.name}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+            </View>
+
+            {latestLocalAnnouncement ? (
+              <>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  {(() => {
+                    const n = Number(latestLocalAnnouncement.budget_amount ?? '');
+                    if (!Number.isFinite(n) || n <= 0) return null;
+                    const label =
+                      n >= 1_000_000_000 ? `$${(n / 1_000_000_000).toFixed(1)}B` :
+                      n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` :
+                      n >= 1_000 ? `$${(n / 1_000).toFixed(0)}K` :
+                      `$${n.toLocaleString('en-AU')}`;
+                    return (
+                      <View style={{ backgroundColor: colors.greenBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#00843D', letterSpacing: 0.3 }}>
+                          {label}
+                        </Text>
+                      </View>
+                    );
+                  })()}
+                  <Text style={{ fontSize: 11, color: colors.textMuted }}>
+                    {timeAgo(latestLocalAnnouncement.announced_at ?? latestLocalAnnouncement.created_at)}
+                  </Text>
+                </View>
+                <Text
+                  style={{ fontSize: 15, fontWeight: '600', color: colors.text, lineHeight: 21 }}
+                  numberOfLines={2}
+                >
+                  {latestLocalAnnouncement.title}
+                </Text>
+              </>
+            ) : (
+              <Text style={{ fontSize: 14, color: colors.textMuted, lineHeight: 20 }}>
+                No federal funding announcements verified for {electorateResult.electorate.name} yet.
+              </Text>
+            )}
+          </Pressable>
+        )}
+
+        {/* ── Weekly Poll ──────────────────────────────────── */}
+        {weeklyPoll && (
+          <WeeklyPollCard
+            poll={weeklyPoll}
+            userVote={weeklyVote}
+            results={weeklyResults}
+            electorate={electorateResult.electorate?.name ?? null}
+            onVote={(i) => { track('poll_vote', { poll_id: weeklyPoll.id, option: i }, 'Home'); trackEvent('poll_voted', { poll_id: weeklyPoll.id }); weeklyVoteFn(i); }}
+            requireAuth={requireAuth}
+          />
+        )}
 
         {/* ── Stale content warning ──────────────────────────── */}
         {newsStories.length > 0 && Date.now() - new Date(newsStories[0].first_seen).getTime() > 48 * 60 * 60 * 1000 && (
@@ -964,18 +1270,18 @@ export function HomeScreen({ navigation }: any) {
                     </View>
                   </View>
                   <Text style={[styles.repUpdateContent, { color: colors.text }]} numberOfLines={3}>{update.content}</Text>
-                  {update.source_url && (
+                  {update.source_url ? (
                     <Pressable
                       style={{ flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 8 }}
                       onPress={(e) => {
                         e.stopPropagation();
-                        Linking.openURL(update.source_url!);
+                        Linking.openURL(update.source_url);
                       }}
                       hitSlop={8}
                     >
                       <Text style={{ color: '#00843D', fontSize: 13, fontWeight: '600' }}>View source →</Text>
                     </Pressable>
-                  )}
+                  ) : null}
                 </Pressable>
               );
             })
@@ -1054,7 +1360,12 @@ export function HomeScreen({ navigation }: any) {
             ? [...filteredStories].sort((a, b) => new Date(b.first_seen).getTime() - new Date(a.first_seen).getTime())
             : filteredStories; // trending = default DB order (article_count DESC)
 
-          const preview = sorted.slice(0, 5);
+          // heroStory is memoised at top level (same inputs as `sorted`) so useNewsStoryArticles fires once
+          const hero = heroStory;
+          const preview = sorted.slice(hero ? 1 : 0, hero ? 5 : 5);
+          const heroLeft = heroArticles.find(a => a.source?.leaning === 'left' || a.source?.leaning === 'center-left');
+          const heroCenter = heroArticles.find(a => a.source?.leaning === 'center');
+          const heroRight = heroArticles.find(a => a.source?.leaning === 'right' || a.source?.leaning === 'center-right');
 
           return (
             <View style={[styles.section, { backgroundColor: colors.background }]}>
@@ -1090,17 +1401,84 @@ export function HomeScreen({ navigation }: any) {
                   </Pressable>
                 ))}
               </View>
+              {/* Today in the Media — hero story with bias + ownership coverage */}
+              {hero && !newsStoriesLoading && (
+                <Pressable
+                  style={{ backgroundColor: '#FAF7F2', borderRadius: 14, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}
+                  onPress={() => navigation.navigate('NewsStoryDetail', { story: hero })}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <View style={{ backgroundColor: categoryColor(hero.category ?? 'politics'), borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#1A1A1A', letterSpacing: 0.4 }}>{(hero.category ?? 'politics').toUpperCase()}</Text>
+                    </View>
+                    <Text style={{ fontSize: 11, color: '#6B7280' }}>·</Text>
+                    <Text style={{ fontSize: 11, color: '#6B7280' }}>{timeAgo(hero.first_seen)}</Text>
+                    <Text style={{ fontSize: 11, color: '#6B7280' }}>·</Text>
+                    <Text style={{ fontSize: 11, color: '#6B7280' }}>{hero.article_count} outlet{hero.article_count !== 1 ? 's' : ''}</Text>
+                  </View>
+
+                  <Text style={{ fontSize: 20, fontWeight: '800', color: '#1A1A1A', lineHeight: 26, marginBottom: 10 }} numberOfLines={3}>
+                    {hero.headline}
+                  </Text>
+
+                  {hero.ai_summary && (
+                    <Text style={{ fontSize: 13, color: '#3A3A3A', lineHeight: 19, marginBottom: 12, fontStyle: 'italic' }} numberOfLines={2}>
+                      {decodeHtml(hero.ai_summary.replace(/^#+\s*/, ''))}
+                    </Text>
+                  )}
+
+                  <TwoRowCoverageBar
+                    articles={heroArticles}
+                    height={8}
+                    showLabels={heroArticles.length > 0}
+                  />
+
+                  {/* Framing row: L / C / R headlines */}
+                  {heroArticles.length > 0 && (heroLeft || heroCenter || heroRight) && (
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 12 }}>
+                      {[
+                        { article: heroLeft,   label: 'LEFT',   color: '#B8342A' },
+                        { article: heroCenter, label: 'CENTRE', color: '#6B7280' },
+                        { article: heroRight,  label: 'RIGHT',  color: '#2C4F8C' },
+                      ].map(({ article, label, color }) => (
+                        <View key={label} style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 8, padding: 8, borderTopWidth: 2, borderTopColor: color }}>
+                          <Text style={{ fontSize: 9, fontWeight: '700', color, letterSpacing: 0.4, marginBottom: 3 }}>
+                            {label}
+                          </Text>
+                          {article ? (
+                            <>
+                              <Text style={{ fontSize: 11, fontWeight: '600', color: '#1A1A1A', lineHeight: 14 }} numberOfLines={3}>
+                                {article.title}
+                              </Text>
+                              <Text style={{ fontSize: 9, color: '#6B7280', marginTop: 3 }} numberOfLines={1}>
+                                {article.source?.name ?? ''}
+                              </Text>
+                            </>
+                          ) : (
+                            <Text style={{ fontSize: 10, color: '#9CA3AF', fontStyle: 'italic' }}>
+                              Not covered
+                            </Text>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </Pressable>
+              )}
+
               {newsStoriesLoading
                 ? [1, 2, 3].map(i => (
                     <SkeletonLoader key={i} height={100} borderRadius={12} style={{ marginBottom: 8 }} />
                   ))
                 : preview.length === 0 ? (
-                  <View style={styles.newsEmptyState}>
-                    <Text style={[styles.newsEmptyText, { color: colors.textBody }]}>Checking sources…</Text>
-                    <Text style={styles.newsEmptySubText}>
-                      Stories appear here once multiple outlets have covered them.
-                    </Text>
-                  </View>
+                  hero ? null : (
+                    <View style={styles.newsEmptyState}>
+                      <Text style={[styles.newsEmptyText, { color: colors.textBody }]}>Checking sources…</Text>
+                      <Text style={styles.newsEmptySubText}>
+                        Stories appear here once multiple outlets have covered them.
+                      </Text>
+                    </View>
+                  )
                 ) : (
                   <View style={[styles.newsListCard, { backgroundColor: colors.surface }]}>
                     {preview.map((story, idx) => {

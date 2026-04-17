@@ -1,0 +1,42 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm i
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Unit tests (Vitest)
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: E2E (Playwright)
+        run: pnpm e2e
+
+      - name: Performance budget
+        run: pnpm run perf:budget
+        env:
+          PERF_BUDGET_KB: 300
+        # Optional: set your public site URL for SEO/OG generation
+      - name: Show env
+        run: echo "NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-not-set}"
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}

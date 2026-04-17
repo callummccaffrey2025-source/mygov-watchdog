@@ -1,0 +1,20 @@
+[
+  {
+    "id": "MP-001",
+    "name": "Alex Nguyen",
+    "party": "Independent",
+    "electorate": "Kooyong",
+    "roles": ["Member of Parliament"],
+    "integrity": { "conflicts": [], "gifts": [] },
+    "votes": [{ "billId": "bill-pid-2025", "position": "aye", "date": "2025-03-21" }]
+  },
+  {
+    "id": "MP-002",
+    "name": "Taylor Singh",
+    "party": "Labor",
+    "electorate": "Grayndler",
+    "roles": ["Minister for Finance"],
+    "integrity": { "conflicts": ["Shareholding disclosure under review"], "gifts": [] },
+    "votes": []
+  }
+]

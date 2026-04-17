@@ -25,7 +25,7 @@ export function useNewsStories(leaning?: string, category?: string, search?: str
   const fetch = useCallback(async () => {
     setLoading(true);
     let query = supabase
-      .from('news_stories')
+      .from('v_civic_news_stories')
       .select('*')
       .gte('article_count', search ? 1 : 3)
       .order('article_count', { ascending: false })

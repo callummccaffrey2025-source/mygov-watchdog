@@ -44,17 +44,24 @@ export function useOfficialPosts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('official_posts')
-      .select(POST_SELECT)
-      .order('created_at', { ascending: false })
-      .limit(8)
-      .then(({ data, error }) => {
-        if (!error && data) {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('official_posts')
+          .select(POST_SELECT)
+          .eq('attribution_verified', true)
+          .order('created_at', { ascending: false })
+          .limit(8);
+        if (!cancelled && !error && data) {
           setPosts((data as unknown as OfficialPost[]) || []);
         }
-        setLoading(false);
-      });
+      } catch {
+        // leave empty
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   return { posts, loading };
@@ -66,15 +73,22 @@ export function usePostsByMember(memberId: string | undefined) {
 
   useEffect(() => {
     if (!memberId) { setLoading(false); return; }
-    supabase
-      .from('official_posts')
-      .select(POST_SELECT)
-      .eq('author_id', memberId)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setPosts((data as unknown as OfficialPost[]) || []);
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('official_posts')
+          .select(POST_SELECT)
+          .eq('author_id', memberId)
+          .eq('attribution_verified', true)
+          .order('created_at', { ascending: false });
+        if (!cancelled) setPosts((data as unknown as OfficialPost[]) || []);
+      } catch {
+        // leave empty
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [memberId]);
 
   return { posts, loading };

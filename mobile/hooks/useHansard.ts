@@ -16,16 +16,22 @@ export function useHansard(memberId: string | undefined) {
 
   useEffect(() => {
     if (!memberId) { setLoading(false); return; }
-    supabase
-      .from('hansard_entries')
-      .select('id,date,debate_topic,excerpt,source_url,chamber')
-      .eq('member_id', memberId)
-      .order('date', { ascending: false })
-      .limit(30)
-      .then(({ data }) => {
-        setEntries((data || []) as HansardEntry[]);
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('hansard_entries')
+          .select('id,date,debate_topic,excerpt,source_url,chamber')
+          .eq('member_id', memberId)
+          .order('date', { ascending: false })
+          .limit(30);
+        if (!cancelled) setEntries((data || []) as HansardEntry[]);
+      } catch {
+        // leave empty
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [memberId]);
 
   return { entries, loading };

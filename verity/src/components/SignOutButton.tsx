@@ -1,11 +1,9 @@
-"use client";
-import { useRouter } from "next/navigation";
-import { supabaseBrowser } from "@/lib/supabaseBrowser";
+'use client';
+import { getSupabase } from '@/lib/supabase';
+
 export default function SignOutButton() {
-  const router = useRouter();
-  return (
-    <button className="border rounded-lg px-3 py-2" onClick={async ()=>{
-      await supabaseBrowser.auth.signOut(); router.refresh();
-    }}>Sign out</button>
-  );
+  const onClick = async () => {
+    try { await getSupabase().auth.signOut(); } finally { location.href = '/'; }
+  };
+  return <button onClick={onClick} className="px-3 py-2 rounded border">Sign out</button>;
 }

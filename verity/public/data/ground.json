@@ -1,0 +1,32 @@
+{
+  "topics": ["All", "Budget", "Energy", "Health", "Education", "Justice"],
+  "stories": [
+    {
+      "title": "Budget 2025 passes Lower House after late-night amendments",
+      "excerpt": "Key changes include a revised energy rebate and indexation shifts for HECS.",
+      "url": "https://example.gov.au/budget-2025",
+      "source": "Parliament House",
+      "stance": "neutral",
+      "published_at": "2025-09-14T23:05:00Z",
+      "tags": ["Budget","Energy","HECS"]
+    },
+    {
+      "title": "States push back on federal energy bill timeline",
+      "excerpt": "Premiers call for a staged approach; industry groups signal support with caveats.",
+      "url": "https://example.com/energy-bill-reaction",
+      "source": "The Ledger",
+      "stance": "center",
+      "published_at": "2025-09-14T21:40:00Z",
+      "tags": ["Energy","States"]
+    },
+    {
+      "title": "Watchlist: privacy reform exposure draft due this week",
+      "excerpt": "AG's dept set to publish exposure draft—what to expect and where to submit.",
+      "url": "https://example.com/privacy-reform",
+      "source": "Civics Brief",
+      "stance": "neutral",
+      "published_at": "2025-09-14T18:10:00Z",
+      "tags": ["Privacy","Justice"]
+    }
+  ]
+}

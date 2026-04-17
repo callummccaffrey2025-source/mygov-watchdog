@@ -21,6 +21,7 @@ interface Prefs {
   daily_brief: boolean;
   breaking_news: boolean;
   weekly_summary: boolean;
+  email_digest_enabled: boolean;
 }
 
 const DEFAULT_PREFS: Prefs = {
@@ -31,6 +32,7 @@ const DEFAULT_PREFS: Prefs = {
   daily_brief: true,
   breaking_news: true,
   weekly_summary: false,
+  email_digest_enabled: true,
 };
 
 const PREF_ITEMS: { key: keyof Prefs; label: string; desc: string; icon: string }[] = [
@@ -41,6 +43,7 @@ const PREF_ITEMS: { key: keyof Prefs; label: string; desc: string; icon: string 
   { key: 'election_updates',   label: 'Election Updates',        desc: 'Election dates, calls, and results',       icon: 'flag-outline' },
   { key: 'local_announcements',label: 'Local Announcements',     desc: 'Funding and projects in your area',        icon: 'location-outline' },
   { key: 'weekly_summary',     label: 'Weekly Summary',          desc: 'A wrap-up of the week in parliament',      icon: 'calendar-outline' },
+  { key: 'email_digest_enabled', label: 'Weekly Email Digest',   desc: 'Your personal weekly briefing sent every Sunday', icon: 'mail-outline' },
 ];
 
 export function NotificationPreferencesScreen({ navigation }: any) {
@@ -75,6 +78,7 @@ export function NotificationPreferencesScreen({ navigation }: any) {
             daily_brief:          data.daily_brief          ?? true,
             breaking_news:        data.breaking_news        ?? true,
             weekly_summary:       data.weekly_summary       ?? false,
+            email_digest_enabled: data.email_digest_enabled ?? true,
           });
         }
       }
@@ -253,7 +257,12 @@ export function NotificationPreferencesScreen({ navigation }: any) {
                       value={prefs[item.key]}
                       onValueChange={v => savePref(item.key, v)}
                       trackColor={{ true: '#00843D' }}
-                      disabled={permissionStatus !== 'granted' || Object.values(prefs).every(v => !v)}
+                      disabled={
+                        // Email digest doesn't need device push permission — always enabled
+                        item.key === 'email_digest_enabled'
+                          ? Object.values(prefs).every(v => !v)
+                          : permissionStatus !== 'granted' || Object.values(prefs).every(v => !v)
+                      }
                     />
                   </View>
                 </View>

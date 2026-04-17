@@ -1,0 +1,68 @@
+/**
+ * Recent votes table (server-safe)
+ * Keep this dumb and resilient to unknown shapes.
+ */
+type AnyVote = {
+  bill_id?: string | number;
+  bill_title?: string;
+  bill?: { title?: string; id?: string | number } | string;
+  stage?: string;
+  date?: string;
+  voted_at?: string;   // fallback
+  vote?: string;
+  position?: string;   // fallback
+  result?: string;     // fallback
+};
+
+export default function MPVotesTable({
+  votes = [],
+  limit,
+}: {
+  votes?: AnyVote[];
+  limit?: number;
+}) {
+  const slice = (votes ?? []).slice(0, limit ?? (votes?.length ?? 0));
+
+  const formatDate = (d?: string) => {
+    if (!d) return "—";
+    const dt = new Date(d);
+    if (isNaN(dt.getTime())) return d;
+    return dt.toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" });
+  };
+
+  const getBillTitle = (v: AnyVote) =>
+    (typeof v.bill === "string" ? v.bill : v.bill?.title) ?? v.bill_title ?? "—";
+
+  const getVoteText = (v: AnyVote) => v.vote ?? v.position ?? v.result ?? "—";
+
+  if (!slice.length) {
+    return (
+      <div className="text-sm text-white/60">No recent votes found.</div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="table-clean w-full text-sm">
+        <caption className="sr-only">Recent votes</caption>
+        <th className="whitespace-nowrap"ead>
+          <tr className="text-left">
+            <th className="whitespace-nowrap">Bill</th>
+            <th className="whitespace-nowrap">Stage</th>
+            <th className="whitespace-nowrap" className="whitespace-nowrap text-right px-4">Date</th>
+            <th className="whitespace-nowrap" className="whitespace-nowrap text-center px-4">Vote</th>
+          </tr>
+        </thead><tbody>
+          {slice.map((v, i) => (
+            <tr key={`${v.bill_id ?? i}-${i}`}>
+              <td>{getBillTitle(v)}</td>
+              <td>{v.stage ?? "—"}</td>
+              <td>{formatDate(v.date ?? v.voted_at)}</td>
+              <td>{getVoteText(v)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

@@ -29,15 +29,20 @@ export function usePolls() {
         if (err) { setError(err.message); setLoading(false); return; }
 
         const enriched = await Promise.all((pollData || []).map(async (poll) => {
-          const { data: voteData } = await supabase
-            .from('poll_votes')
-            .select('option_index')
-            .eq('poll_id', poll.id);
+          try {
+            const { data: voteData } = await supabase
+              .from('poll_votes')
+              .select('option_index')
+              .eq('poll_id', poll.id);
 
-          const counts = (poll.options || []).map((_: any, i: number) =>
-            (voteData || []).filter(v => v.option_index === i).length
-          );
-          return { ...poll, _voteCounts: counts, _totalVotes: counts.reduce((a: number, b: number) => a + b, 0) };
+            const counts = (poll.options || []).map((_: any, i: number) =>
+              (voteData || []).filter(v => v.option_index === i).length
+            );
+            return { ...poll, _voteCounts: counts, _totalVotes: counts.reduce((a: number, b: number) => a + b, 0) };
+          } catch {
+            const counts = (poll.options || []).map(() => 0);
+            return { ...poll, _voteCounts: counts, _totalVotes: 0 };
+          }
         }));
 
         setPolls(enriched);

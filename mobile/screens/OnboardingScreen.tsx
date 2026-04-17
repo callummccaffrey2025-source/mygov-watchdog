@@ -282,6 +282,11 @@ export function OnboardingScreen({ onComplete }: Props) {
               </Text>
             </View>
           </View>
+          {/* Auto-follow badge */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, alignSelf: 'center' }}>
+            <Ionicons name="checkmark-circle" size={16} color="#00843D" />
+            <Text style={{ fontSize: 13, fontWeight: '500', color: '#00843D' }}>Auto-following your MP</Text>
+          </View>
         </View>
         <View style={styles.footer}>
           <Pressable style={styles.btn} onPress={() => setStep(4)}>

@@ -35,60 +35,64 @@ export function useNewsStoryArticles(storyId: number | undefined) {
 
     setLoading(true);
     setArticles([]);
+    let cancelled = false;
 
     (async () => {
-      // Step 1: get article IDs linked to this story
-      const { data: junctionRows, error: err1 } = await supabase
-        .from('news_story_articles')
-        .select('article_id')
-        .eq('story_id', storyId);
+      try {
+        const { data: junctionRows, error: err1 } = await supabase
+          .from('news_story_articles')
+          .select('article_id')
+          .eq('story_id', storyId);
 
-      if (err1) {
-        console.error('useNewsStoryArticles junction error:', err1.message);
-        setLoading(false);
-        return;
+        if (err1 || cancelled) {
+          if (!cancelled) setLoading(false);
+          return;
+        }
+
+        const articleIds = (junctionRows || []).map((r: any) => r.article_id);
+        if (articleIds.length === 0) {
+          if (!cancelled) setLoading(false);
+          return;
+        }
+
+        const { data: articlesData, error: err2 } = await supabase
+          .from('news_articles')
+          .select('id, title, description, url, published_at, image_url, category, source_id, news_sources(id, name, slug, leaning, website_url, factuality_numeric, owner)')
+          .in('id', articleIds)
+          .eq('is_civic', true);
+
+        if (err2 || cancelled) {
+          if (!cancelled) setLoading(false);
+          return;
+        }
+
+        const raw: StoryArticle[] = ((articlesData as any[]) || [])
+          .map((a: any) => ({
+            id: a.id,
+            title: a.title,
+            description: a.description,
+            url: a.url,
+            published_at: a.published_at,
+            image_url: a.image_url,
+            category: a.category,
+            source: a.news_sources,
+          }))
+          .filter((a: any) => a.source != null);
+
+        raw.sort((a, b) => {
+          const ai = LEANING_ORDER.indexOf(a.source?.leaning ?? '');
+          const bi = LEANING_ORDER.indexOf(b.source?.leaning ?? '');
+          return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+        });
+
+        if (!cancelled) setArticles(raw);
+      } catch {
+        // Network failure — leave empty
       }
-
-      const articleIds = (junctionRows || []).map((r: any) => r.article_id);
-      if (articleIds.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      // Step 2: fetch articles with source info
-      const { data: articlesData, error: err2 } = await supabase
-        .from('news_articles')
-        .select('id, title, description, url, published_at, image_url, category, source_id, news_sources(id, name, slug, leaning, website_url, factuality_numeric, owner)')
-        .in('id', articleIds);
-
-      if (err2) {
-        console.error('useNewsStoryArticles articles error:', err2.message);
-        setLoading(false);
-        return;
-      }
-
-      const raw: StoryArticle[] = ((articlesData as any[]) || [])
-        .map((a: any) => ({
-          id: a.id,
-          title: a.title,
-          description: a.description,
-          url: a.url,
-          published_at: a.published_at,
-          image_url: a.image_url,
-          category: a.category,
-          source: a.news_sources,
-        }))
-        .filter((a: any) => a.source != null);
-
-      raw.sort((a, b) => {
-        const ai = LEANING_ORDER.indexOf(a.source?.leaning ?? '');
-        const bi = LEANING_ORDER.indexOf(b.source?.leaning ?? '');
-        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-      });
-
-      setArticles(raw);
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     })();
+
+    return () => { cancelled = true; };
   }, [storyId]);
 
   return { articles, loading };

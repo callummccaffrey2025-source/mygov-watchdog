@@ -1,0 +1,62 @@
+// Lightweight formatting helpers used across UI
+
+/** Coerce many date inputs to a Date (or Invalid Date). */
+export function fmtDate(input: string | number | Date | null | undefined): Date {
+  if (input instanceof Date) return input;
+  if (input == null) return new Date(NaN);
+  const n = typeof input === "number" ? input : Date.parse(String(input));
+  return new Date(n);
+}
+
+/** Return "17 Oct 2025" for valid dates, otherwise "—". */
+export function formatIsoDate(input: string | number | Date | null | undefined): string {
+  const d = fmtDate(input);
+  if (!isFinite(d.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-AU", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(d);
+}
+
+/** Title-case fallback. */
+function titleCase(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/(^|[\s-_/])([a-z])/g, (_, p, c) => p + c.toUpperCase());
+}
+
+/**
+ * Normalise common parliamentary stage labels into a consistent UI label.
+ * Falls back to a sensible title-cased version.
+ */
+export function formatStage(value: unknown): string {
+  if (value == null) return "—";
+  const raw = String(value).trim();
+  if (!raw) return "—";
+
+  const key = raw.toLowerCase().replace(/[\s_-]+/g, "");
+  const map: Record<string, string> = {
+    firstreading: "First reading",
+    secondreading: "Second reading",
+    thirdreading: "Third reading",
+    considerationindetail: "Consideration in detail",
+    committee: "Committee",
+    committagestage: "Committee stage",
+    reportstage: "Report stage",
+    secondreadingagree: "Second reading",
+    secondreadingsummary: "Second reading",
+  };
+
+  if (map[key]) return map[key];
+
+  // Try to preserve numbers/words nicely
+  const cleaned = raw.replace(/_/g, " ").replace(/\s+/g, " ");
+  return titleCase(cleaned);
+}
+
+export default {
+  fmtDate,
+  formatIsoDate,
+  formatStage,
+};

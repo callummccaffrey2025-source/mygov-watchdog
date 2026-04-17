@@ -9,15 +9,19 @@ export function useReactions(targetType: string, targetId: string | null) {
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
-    if (!targetId) return;
-    const { data } = await supabase
-      .from('reactions')
-      .select('reaction')
-      .eq('target_type', targetType)
-      .eq('target_id', targetId);
+    if (!targetId) { setLoading(false); return; }
+    try {
+      const { data } = await supabase
+        .from('reactions')
+        .select('reaction')
+        .eq('target_type', targetType)
+        .eq('target_id', targetId);
 
-    setLikes((data || []).filter(r => r.reaction === 'like').length);
-    setDislikes((data || []).filter(r => r.reaction === 'dislike').length);
+      setLikes((data || []).filter(r => r.reaction === 'like').length);
+      setDislikes((data || []).filter(r => r.reaction === 'dislike').length);
+    } catch {
+      // leave counts as-is
+    }
     setLoading(false);
   };
 

@@ -1,0 +1,78 @@
+type AnyVote = Record<string, any>;
+
+export default function MPVotesTable({
+  votes = [],
+  limit,
+}: {
+  votes?: AnyVote[];
+  limit?: number;
+}) {
+  const slice = (votes ?? []).slice(0, limit ?? (votes?.length ?? 0));
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="table-clean w-full text-sm">
+        <caption className="sr-only">Recent votes</caption>
+        <thead>
+          <tr className="text-left border-b border-white/10">
+            <th className="p-3 whitespace-nowrap">Bill</th>
+            <th className="p-3 whitespace-nowrap">Stage</th>
+            <th className="p-3 whitespace-nowrap">Date</th>
+            <th className="p-3 whitespace-nowrap">Vote</th>
+          </tr>
+        </thead>
+        <tbody>
+          {slice.map((v, i) => {
+            // Be lenient about incoming field names
+            const bill =
+              v.bill_title ??
+              v.bill_name ??
+              v.bill?.title ??
+              v.bill ??
+              "—";
+
+            const stage =
+              v.stage_text ??
+              v.stage_name ??
+              v.stage ??
+              "—";
+
+            const rawDate =
+              v.voted_at ?? v.voted_on ?? v.date ?? v.created_at ?? null;
+            const dateStr = rawDate
+              ? new Date(rawDate).toLocaleDateString("en-AU", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "—";
+
+            const position = v.vote ?? v.position ?? v.decision ?? "—";
+
+            const key = String(v.bill_id ?? v.id ?? i);
+
+            const billHref =
+              v.bill_slug ? `/bills/${v.bill_slug}` : v.bill_url ?? undefined;
+
+            return (
+              <tr key={key} className="border-t border-white/10">
+                <td className="p-3">
+                  {billHref ? (
+                    <a href={billHref} className="text-emerald-300 hover:underline">
+                      {bill}
+                    </a>
+                  ) : (
+                    bill
+                  )}
+                </td>
+                <td className="p-3">{stage}</td>
+                <td className="p-3 whitespace-nowrap">{dateStr}</td>
+                <td className="p-3">{position}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}

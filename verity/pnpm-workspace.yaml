@@ -1,0 +1,9 @@
+ignoredBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@sentry/cli'
+  - '@tailwindcss/oxide'
+  - esbuild
+  - lefthook
+  - prisma
+  - unrs-resolver

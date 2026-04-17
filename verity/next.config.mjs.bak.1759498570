@@ -1,0 +1,31 @@
+import path from 'node:path';
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+    dirs: ['app','components','lib'],
+  },
+  reactStrictMode: true,
+  webpack: (config) => {
+    // Hard alias so "@/..." always resolves to ./src
+    config.resolve.alias['@'] = path.resolve(process.cwd(), 'src');
+    return config;
+  },
+};
+export default nextConfig;
+
+/** temp rewrite to bypass the broken "bills" segment */
+const withBillsRewrite = (config) => ({
+  ...config,
+  async rewrites() {
+    const base = (await (config.rewrites?.() ?? { beforeFiles:[], afterFiles:[], fallback:[] }));
+    return {
+      ...base,
+      beforeFiles: [
+        ...(base.beforeFiles ?? []),
+        { source: '/bills/:path*', destination: '/legislation/:path*' },
+      ],
+    };
+  }
+});
+module.exports = withBillsRewrite(module.exports || {});

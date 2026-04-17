@@ -1,0 +1,29 @@
+[
+  {
+    "id": "s-001",
+    "type": "bill",
+    "title": "Privacy Amendment (Enhancing Online Privacy) Bill 2025",
+    "date": "2025-02-11",
+    "url": "https://www.aph.gov.au/bills/privacy-amendment-2025",
+    "snippet": "The bill strengthens penalties and introduces new rights...",
+    "text": "This bill strengthens penalties for serious data breaches. It amends the Privacy Act to enhance enforcement and introduces a right to object to profiling. Treasury estimates cost impacts are minor. Media coverage emphasised stronger penalties."
+  },
+  {
+    "id": "s-002",
+    "type": "hansard",
+    "title": "Hansard: Question Time on fuel excise relief",
+    "date": "2025-03-04",
+    "url": "https://www.aph.gov.au/hansard/2025-03-04",
+    "snippet": "Members debated temporary fuel excise relief...",
+    "text": "Members debated temporary fuel excise relief and its inflationary effects. The Treasurer cited ABS CPI data. Opposition raised concerns about regional impacts."
+  },
+  {
+    "id": "s-003",
+    "type": "media",
+    "title": "Minister announces grant program for regional EV chargers",
+    "date": "2025-02-05",
+    "url": "https://minister.gov.au/media/ev-chargers",
+    "snippet": "New funding for regional charging infrastructure...",
+    "text": "The program funds 300 new chargers across regional Australia. Expected to cut transport emissions. Industry groups welcomed the move."
+  }
+]

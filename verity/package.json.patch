@@ -1,0 +1,7 @@
+Add this to your "scripts" section in package.json:
+
+"typecheck": "tsc --noEmit",
+"lint": "next lint",
+"build": "next build",
+"dev": "next dev",
+"start": "next start"

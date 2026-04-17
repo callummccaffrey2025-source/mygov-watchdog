@@ -1,0 +1,46 @@
+{
+  "name": "verity",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "doctor": "bash agents/doctor.sh",
+    "sitemap": "bash agents/sitemap.sh",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "dependencies": {
+    "@pinecone-database/pinecone": "^6.1.2",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.76.1",
+    "autoprefixer": "^10.4.21",
+    "date-fns": "^4.1.0",
+    "langchain": "^1.0.1",
+    "next": "16.0.0",
+    "openai": "^6.6.0",
+    "postcss": "^8.5.6",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "stripe": "^18.5.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9.36.0",
+    "eslint-config-next": "14.2.7",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

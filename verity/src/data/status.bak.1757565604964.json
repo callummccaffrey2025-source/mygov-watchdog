@@ -1,0 +1,5 @@
+{
+  "uptime30d": "99.98%",
+  "lastIngest": { "bills": "2025-09-08T03:00:00Z", "hansard": "2025-09-08T04:00:00Z", "media": "2025-09-09T02:00:00Z" },
+  "docCounts": { "sources": 3, "bills": 1, "mps": 2 }
+}

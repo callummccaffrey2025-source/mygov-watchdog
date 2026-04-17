@@ -1,0 +1,57 @@
+import fmt from "@/lib/format";
+const { formatStage, formatIsoDate, fmtDate, formatDateAU } = fmt;
+import format from "@/lib/format";
+import type { MPVote } from "@/types/mp";
+export default function MPVotesTable({ votes, limit = 10 }: { votes?: MPVote[]; limit?: number }) {
+  const slice = (votes ?? []).slice(0, limit);
+
+  if (slice.length === 0) {
+    return <div className="p-4 text-[.95rem] text-white/70">No recent votes found.</div>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="table-clean text-sm">
+        <caption className="sr-only">Recent votes</caption>
+        <thead>
+          <tr className="text-left">
+            <th className="whitespace-nowrap">Bill</th>
+            <th className="whitespace-nowrap">Stage</th>
+            <th className="whitespace-nowrap text-right px-4">Date</th>
+            <th className="whitespace-nowrap text-center px-4">Vote</th>
+          </tr>
+        </thead>
+        <tbody>
+          {slice.map((v, i) => {
+            const key = String((v as any).id ?? (v as any).bill_id ?? i);
+            const title = (v as any).bill_title ?? v.bill?.title ?? (v as any).title ?? "Bill";
+            const slug = (v as any).bill_slug ?? v.bill?.slug ?? (v as any).bill_id ?? "";
+            const rawStage = (v as any).stage ?? (v as any).stage_name ?? "";
+            const stage = rawStage ? formatStage(String(rawStage)) : "—";
+            const date  = formatIsoDate(fmtDate((v as any).date ?? (v as any).voted_at));
+            const vote = (v as any).vote ?? (v as any).position ?? "—";
+            return (
+              <tr key={key}>
+                <td>
+                  {slug ? (
+                    <a
+                      href={`/bills/${slug}`}
+                      className="underline underline-offset-2 decoration-white/30 hover:decoration-white/60"
+                    >
+                      {title}
+                    </a>
+                  ) : (
+                    title
+                  )}
+                </td>
+                <td>{stage}</td>
+                <td className="text-right px-4">{date}</td>
+                <td className="text-center px-4">{(vote==="Aye")? <span className="badge badge-aye">Aye</span> : (vote==="Nay")? <span className="badge badge-nay">Nay</span> : vote ?? "—"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}

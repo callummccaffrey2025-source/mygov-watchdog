@@ -1,0 +1,81 @@
+## Versions
+v20.19.4
+10.15.0
+Next.js v15.5.3
+2.40.7
+
+## Supabase project_ref + URL
+
+## Functions list
+
+  
+   ID                                   | NAME      | SLUG      | STATUS | VERSION | UPDATED_AT (UTC)    
+  --------------------------------------|-----------|-----------|--------|---------|---------------------
+   75728961-1b8f-4a61-9bd3-0497f41741bf | crawler   | crawler   | ACTIVE | 15      | 2025-08-30 10:10:08 
+   ba7c13ec-2d26-4de3-95ae-48a167fc2f7c | fetch-aph | fetch-aph | ACTIVE | 21      | 2025-09-23 03:32:08 
+
+
+## Secrets (names only)
+NAME
+---------------------------|------------------------------------------------------------------
+NEXT_PUBLIC_SITE_URL
+SB_SERVICE_ROLE
+SB_URL
+SERVICE_ROLE_KEY
+SUPABASE_ANON_KEY
+SUPABASE_DB_URL
+SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_URL
+THEYVOTE_API_KEY
+TVFY_API_KEY
+
+## Env keys present (.env.local)
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<set>
+SUPABASE_SERVICE_ROLE_KEY=<set>
+
+## Vercel cron (if any)
+{
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "framework": "nextjs"
+}
+
+## Key API routes present
+alerts
+analytics
+ask
+bills
+briefings
+complaints
+contact
+context
+corruption
+crawl
+cron
+diff
+export
+health
+ingest
+join
+keys
+metrics
+mps
+news
+og
+personalize
+petitions
+preferences
+referrals
+search
+status
+stripe
+stripe-webhook
+subscribe
+track
+unsubscribe
+waitlist
+watchlist
+worker
+
+## MPs page present
+src/app/mps/page.tsx exists

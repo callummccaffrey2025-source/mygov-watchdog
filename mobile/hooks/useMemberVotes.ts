@@ -20,19 +20,22 @@ export function useMemberVotes(memberId: string | null) {
     let cancelled = false;
     setLoading(true);
 
-    supabase
-      .from('member_votes')
-      .select('*, bill:bills(id,title,current_status)')
-      .eq('member_id', memberId)
-      .order('created_at', { ascending: false })
-      .limit(50)
-      .then(({ data, error: err }) => {
-        if (!cancelled) {
-          if (err) setError(err.message);
-          else setVotes(data || []);
-          setLoading(false);
-        }
-      });
+    (async () => {
+      try {
+        const { data, error: err } = await supabase
+          .from('member_votes')
+          .select('*, bill:bills(id,title,current_status)')
+          .eq('member_id', memberId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (cancelled) return;
+        if (err) setError(err.message);
+        else setVotes(data || []);
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message ?? 'Network error');
+      }
+      if (!cancelled) setLoading(false);
+    })();
 
     return () => { cancelled = true; };
   }, [memberId]);

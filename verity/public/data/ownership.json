@@ -1,0 +1,7 @@
+{
+  "rows":[
+    {"outlet":"The Australian","parent":"News Corp Australia"},
+    {"outlet":"Guardian Australia","parent":"Guardian Media Group"},
+    {"outlet":"ABC News","parent":"Australian Broadcasting Corporation"}
+  ]
+}

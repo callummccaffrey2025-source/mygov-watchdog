@@ -44,7 +44,6 @@ export function useNotifications() {
       const { data, error } = await query;
 
       if (error) {
-        console.error('[useNotifications] fetch error:', error.message);
         setLoading(false);
         return;
       }
@@ -61,8 +60,8 @@ export function useNotifications() {
 
       setNotifications(items);
       setUnreadCount(items.filter((n) => !n.is_read).length);
-    } catch (err) {
-      console.error('[useNotifications] unexpected error:', err);
+    } catch {
+      // non-critical
     } finally {
       setLoading(false);
     }
@@ -80,14 +79,13 @@ export function useNotifications() {
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
 
-      const { error } = await supabase
-        .from('user_notifications')
-        .update({ is_read: true })
-        .eq('id', id);
-
-      if (error) {
-        console.error('[useNotifications] markRead error:', error.message);
-        // Revert on failure
+      try {
+        const { error } = await supabase
+          .from('user_notifications')
+          .update({ is_read: true })
+          .eq('id', id);
+        if (error) fetchNotifications();
+      } catch {
         fetchNotifications();
       }
     },
@@ -102,13 +100,13 @@ export function useNotifications() {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     setUnreadCount(0);
 
-    const { error } = await supabase
-      .from('user_notifications')
-      .update({ is_read: true })
-      .in('id', unreadIds);
-
-    if (error) {
-      console.error('[useNotifications] markAllRead error:', error.message);
+    try {
+      const { error } = await supabase
+        .from('user_notifications')
+        .update({ is_read: true })
+        .in('id', unreadIds);
+      if (error) fetchNotifications();
+    } catch {
       fetchNotifications();
     }
   }, [notifications, fetchNotifications]);

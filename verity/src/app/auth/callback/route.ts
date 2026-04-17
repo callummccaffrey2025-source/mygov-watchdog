@@ -1,10 +1,2 @@
-import { NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
-export const dynamic = "force-dynamic";
-export async function GET(req: Request) {
-  const supabase = getSupabaseServer();
-  const { searchParams, origin } = new URL(req.url);
-  const code = searchParams.get("code");
-  if (code) await supabase.auth.exchangeCodeForSession(code);
-  return NextResponse.redirect(`${origin}/account`);
-}
+export async function GET(){ return new Response(null,{ status:204 }); }
+export async function POST(){ return new Response(null,{ status:204 }); }

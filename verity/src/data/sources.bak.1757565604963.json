@@ -1,0 +1,29 @@
+[
+  {
+    "id": "src-budget-media",
+    "type": "media",
+    "title": "Treasurer announces 2025 Federal Budget focus on housing",
+    "date": "2025-05-07",
+    "url": "https://example.org/budget-housing",
+    "snippet": "Budget signals a major housing package with transparency requirements.",
+    "text": "The 2025 Federal Budget focuses on affordable housing, with measures for reporting outcomes and integrity safeguards."
+  },
+  {
+    "id": "src-bill-transparency",
+    "type": "bill",
+    "title": "Public Interest Disclosure (Integrity) Amendment Bill 2025",
+    "date": "2025-03-19",
+    "url": "https://example.org/bill-pid-2025",
+    "snippet": "Expands protections for whistleblowers and strengthens oversight.",
+    "text": "The bill extends protections for public interest disclosures and introduces audit trails for agencies."
+  },
+  {
+    "id": "src-hansard-qa",
+    "type": "hansard",
+    "title": "Hansard: Question Time on whistleblower protections",
+    "date": "2025-03-20",
+    "url": "https://example.org/hansard-whistle",
+    "snippet": "Members debated scope and enforcement of new protections.",
+    "text": "Debate centered on scope, enforcement, and the role of the new Integrity Commissioner."
+  }
+]

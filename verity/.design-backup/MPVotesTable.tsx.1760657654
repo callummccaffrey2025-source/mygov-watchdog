@@ -1,0 +1,77 @@
+type VoteRow = {
+  id?: string | number
+  bill_id?: string | number
+  bill_slug?: string
+  bill_title?: string
+  bill?: { title?: string; slug?: string }
+  stage?: string
+  stage_name?: string
+  date?: string
+  voted_at?: string
+  vote?: string
+  position?: string
+};
+
+export default function MPVotesTable({
+  votes = [],
+  limit = 10,
+}: {
+  votes?: VoteRow[];
+  limit?: number;
+}) {
+  const slice = (votes ?? []).slice(0, limit);
+
+  if (slice.length === 0) {
+    return (
+      <div className="p-4 text-[.95rem] text-white/70">
+        No recent votes found.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="table-clean w-full text-sm">
+        <caption className="sr-only">Recent votes</caption>
+        <thead>
+          <tr className="text-left">
+            <th className="whitespace-nowrap">Bill</th>
+            <th className="whitespace-nowrap">Stage</th>
+            <th className="whitespace-nowrap text-right px-4">Date</th>
+            <th className="whitespace-nowrap text-center px-4">Vote</th>
+          </tr>
+        </thead>
+        <tbody>
+          {slice.map((v, i) => {
+            const key = String(v.id ?? v.bill_id ?? i);
+            const title =
+              v.bill_title ?? v.bill?.title ?? (v as any).title ?? "Bill";
+            const slug = v.bill_slug ?? v.bill?.slug ?? v.bill_id ?? "";
+            const stage = v.stage ?? v.stage_name ?? "—";
+            const date = v.date ?? v.voted_at ?? "—";
+            const vote = v.vote ?? v.position ?? "—";
+            return (
+              <tr key={key}>
+                <td>
+                  {slug ? (
+                    <a
+                      href={`/bills/${slug}`}
+                      className="underline underline-offset-2 decoration-white/30 hover:decoration-white/60"
+                    >
+                      {title}
+                    </a>
+                  ) : (
+                    title
+                  )}
+                </td>
+                <td>{stage}</td>
+                <td className="text-right px-4">{date}</td>
+                <td className="text-center px-4">{vote}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}

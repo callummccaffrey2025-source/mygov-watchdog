@@ -1,0 +1,18 @@
+{
+  "name": "Verity — All Pages",
+  "items": [
+    { "title":"Home",        "subtitle":"Landing",              "href": "/",                             "meta": { "role":"core" } },
+    { "title":"Dashboard",   "subtitle":"Personalised start",   "href": "/dashboard",                     "meta": { "status":"stub" } },
+    { "title":"Ground",      "subtitle":"Multi-source feed",    "href": "/ground",                        "meta": { "status":"live" } },
+    { "title":"Briefings",   "subtitle":"All briefings",        "href": "/briefings",                     "meta": { "status":"stub" } },
+    { "title":"Budget 2025", "subtitle":"Briefing example",     "href": "/briefings/budget-2025",         "meta": { "status":"stub" } },
+    { "title":"Bills",       "subtitle":"Latest bills",         "href": "/bills",                         "meta": { "status":"stub" } },
+    { "title":"Bill Compare","subtitle":"A/B diff view",        "href": "/bills/compare?a=latest&b=prev", "meta": { "status":"stub" } },
+    { "title":"MPs",         "subtitle":"Directory",            "href": "/mps",                           "meta": { "status":"stub" } },
+    { "title":"Ownership",   "subtitle":"Media ownership AU",   "href": "/ownership",                     "meta": { "status":"stub" } },
+    { "title":"Search",      "subtitle":"Semantic & keyword",   "href": "/search",                        "meta": { "status":"stub" } },
+    { "title":"Join",        "subtitle":"Waitlist",             "href": "/join-waitlist",                 "meta": { "status":"live" } },
+    { "title":"Pricing",     "subtitle":"$1/mo plan",           "href": "/pricing",                       "meta": { "status":"public" } },
+    { "title":"Persona Preview","subtitle":"Citizen/Power/Journalist","href": "/previews/personalisation", "meta": { "status":"live" } }
+  ]
+}

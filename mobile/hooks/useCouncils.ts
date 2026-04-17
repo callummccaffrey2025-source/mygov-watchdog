@@ -21,15 +21,21 @@ export function useCouncils() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('councils')
-      .select('id,name,state,type,website,mayor_name,area_postcodes,phone,email,address,population,area_sqkm')
-      .order('state')
-      .order('name')
-      .then(({ data }) => {
-        setCouncils((data as Council[]) || []);
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('councils')
+          .select('id,name,state,type,website,mayor_name,area_postcodes,phone,email,address,population,area_sqkm')
+          .order('state')
+          .order('name');
+        if (!cancelled) setCouncils((data as Council[]) || []);
+      } catch {
+        // leave empty
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   return { councils, loading };

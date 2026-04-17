@@ -1,0 +1,1 @@
+import type { MP } from "@/types"; export default function MPCard({ mp }:{ mp: MP }){return(<div className="rounded-xl border border-white/10 p-4"><div className="font-semibold">{mp.name}</div><div className="text-sm text-neutral-400">{mp.party??"Independent"} • {mp.electorate??"—"}</div></div>)}

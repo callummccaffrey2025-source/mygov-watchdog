@@ -1,0 +1,6 @@
+pre-commit:
+  parallel: true
+  commands:
+    typecheck: { run: pnpm exec tsc --noEmit }
+    lint: { run: pnpm exec eslint . }
+    a11y: { run: pnpm exec playwright test -c . }

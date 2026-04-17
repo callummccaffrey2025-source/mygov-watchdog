@@ -1,0 +1,2 @@
+-- PASTE THE FULL SCHEMA FROM MY STEP 2 HERE (parties, electorates, mps, bills, bill_events, votes, mp_votes,
+-- sources, news_articles, user_preferences, alerts, views, RLS + policies)

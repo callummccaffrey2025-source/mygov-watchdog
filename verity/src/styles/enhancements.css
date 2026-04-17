@@ -1,0 +1,13 @@
+html:focus-within { scroll-behavior: smooth; }
+:target { scroll-margin-top: 90px; } /* offset for sticky header */
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within { scroll-behavior: auto; }
+}
+
+/* subtle focus ring for keyboard users */
+:focus-visible {
+  outline: 2px solid rgba(255,255,255,.45);
+  outline-offset: 2px;
+  border-radius: 6px;
+}

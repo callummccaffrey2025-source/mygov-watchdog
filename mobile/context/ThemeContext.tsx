@@ -54,7 +54,7 @@ const ThemeContext = createContext<ThemeContextType>({
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  console.log('[ThemeContext] colorScheme:', scheme, '→ isDark:', isDark);
+  // Debug logging removed for production
   return (
     <ThemeContext.Provider value={{ colors: isDark ? COLORS_DARK : COLORS_LIGHT, isDark }}>
       {children}

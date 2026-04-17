@@ -26,18 +26,26 @@ export function usePartyDonations(partyId: string | undefined) {
 
   useEffect(() => {
     if (!partyId) { setLoading(false); return; }
-    supabase
-      .from('donations')
-      .select('id,donor_name,donor_type,amount,financial_year,party_id')
-      .eq('party_id', partyId)
-      .order('amount', { ascending: false })
-      .limit(20)
-      .then(({ data }) => {
-        const rows = (data as Donation[]) || [];
-        setDonations(rows);
-        setTotalAmount(rows.reduce((sum, d) => sum + Number(d.amount), 0));
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('donations')
+          .select('id,donor_name,donor_type,amount,financial_year,party_id')
+          .eq('party_id', partyId)
+          .order('amount', { ascending: false })
+          .limit(20);
+        if (!cancelled) {
+          const rows = (data as Donation[]) || [];
+          setDonations(rows);
+          setTotalAmount(rows.reduce((sum, d) => sum + Number(d.amount), 0));
+        }
+      } catch {
+        // leave empty
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [partyId]);
 
   return { donations, loading, totalAmount };

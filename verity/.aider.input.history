@@ -1,0 +1,24 @@
+
+# 2025-10-17 19:22:03.865315
++Add a minimal MP details page at src/app/mps/[id]/page.tsx that fetches from /api/mps/[id] server-side,
+
+# 2025-10-17 19:24:01.335229
++renders name/party/state, and adds export const revalidate = 3600.
+
+# 2025-10-17 19:25:31.571282
++Do not add notFound() calls; return a gentle "Temporarily unavailable" div if fetch fails.
+
+# 2025-10-17 19:46:25.718776
++Add a minimal MP details page at src/app/mps/[id]/page.tsx...
+
+# 2025-10-18 15:49:02.554678
++Make /app/bills/page.tsx render cards with title, chamber, stage; link to details.
+
+# 2025-10-18 15:49:14.700131
++Keep TS happy, preserve revalidate.
+
+# 2025-10-20 13:23:45.829201
++Make /app/bills/page.tsx render cards with title, chamber, stage; link to details.
+
+# 2025-10-20 13:23:59.594601
++Keep TS happy, preserve revalidate.

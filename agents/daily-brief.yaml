@@ -1,0 +1,28 @@
+name: daily-brief
+description: |
+  Generates the AI-powered Verity Daily Brief — three sections (what happened,
+  what it means, one thing to know) — for the national feed and any electorate
+  the user opens. Sends push notifications to subscribed devices.
+schedule: "0 21 * * *"  # 7:00am AEST daily (1 hour after news pipeline)
+runtime: edge_function
+endpoint: https://zmmglikiryuftqmoprqm.supabase.co/functions/v1/generate-daily-brief
+method: POST
+auth:
+  type: bearer
+  token: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+body: {}
+timeout: 300
+env_required_in_function:
+  - ANTHROPIC_API_KEY  # set with: supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+upstream_dependency: news-pipeline  # must run first
+notifications:
+  on_failure:
+    - log_to: daily_brief_runs
+      status: error
+  on_success:
+    - log_to: daily_brief_runs
+      status: success
+    - send_push:
+        title: "Your Daily Brief"
+        body: "{{ai_text.what_happened[0]}}"
+        data: { screen: 'DailyBrief' }

@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+html, body { background: #000; }
+a { @apply text-emerald-300 hover:text-emerald-200; }
+button { @apply focus:outline-none; }
+
+/* --- Verity hero background glow --- */
+.hero-glow {
+  position: relative;
+  isolation: isolate;
+}
+.hero-glow::before {
+  content: "";
+  position: absolute;
+  inset: -80px -40px auto -40px;
+  height: 300px;
+  background: radial-gradient(600px 200px at left top, rgba(16,185,129,0.08), transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+
+/* Subtle but richer hero glow */
+:root {
+  --hero-emerald: radial-gradient(800px 300px at 20% 0%,
+    rgba(16,185,129,0.14), rgba(16,185,129,0.06) 40%, transparent 70%);
+}
+.hero-emerald {
+  background-image: var(--hero-emerald);
+}
+
+/* Universal focus visible */
+:where(a,button,input,select,textarea):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(16,185,129,.35);
+  border-radius: .75rem;
+}
+
+/* --- Verity: subtle live pulse & chip styling --- */
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); opacity: .85; }
+  50%      { transform: scale(1.25); opacity: 1; }
+}
+.animate-pulse-slow { animation: pulse-slow 2.6s ease-in-out infinite; }
+.live-dot {
+  display:inline-block; width:.5rem; height:.5rem;
+  border-radius:9999px; background:rgb(74 222 128 / .85); /* emerald-400 */
+  box-shadow: 0 0 0 1px rgb(52 211 153 / .35);            /* emerald ring */
+}

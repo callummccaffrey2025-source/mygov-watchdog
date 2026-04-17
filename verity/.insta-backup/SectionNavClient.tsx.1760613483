@@ -1,0 +1,35 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+const SECTIONS = ["scorecard","highlights","votes","news","committees","contacts"];
+export default function SectionNavClient() {
+  const [active,setActive] = useState<string>("scorecard");
+  const obs = useRef<IntersectionObserver>();
+  useEffect(()=> {
+    const els = SECTIONS.map(id => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+    obs.current?.disconnect();
+    obs.current = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting){ setActive(e.target.id); } });
+    }, { rootMargin: "-40% 0px -55% 0px", threshold: [0, 1]});
+    els.forEach(el => obs.current!.observe(el));
+    return ()=> obs.current?.disconnect();
+  },[]);
+  return (
+    <div className="sticky top-0 z-20 no-print">
+      <div className="mx-auto container-page px-0">
+        <nav className="card px-3 py-2 flex gap-3 overflow-x-auto">
+          {SECTIONS.map(id=>{
+            const is = active===id;
+            return (
+              <a key={id} href={`#${id}`}
+                 className={"text-sm px-3 py-1.5 rounded-full border " +
+                 (is ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
+                     : "border-white/10 text-white/80 hover:text-white")}>
+                {id[0].toUpperCase()+id.slice(1).replaceAll("-", " ")}
+              </a>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+  );
+}

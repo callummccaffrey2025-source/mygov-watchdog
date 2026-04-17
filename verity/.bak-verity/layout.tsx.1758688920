@@ -1,0 +1,50 @@
+
+export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  title: {
+    default: "Verity — Transparent politics, made simple.",
+    template: "%s · Verity"
+  },
+  description: "Verity pulls bills, votes and MPs into one clean feed. Built for Australians.",
+  openGraph: {
+    type: "website",
+    title: "Verity — Transparent politics, made simple.",
+    description: "Track bills, stages and MPs in one place.",
+    url: "/",
+    siteName: "Verity",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Verity" }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Verity — Transparent politics, made simple.",
+    description: "Track bills, stages and MPs in one place.",
+    images: ["/og.png"]
+  }
+};
+import "./globals.css";
+import type { Metadata } from "next";
+import SiteHeader from "@/components/SiteHeader";
+
+export const metadata: Metadata = {
+  title: "Verity",
+  description: "Built for Australians.",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className="dark">
+      <body className="bg-black text-zinc-200 antialiased">
+        <SiteHeader />
+        <div className="mx-auto max-w-6xl px-4">{children}</div>
+      </body>
+    </html>
+  );
+}
+
+
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)",  color: "#0b0b0b" }
+  ],
+};

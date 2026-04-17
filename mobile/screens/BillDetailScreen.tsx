@@ -33,6 +33,8 @@ import { useTheme } from '../context/ThemeContext';
 import { AuthPromptSheet } from '../components/AuthPromptSheet';
 import { useAuthGate } from '../hooks/useAuthGate';
 import { track } from '../lib/analytics';
+import { trackEvent } from '../lib/engagementTracker';
+import { useBillHistory } from '../hooks/useBillHistory';
 import { SHADOWS } from '../constants/design';
 
 interface Argument {
@@ -110,8 +112,14 @@ export function BillDetailScreen({ route, navigation }: any) {
 
   useEffect(() => {
     if (!bill && billId) {
-      supabase.from('bills').select('*').eq('id', billId).single()
-        .then(({ data }) => { if (data) setBill(data as Bill); });
+      (async () => {
+        try {
+          const { data } = await supabase.from('bills').select('*').eq('id', billId).maybeSingle();
+          if (data) setBill(data as Bill);
+        } catch {
+          // Network failure — caller sees initial state
+        }
+      })();
     }
   }, [billId]);
 
@@ -123,29 +131,24 @@ export function BillDetailScreen({ route, navigation }: any) {
     if (bill) {
       track('bill_detail_view', { bill_id: bill.id, title: bill.short_title || bill.title }, 'BillDetail');
       if (user) trackEngagement(user.id, 'bill_read', bill.categories?.[0]);
+      trackEvent('bill_read', { bill_id: bill.id });
     }
   }, [bill?.id, user?.id]);
 
   const { votes, loading: votesLoading } = useBillVotes(bill?.id ?? '');
   const { divisions: relatedDivisions, loading: divisionsLoading } = useBillDivisions(bill ?? ({} as Bill));
+  const { changes: billHistory } = useBillHistory(bill?.id ?? null);
   const { likes, dislikes, userReaction, react } = useReactions('bill', bill?.id ?? '');
   const { member: myMP } = useElectorateByPostcode(postcode);
   const { following: bookmarked, toggle: toggleBookmark } = useFollow('bill', bill?.id ?? '');
   const { colors } = useTheme();
   const { requireAuth, authSheetProps } = useAuthGate();
 
-  if (!bill) {
-    return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
-        <SkeletonLoader width="100%" height={200} />
-      </SafeAreaView>
-    );
-  }
-
   const [args, setArgs] = useState<Argument[]>([]);
   const [argsLoading, setArgsLoading] = useState(true);
 
   useEffect(() => {
+    if (!bill) return;
     supabase
       .from('bill_arguments')
       .select('id,side,argument_text')
@@ -154,7 +157,26 @@ export function BillDetailScreen({ route, navigation }: any) {
         setArgs((data as Argument[]) || []);
         setArgsLoading(false);
       });
-  }, [bill.id]);
+  }, [bill?.id]);
+
+  const billCardRef = useRef<any>(null);
+  const [showBillCard, setShowBillCard] = useState(false);
+
+  useEffect(() => {
+    if (showBillCard && bill) {
+      captureAndShare(billCardRef, 'bill', bill.id, user?.id)
+        .finally(() => setShowBillCard(false));
+    }
+  }, [showBillCard]);
+
+  // All hooks above this line — safe to early-return below
+  if (!bill) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+        <SkeletonLoader width="100%" height={200} />
+      </SafeAreaView>
+    );
+  }
 
   const forArgs = args.filter(a => a.side === 'for');
   const againstArgs = args.filter(a => a.side === 'against');
@@ -171,16 +193,6 @@ export function BillDetailScreen({ route, navigation }: any) {
   const myMPVote = myMP
     ? votes.find(v => v.member_id === myMP.id)
     : null;
-
-  const billCardRef = useRef<any>(null);
-  const [showBillCard, setShowBillCard] = useState(false);
-
-  useEffect(() => {
-    if (showBillCard) {
-      captureAndShare(billCardRef, 'bill', bill.id, user?.id)
-        .finally(() => setShowBillCard(false));
-    }
-  }, [showBillCard]);
 
   const handleShare = () => {
     setShowBillCard(true);
@@ -235,7 +247,7 @@ export function BillDetailScreen({ route, navigation }: any) {
         style={[styles.scroll, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={() => { if (billId) { supabase.from('bills').select('*').eq('id', billId).single().then(({ data }) => { if (data) setBill(data as Bill); }); } }} tintColor="#00843D" />}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={async () => { if (billId) { try { const { data } = await supabase.from('bills').select('*').eq('id', billId).maybeSingle(); if (data) setBill(data as Bill); } catch {} } }} tintColor="#00843D" />}
       >
         {/* ── Title block ────────────────────────────────── */}
         <View style={styles.titleBlock}>
@@ -434,6 +446,47 @@ export function BillDetailScreen({ route, navigation }: any) {
             </>
           )}
         </View>
+
+        {/* ── History Timeline ───────────────────────────── */}
+        {billHistory.length > 0 && (
+          <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 14 }}>History</Text>
+            {billHistory.map((change, i) => {
+              const isLatest = i === 0;
+              return (
+                <View key={change.id} style={{ flexDirection: 'row', marginBottom: 14 }}>
+                  {/* Timeline column */}
+                  <View style={{ width: 24, alignItems: 'center' }}>
+                    <View style={{
+                      width: 12, height: 12, borderRadius: 6,
+                      backgroundColor: isLatest ? '#00843D' : colors.cardAlt,
+                      borderWidth: 2, borderColor: isLatest ? '#00843D' : colors.border,
+                      marginTop: 4,
+                    }} />
+                    {i < billHistory.length - 1 && (
+                      <View style={{ width: 2, flex: 1, backgroundColor: colors.border, marginTop: 4, minHeight: 30 }} />
+                    )}
+                  </View>
+
+                  {/* Content column */}
+                  <View style={{ flex: 1, paddingBottom: 4 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text, lineHeight: 20 }}>
+                      {change.new_status}
+                    </Text>
+                    {change.change_description && change.change_description !== change.new_status && (
+                      <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 18, marginTop: 2 }} numberOfLines={2}>
+                        {change.change_description}
+                      </Text>
+                    )}
+                    <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>
+                      {timeAgo(change.changed_at)}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         {/* ── AI Impact Analysis (Pro) ────────────────────── */}
         <View style={styles.section}>

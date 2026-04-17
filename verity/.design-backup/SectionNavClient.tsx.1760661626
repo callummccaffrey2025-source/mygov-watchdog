@@ -1,0 +1,49 @@
+"use client";
+import { useEffect, useState } from "react";
+
+const LINKS = [
+  { href: "#at-a-glance", label: "At a glance" },
+  { href: "#highlights", label: "Highlights" },
+  { href: "#votes", label: "Votes" },
+  { href: "#committees", label: "Committees" },
+  { href: "#contacts", label: "Contacts" },
+];
+
+export default function SectionNavClient() {
+  const [active, setActive] = useState<string>(LINKS[0].href);
+
+  useEffect(() => {
+    const ids = LINKS.map(l => l.href.substring(1));
+    const els = ids
+      .map(id => document.getElementById(id))
+      .filter((x): x is HTMLElement => !!x);
+
+    if (els.length === 0) return;
+    const obs = new IntersectionObserver((entries) => {
+      const top = entries.sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (top?.target?.id) setActive(`#${top.target.id}`);
+    }, { rootMargin: "-40% 0px -55% 0px", threshold: [0,.25,.5,.75,1] });
+
+    els.forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <nav aria-label="Profile sections" className="tabs sticky top-0 z-10 backdrop-blur supports-[backdrop-filter]:bg-white/5">
+      <div className="container-page mx-auto px-4 overflow-x-auto">
+        <ul className="flex gap-2 py-2">
+          {LINKS.map(link => (
+            <li key={link.href}>
+              <a
+                href={link.href}
+                className={`tab ${active === link.href ? "is-active" : ""}`}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
+  );
+}

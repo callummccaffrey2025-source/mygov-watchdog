@@ -39,29 +39,32 @@ export function useCommunityPosts(
   const fetch = useCallback(async () => {
     if (!electorate) { setLoading(false); return; }
     setLoading(true);
-    let q = supabase
-      .from('community_posts')
-      .select('*')
-      .eq('electorate', electorate)
-      .eq('is_removed', false);
+    try {
+      let q = supabase
+        .from('community_posts')
+        .select('*')
+        .eq('electorate', electorate)
+        .eq('is_removed', false);
 
-    if (tab === 'latest') {
-      q = q.order('created_at', { ascending: false }).limit(30);
-    } else if (tab === 'top') {
-      q = q.order('upvotes', { ascending: false }).limit(30);
-    } else if (tab === 'mine') {
-      // posts by this device or user
-      if (userId && deviceId) {
-        q = q.or(`user_id.eq.${userId},device_id.eq.${deviceId}`).limit(30);
-      } else if (userId) {
-        q = q.eq('user_id', userId).limit(30);
-      } else if (deviceId) {
-        q = q.eq('device_id', deviceId).limit(30);
+      if (tab === 'latest') {
+        q = q.order('created_at', { ascending: false }).limit(30);
+      } else if (tab === 'top') {
+        q = q.order('upvotes', { ascending: false }).limit(30);
+      } else if (tab === 'mine') {
+        if (userId && deviceId) {
+          q = q.or(`user_id.eq.${userId},device_id.eq.${deviceId}`).limit(30);
+        } else if (userId) {
+          q = q.eq('user_id', userId).limit(30);
+        } else if (deviceId) {
+          q = q.eq('device_id', deviceId).limit(30);
+        }
       }
-    }
 
-    const { data } = await q;
-    setPosts((data as CommunityPost[]) ?? []);
+      const { data } = await q;
+      setPosts((data as CommunityPost[]) ?? []);
+    } catch {
+      // leave empty
+    }
     setLoading(false);
   }, [electorate, tab, deviceId, userId]);
 
@@ -77,15 +80,19 @@ export function useCommunityComments(postId: string | null) {
   const fetch = useCallback(async () => {
     if (!postId) { setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase
-      .from('community_comments')
-      .select('*')
-      .eq('post_id', postId)
-      .eq('is_removed', false)
-      .order('upvotes', { ascending: false })
-      .order('created_at', { ascending: true })
-      .limit(100);
-    setComments((data as CommunityComment[]) ?? []);
+    try {
+      const { data } = await supabase
+        .from('community_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .eq('is_removed', false)
+        .order('upvotes', { ascending: false })
+        .order('created_at', { ascending: true })
+        .limit(100);
+      setComments((data as CommunityComment[]) ?? []);
+    } catch {
+      // leave empty
+    }
     setLoading(false);
   }, [postId]);
 

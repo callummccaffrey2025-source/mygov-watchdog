@@ -21,18 +21,26 @@ export function useIndividualDonations(memberId: string | undefined) {
       setLoading(false);
       return;
     }
-    supabase
-      .from('individual_donations')
-      .select('id,donor_name,donor_type,amount,financial_year,receipt_type,recipient_name')
-      .eq('member_id', memberId)
-      .order('amount', { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
-        const rows = (data || []) as IndividualDonation[];
-        setDonations(rows);
-        setTotal(rows.reduce((s, d) => s + Number(d.amount), 0));
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('individual_donations')
+          .select('id,donor_name,donor_type,amount,financial_year,receipt_type,recipient_name')
+          .eq('member_id', memberId)
+          .order('amount', { ascending: false })
+          .limit(50);
+        if (!cancelled) {
+          const rows = (data || []) as IndividualDonation[];
+          setDonations(rows);
+          setTotal(rows.reduce((s, d) => s + Number(d.amount), 0));
+        }
+      } catch {
+        // leave empty
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [memberId]);
 
   return { donations, total, loading };

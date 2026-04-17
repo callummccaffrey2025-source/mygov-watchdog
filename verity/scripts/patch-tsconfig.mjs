@@ -1,0 +1,10 @@
+import { readFileSync, writeFileSync, existsSync } from "fs";
+const p = "tsconfig.json";
+if (!existsSync(p)) process.exit(0);
+const j = JSON.parse(readFileSync(p, "utf8"));
+j.compilerOptions ||= {};
+j.compilerOptions.baseUrl = "src";
+j.compilerOptions.paths ||= {};
+j.compilerOptions.paths["@/*"] = ["*"];
+writeFileSync(p, JSON.stringify(j, null, 2));
+console.log("patched:", p);

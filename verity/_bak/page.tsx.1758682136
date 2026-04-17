@@ -1,0 +1,289 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Bills • Verity",
+  description: "Track Australian bills and divisions",
+};
+
+type Bill = {
+  id?: string;
+  title: string;
+  status: string | null;
+  updated_at?: string | null;
+  url?: string | null; // in case you add links later
+};
+
+const PAGE_SIZE = 12;
+
+function param(v?: string | null) {
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+
+async function getBills({
+  q,
+  status,
+  page,
+}: { q: string | null; status: string | null; page: number }) {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  const sp: string[] = [];
+  // search title with ilike
+  if (q) sp.push(`title=ilike.*${encodeURIComponent(q)}*`);
+  if (status) sp.push(`status=eq.${encodeURIComponent(status)}`);
+
+  const limit = PAGE_SIZE;
+  const offset = Math.max(0, (page - 1) * PAGE_SIZE);
+
+  const qs = [
+    "select=id,title,status,updated_at",
+    "order=updated_at.desc.nullslast",
+    `limit=${limit}`,
+    `offset=${offset}`,
+    ...sp,
+  ].join("&");
+
+  const url = `${base}/rest/v1/bills?${qs}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      headers: {
+        apikey: anon,
+        Authorization: `Bearer ${anon}`,
+        Prefer: "count=exact",
+      },
+      next: { revalidate: 30 },
+    });
+  } catch (e) {
+    console.error("Bills fetch failed (network):", e);
+    return { items: [] as Bill[], total: 0, limit, offset };
+  }if (!res.ok) {
+    console.error("Bills fetch failed (HTTP):", res.status, await res.text().catch(()=>"(no body)"));
+    return { items: [] as Bill[], total: 0, limit, offset };
+  }
+
+  const items = (await res.json()) as Bill[];
+  const cr = res.headers.get("content-range");
+  const total = cr && cr.includes("/") ? Number(cr.split("/")[1]) : items.length;
+  return { items, total, limit, offset };
+}
+
+function StatusChip({ value }: { value: string | null }) {
+  const v = (value || "Unknown").toLowerCase();
+  const palette: Record<string, string> = {
+    introduced:
+      "bg-emerald-900/40 text-emerald-300 ring-1 ring-emerald-700/50",
+    "second reading":
+      "bg-emerald-900/40 text-emerald-200 ring-1 ring-emerald-700/60",
+    committee:
+      "bg-cyan-900/40 text-cyan-200 ring-1 ring-cyan-700/50",
+    passed:
+      "bg-emerald-800/50 text-emerald-100 ring-1 ring-emerald-600/50",
+    lapsed:
+      "bg-zinc-800/50 text-zinc-200 ring-1 ring-zinc-700/50",
+    division:
+      "bg-fuchsia-900/40 text-fuchsia-200 ring-1 ring-fuchsia-700/50",
+    unknown:
+      "bg-zinc-900/50 text-zinc-300 ring-1 ring-zinc-700/50",
+  };
+  const cls = palette[v] ?? palette["unknown"];
+  return (
+    <span className={`px-2 py-1 text-xs rounded-full ${cls}`}>
+      {value || "Unknown"}
+    </span>
+  );
+}
+
+function Toolbar({
+  q,
+  status,
+  total,
+}: { q: string | null; status: string | null; total: number }) {
+  const statuses = [
+    "Introduced",
+    "Second reading",
+    "Committee",
+    "Passed",
+    "Lapsed",
+    "Division",
+  ];
+
+  const qParam = q ? `&q=${encodeURIComponent(q)}` : "";
+  return (
+    <div className="mb-6 space-y-3">
+      <form
+        action="/bills"
+        className="flex items-center gap-2"
+      >
+        <input
+          name="q"
+          defaultValue={q ?? ""}
+          placeholder="Search bills…"
+          className="w-full md:w-96 rounded-xl bg-zinc-950 border border-emerald-900/50 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-600/60"
+        />
+        <button
+          className="rounded-xl px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white transition"
+          type="submit"
+        >
+          Search
+        </button>
+        {(q || status) && (
+          <Link
+            href="/bills"
+            className="rounded-xl px-3 py-2 bg-zinc-800 text-zinc-100 hover:bg-zinc-700 transition"
+          >
+            Clear
+          </Link>
+        )}
+      </form>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs uppercase tracking-wide text-zinc-400">
+          Status
+        </span>
+        <Link
+          href={`/bills?${q ? `q=${encodeURIComponent(q)}` : ""}`}
+          className={`text-xs rounded-full px-3 py-1 border transition ${
+            !status
+              ? "bg-emerald-800/40 border-emerald-700 text-emerald-100"
+              : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-600"
+          }`}
+        >
+          All
+        </Link>
+        {statuses.map((s) => {
+          const active = (status || "").toLowerCase() === s.toLowerCase();
+          return (
+            <Link
+              key={s}
+              href={`/bills?status=${encodeURIComponent(s)}${qParam}`}
+              className={`text-xs rounded-full px-3 py-1 border transition ${
+                active
+                  ? "bg-emerald-800/40 border-emerald-700 text-emerald-100"
+                  : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-600"
+              }`}
+            >
+              {s}
+            </Link>
+          );
+        })}
+        <span className="ml-auto text-sm text-zinc-400">
+          {total.toLocaleString()} result{total === 1 ? "" : "s"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function Card({ bill }: { bill: Bill }) {
+  const updated =
+    bill.updated_at ? new Date(bill.updated_at).toLocaleDateString() : null;
+  return (
+    <article className="group rounded-2xl border border-emerald-900/40 bg-zinc-950 hover:bg-zinc-900/60 transition shadow-sm hover:shadow-emerald-900/10">
+      <div className="p-4 md:p-5 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-base md:text-lg font-medium text-zinc-100 leading-snug">
+            {bill.title}
+          </h3>
+          <StatusChip value={bill.status} />
+        </div>
+        <div className="flex items-center justify-between text-xs text-zinc-400">
+          <span>Updated {updated ?? "—"}</span>
+          {/* Optional: external link if you store URLs per bill */}
+          {bill.url ? (
+            <a
+              href={bill.url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-emerald-400 hover:text-emerald-300"
+            >
+              Source →
+            </a>
+          ) : (
+            <span className="text-zinc-600">Source →</span>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function Pager({
+  page,
+  total,
+}: { page: number; total: number }) {
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const prev = Math.max(1, page - 1);
+  const next = Math.min(pages, page + 1);
+
+  if (pages <= 1) return null;
+
+  const link = (p: number, label?: string, disabled?: boolean) => (
+    <Link
+      href={`?page=${p}`}
+      className={`px-3 py-1 rounded-lg border ${
+        disabled
+          ? "border-zinc-800 text-zinc-600 pointer-events-none"
+          : "border-zinc-700 text-zinc-200 hover:border-emerald-700 hover:text-emerald-200"
+      }`}
+    >
+      {label ?? p}
+    </Link>
+  );
+
+  return (
+    <div className="mt-6 flex items-center justify-center gap-2">
+      {link(prev, "Prev", page === 1)}
+      <span className="text-sm text-zinc-400">
+        Page {page} / {pages}
+      </span>
+      {link(next, "Next", page === pages)}
+    </div>
+  );
+}
+
+export default async function BillsPage({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  const q = param(Array.isArray(searchParams.q) ? searchParams.q[0] : (searchParams.q as string));
+  const status = param(Array.isArray(searchParams.status) ? searchParams.status[0] : (searchParams.status as string));
+  const pageRaw = param(Array.isArray(searchParams.page) ? searchParams.page[0] : (searchParams.page as string));
+  const page = Math.max(1, Number(pageRaw || "1"));
+
+  const { items, total } = await getBills({ q, status, page });
+
+  return (
+    <main className="min-h-screen bg-black">
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        <header className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-emerald-300">
+            Bills
+          </h1>
+          <p className="text-zinc-400 mt-1">
+            Live from Supabase • filtered & searchable
+          </p>
+        </header>
+
+        <Toolbar q={q} status={status} total={total} />
+
+        {items.length === 0 ? (
+          <div className="rounded-2xl border border-zinc-800 p-8 text-center text-zinc-400">
+            { (q || status) ? "No bills found." : "No bills yet or data unavailable." }
+          </div>
+        ) : (
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+            {items.map((b) => (
+              <Card key={b.id ?? `${b.title}-${b.updated_at ?? ""}`} bill={b} />
+            ))}
+          </section>
+        )}
+
+        <Pager page={page} total={total} />
+      </div>
+    </main>
+  );
+}

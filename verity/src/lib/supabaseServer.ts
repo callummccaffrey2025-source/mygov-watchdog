@@ -1,17 +1,17 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+// src/lib/supabaseServer.ts
+import { createClient } from "@supabase/supabase-js";
 
-export async function getSupabaseServer() {
-  const cookieStore: any = await (cookies() as any);
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-    {
-      cookies: {
-        get(name: string) { return cookieStore.get(name)?.value; },
-        set(name: string, value: string, options: any) { cookieStore.set({ name, value, ...options }); },
-        remove(name: string, options: any) { cookieStore.set({ name, value: "", ...options, maxAge: 0 }); },
-      },
-    }
+const url = process.env.SUPABASE_URL!;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE!;
+
+if (!url || !serviceKey) {
+  // Keep errors obvious during dev
+  console.warn(
+    "[supabase] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE. " +
+      "The /api/waitlist route will return 500 until you set .env.local."
   );
 }
+
+export const supabaseAdmin = createClient(url, serviceKey, {
+  auth: { persistSession: false },
+});

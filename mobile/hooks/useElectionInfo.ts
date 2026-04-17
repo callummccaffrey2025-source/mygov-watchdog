@@ -19,17 +19,23 @@ export function useElectionInfo(electionType: 'federal' | 'state' = 'federal') {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('election_info')
-      .select('*')
-      .eq('election_type', electionType)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        setElection(data ?? null);
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('election_info')
+          .select('*')
+          .eq('election_type', electionType)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!cancelled) setElection(data ?? null);
+      } catch {
+        // leave null
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [electionType]);
 
   return { election, loading };

@@ -1,27 +1,40 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+'use client';
+import { useState } from 'react';
+import Section from '@/components/shared/Section';
+import Empty from '@/components/shared/Empty';
 
-"use client";
-import { useState } from "react";
-export default function SearchPage() {
-  const [q,setQ]=useState("");
-  const [results,setResults]=useState<any[]>([]);
+export default function Page(){
+  const [q,setQ] = useState(''); const [data,setData] = useState<any>(null);
+  const run = async () => {
+    const r = await fetch('/api/search?q=' + encodeURIComponent(q));
+    setData(await r.json());
+  };
   return (
-    <main className="mx-auto max-w-3xl p-6 space-y-4">
-      <h1 className="text-3xl font-semibold">Search</h1>
-      <div className="flex gap-2">
-        <input value={q} onChange={e=>setQ(e.target.value)} className="flex-1 border rounded-lg p-3" placeholder="Search bills, debates, news..." />
-        <button className="rounded-lg px-4 py-2 border" onClick={async()=>{
-          const r = await fetch("/api/search?q="+encodeURIComponent(q)); setResults(await r.json());
-        }}>Search</button>
+    <Section title="Search">
+      <div className="flex gap-2 mb-4">
+        <input
+          value={q} onChange={e=>setQ(e.target.value)}
+          placeholder="Search bills, MPs, parties, topics…"
+          className="flex-1 rounded-2xl px-4 py-2 bg-black/30 border border-white/10"
+        />
+        <button className="btn" onClick={run}>Search</button>
       </div>
-      <ul className="space-y-3">
-        {results.map(r=>(
-          <li key={r.id} className="border rounded-lg p-3">
-            <a className="font-medium underline" href={r.url} target="_blank">{r.title}</a>
-            <div className="text-sm opacity-70">{new Date(r.published_at).toLocaleString()}</div>
-          </li>
-        ))}
-      </ul>
-    </main>
+      {!data && <Empty title="Try a search" />}
+      {data && (data.results?.length ?? 0) === 0 && <Empty title={`No results for “${data.q}”`} />}
+      {data && (data.results?.length ?? 0) > 0 && (
+        <div className="space-y-6">
+          {data.results.map((group:any)=>(
+            <div key={group.type} className="space-y-3">
+              <div className="text-sm font-semibold uppercase tracking-wide subtle">{group.type}</div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {group.items.map((it:any)=>(
+                  <div key={it.id} className="card p-4">{it.title || it.name}</div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Section>
   );
 }

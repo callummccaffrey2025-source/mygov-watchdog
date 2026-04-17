@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MP {
+  id         String      @id
+  name       String
+  party      String
+  electorate String
+
+  followers  FollowMP[]
+}
+
+model Bill {
+  id         String      @id
+  title      String
+  summary    String
+  status     String
+  introduced DateTime
+  sponsor    String?
+
+  followers  FollowBill[]
+}
+
+model News {
+  id        String   @id
+  title     String
+  source    String
+  url       String
+  published DateTime
+  topic     String?
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+/**
+ * App users. This powers "log in with email link".
+ * We don't store password. We just email a magic link later.
+ */
+model User {
+  id        String      @id @default(cuid())
+  email     String      @unique
+  createdAt DateTime    @default(now())
+
+  followsMP   FollowMP[]
+  followsBill FollowBill[]
+}
+
+/**
+ * A user follows an MP.
+ * (user wants alerts for this person)
+ */
+model FollowMP {
+  id        String   @id @default(cuid())
+  userId    String
+  mpId      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mp   MP   @relation(fields: [mpId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mpId])
+}
+
+/**
+ * A user follows a Bill.
+ * (user wants alerts for this bill)
+ */
+model FollowBill {
+  id        String   @id @default(cuid())
+  userId    String
+  billId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bill Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, billId])
+}

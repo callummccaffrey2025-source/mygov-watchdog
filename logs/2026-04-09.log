@@ -1,0 +1,6 @@
+=== Verity Autopilot: 2026-04-09 ===
+[Thu Apr  9 06:00:00 AEST 2026] Starting news ingestion...
+/Users/callummccaffrey/verity/scripts/verity_autopilot.sh: line 12: python: command not found
+[Thu Apr  9 06:00:00 AEST 2026] News ingestion failed
+[Thu Apr  9 06:00:00 AEST 2026] Triggering daily brief generation...
+{"error":"Anthropic API 400: {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CZru2gJhsqtqkiWvZx3wq\"}","brief":null}[Thu Apr  9 06:00:04 AEST 2026] Autopilot complete.

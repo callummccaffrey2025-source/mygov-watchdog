@@ -1,0 +1,17 @@
+{
+  "items":[
+    {
+      "id":"alex-smith",
+      "name":"Alex Smith",
+      "party":"Independent",
+      "electorate":"Sydney",
+      "attendance":"96%",
+      "contacts":{"email":"alex.smith@example.org","phone":"(02) 1234 5678"},
+      "signals":["Crossed floor on energy bill","High local engagement"],
+      "recentVotes":[
+        {"bill":"Housing Affordability Bill 2025","position":"Aye"},
+        {"bill":"Climate Targets Amendment","position":"Noe"}
+      ]
+    }
+  ]
+}

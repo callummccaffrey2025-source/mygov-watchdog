@@ -1,0 +1,146 @@
+export const revalidate = 300;
+export const dynamic = "force-static";
+import type { Metadata, ResolvingMetadata } from "next";
+import MPHeader from "@/components/mps/MPHeader";
+import Section from "@/components/mps/Section";
+import MPVotesTable from "@/components/mps/MPVotesTable";
+import MPVotesClient from "@/components/mps/MPVotesClient";
+import MPNewsList from "@/components/mps/MPNewsList";
+import MPJsonLd from "@/components/seo/MPJsonLd";
+import MPPersonJsonLd from "@/components/seo/MPPersonJsonLd";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import Breadcrumbs from "@/components/nav/Breadcrumbs";
+import Tabs from "@/components/mps/Tabs";
+import SimilarMPs from "@/components/mps/SimilarMPs";
+import Empty from "@/components/empty/Empty";
+import FollowButton from "@/components/mps/FollowButton";
+import ClientPrintButton from "@/components/misc/ClientPrintButton";
+import PrintButton from "@/components/common/PrintButton";
+import SectionNav from "@/components/nav/SectionNav";
+import StickyIdentity from "@/components/mps/StickyIdentity";
+import { track } from "@/lib/analytics";
+import BackToTop from "@/components/utility/BackToTop";
+import ShareButtons from "@/components/utility/ShareButtons";
+import { notFound } from "next/navigation";
+import MPCommittees from "@/components/mps/MPCommittees";
+import MPContacts from "@/components/mps/MPContacts";
+import MPHero from "@/components/mps/MPHero";
+import MPScorecard from "@/components/mps/MPScorecard";
+import MPHighlights from "@/components/mps/MPHighlights";
+import ScorecardSkeleton from "@/components/skeletons/ScorecardSkeleton";
+import VotesSkeleton from "@/components/skeletons/VotesSkeleton";
+import MotionSection from "@/components/motion/MotionSection";
+import { MPScorecardSchema } from "@/types/metrics.schema";
+import type { MPProfile } from "@/types/mp";
+import { MPProfileSchema } from "@/types/mp.schema";
+
+import MPActionsRow from "@/components/mps/MPActionsRow";
+async function fetchProfile(slug: string): Promise<MPProfile> {
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+  const res = await fetch(`${base}/api/mps/${slug}`, { next: { revalidate: 300 } });
+  if (!res.ok) throw new Error("Failed to load MP");
+  const data = await res.json();
+  const parsed = MPProfileSchema.safeParse(data);
+  if (!parsed.success) throw new Error("Invalid MP payload");
+  return parsed.data;
+}
+
+export async function generateMetadata(
+  { params }: { params: { slug: string } },
+  _parent: ResolvingMetadata
+): Promise<Metadata> {
+  const mp = await fetchProfile(params.slug);
+  if (mp.name === "Unknown MP") {
+    notFound();
+  }
+  const title = `${mp.name} — ${mp.party} — ${mp.electorate} (${mp.state}) | Verity`;
+  const description = `Profile, roles, votes and news for ${mp.name}, ${mp.party} Member for ${mp.electorate}, ${mp.state}.`;
+  const ogImage = mp.headshot_url ?? `/api/og/mps/${mp.slug}`;
+  return {
+    title,
+    description,
+    openGraph: { title, description, images: [`/api/og/mp/${params.slug}?name=${encodeURIComponent(mp?.name ?? "")}&party=${encodeURIComponent(mp?.party ?? "")}&img=${encodeURIComponent(mp?.headshot_url ?? "")}`], type: "profile" },
+    twitter: { card: "summary_large_image", title, description, images: [`/api/og/mp/${params.slug}?name=${encodeURIComponent(mp?.name ?? "")}&party=${encodeURIComponent(mp?.party ?? "")}&img=${encodeURIComponent(mp?.headshot_url ?? "")}`] },
+    alternates: { canonical: `/mps/${params.slug}` },
+    robots: mp.name === "Unknown MP" ? { index: false, follow: true } : undefined,
+  };
+}
+
+export default async function Page(
+  { params, searchParams }: { params: { slug: string }; searchParams: { tab?: string } }
+) {
+  const mp = await fetchProfile(params.slug);
+
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+  let metrics: import("@/types/metrics.schema").MPScorecard | null = null;
+  try {
+    const res = await fetch(`${base}/api/mps/${params.slug}/metrics`, { next: { revalidate: 300 } });
+    if (res.ok) {
+      metrics = MPScorecardSchema.parse(await res.json());
+    }
+  } catch {}
+
+  if (mp.name === "Unknown MP") {
+    notFound();
+  }
+
+  const tab = searchParams?.tab ?? "votes";
+
+  return (
+    <main id="main"  className="canvas-grad mx-auto w-full max-w-4xl space-y-6 px-3 py-6 max-w-4xl md:max-w-5xl mx-auto space-y-6">
+            <MPHero mp={mp} />
+<MPHeader mp={mp} roles={mp.roles} />
+      <StickyIdentity name={mp.name} slug={mp.slug} party={mp.party} />
+      <MPJsonLd mp={mp} />
+      <MPPersonJsonLd name={mp.name} slug={mp.slug} headshot={mp.headshot_url} party={mp.party} electorate={mp.electorate} state={mp.state} />
+      <BreadcrumbJsonLd name={mp.name} slug={mp.slug} />
+
+      <Breadcrumbs name={mp.name} slug={mp.slug} />
+      <MPActionsRow
+    slug={mp.slug}
+    name={mp.name}
+    rssHref={"/mps/"+mp.slug+"/rss"}
+    emailHref={"mailto:"+ (mp.office_email ?? "office@example.com")}
+  />
+{metrics ? (
+        <MotionSection>
+          <Section id="scorecard" title="At a glance">
+            <MPScorecard m={metrics} />
+          </Section>
+
+      <Section id="highlights" title="Highlights" caption="Auto-generated">
+        <MPHighlights slug={mp.slug} />
+      </Section>
+        </MotionSection>
+      ) : (
+        <Section id="scorecard" title="At a glance">
+          <ScorecardSkeleton />
+        </Section>
+      )}
+
+      <SectionNav />
+
+      <MotionSection>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Section id="votes" title="Recent votes" caption={`${mp.recent_votes.length} total`}>
+            <MPVotesClient votes={mp.recent_votes} />
+          </Section>
+
+        <Section id="news" title="Recent news">
+          <MPNewsList items={mp.news} />
+        </Section>
+      </div>
+      </MotionSection>
+
+      <Section id="committees" title="Committees">
+        <MPCommittees committees={mp.committees} />
+      </Section>
+
+      <Section id="contacts" title="Contacts &amp; offices">
+        <MPContacts offices={mp.contacts?.offices} />
+      </Section>
+      <BackToTop />
+    </main>
+  );
+
+}

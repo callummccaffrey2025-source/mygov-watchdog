@@ -1,0 +1,17 @@
+name: Ingest Live Data
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes
+  workflow_dispatch: {}
+
+jobs:
+  ping-vercel-crons:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call ingest digests
+        run: |
+          curl -fsS "https://${{ secrets.VERCEL_DEPLOYMENT_HOST }}/api/cron/ingest-digests?secret=${{ secrets.CRON_SECRET }}"
+      - name: Call ingest divisions
+        run: |
+          curl -fsS "https://${{ secrets.VERCEL_DEPLOYMENT_HOST }}/api/cron/ingest-divisions?secret=${{ secrets.CRON_SECRET }}"

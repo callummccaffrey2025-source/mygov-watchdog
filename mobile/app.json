@@ -45,7 +45,9 @@
       "buildNumber": "1",
       "usesAppleSignIn": true,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryAddUsageDescription": "Verity saves share cards to your photo library when you tap Save from the share sheet.",
+        "NSUserActivityTypes": ["NSUserActivityTypeBrowsingWeb"]
       }
     },
     "android": {
@@ -69,7 +71,14 @@
       "expo-sharing",
       "expo-web-browser",
       "expo-image",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon-appstore.png",
+          "color": "#00843D"
+        }
+      ]
     ],
     "owner": "callummccaffrey",
     "runtimeVersion": {

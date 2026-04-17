@@ -1,8 +1,9 @@
+export const dynamic = "force-static";
 export default function Page(){
   return (
-    <section className="min-h-[40vh] py-10">
-      <h1 className="text-3xl font-semibold capitalize">faq</h1>
-      <p className="text-gray-600 mt-2">Content coming soon.</p>
-    </section>
+    <div>
+      <h1 className="text-2xl font-bold">FAQ</h1>
+      <p className="text-neutral-100 mt-2">Common questions</p>
+    </div>
   );
 }

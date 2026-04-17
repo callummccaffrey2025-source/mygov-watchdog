@@ -23,8 +23,6 @@ import { HomeScreen } from './screens/HomeScreen';
 import { ExploreScreen } from './screens/ExploreScreen';
 import { NewsScreen } from './screens/NewsScreen';
 import { NewsStoryDetailScreen } from './screens/NewsStoryDetailScreen';
-import { ElectionScreen } from './screens/ElectionScreen';
-import { YourMPScreen } from './screens/YourMPScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { MemberProfileScreen } from './screens/MemberProfileScreen';
 import { BillDetailScreen } from './screens/BillDetailScreen';
@@ -46,6 +44,9 @@ import { AboutScreen } from './screens/AboutScreen';
 import { DailyBriefScreen } from './screens/DailyBriefScreen';
 import { ActivityScreen } from './screens/ActivityScreen';
 import { SavedScreen } from './screens/SavedScreen';
+import { PromiseTrackerScreen } from './screens/PromiseTrackerScreen';
+import { CompareMPsScreen } from './screens/CompareMPsScreen';
+import { LocalAnnouncementsScreen } from './screens/LocalAnnouncementsScreen';
 import { supabase } from './lib/supabase';
 
 // Show notifications when app is in foreground
@@ -92,10 +93,11 @@ function HomeTabs() {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700', letterSpacing: 0.2 },
         tabBarIcon: ({ focused }) => {
           const icons: Record<string, [string, string]> = {
-            Home:    ['home',   'home-outline'],
-            Explore: ['search', 'search-outline'],
-            'Your MP': ['person-circle', 'person-circle-outline'],
-            Profile: ['person', 'person-outline'],
+            Home:      ['home',        'home-outline'],
+            Explore:   ['search',      'search-outline'],
+            News:      ['newspaper',   'newspaper-outline'],
+            Community: ['chatbubbles', 'chatbubbles-outline'],
+            Profile:   ['person',      'person-outline'],
           };
           const [active, inactive] = icons[route.name] ?? ['ellipse', 'ellipse-outline'];
           return (
@@ -110,7 +112,8 @@ function HomeTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Explore" component={ExploreScreen} />
-      <Tab.Screen name="Your MP" component={YourMPScreen} />
+      <Tab.Screen name="News" component={NewsScreen} />
+      <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -330,6 +333,9 @@ export default function App() {
               <Stack.Screen name="DailyBrief" component={DailyBriefScreen} />
               <Stack.Screen name="Activity" component={ActivityScreen} />
               <Stack.Screen name="Saved" component={SavedScreen} />
+              <Stack.Screen name="PromiseTracker" component={PromiseTrackerScreen} />
+              <Stack.Screen name="CompareMPs" component={CompareMPsScreen} />
+              <Stack.Screen name="LocalAnnouncements" component={LocalAnnouncementsScreen} />
             </Stack.Navigator>
             <AppNotificationGate />
           </NavigationContainer>

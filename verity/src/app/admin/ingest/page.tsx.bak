@@ -1,0 +1,31 @@
+export const dynamic = "force-dynamic";
+async function ingest(url: string) {
+  const r = await fetch("/api/ingest/bills", {
+    method: "POST",
+    headers: { "content-type":"application/json" },
+    body: JSON.stringify({ url })
+  });
+  return r.json();
+}
+export default function IngestPage() {
+  async function action(formData: FormData) {
+    "use server";
+    const url = String(formData.get("url") ?? "");
+    await ingest(url);
+  }
+  return (
+    <main className="mx-auto max-w-2xl px-6 py-10 space-y-4">
+      <h1 className="text-2xl font-semibold">Ingest Bills</h1>
+      <form action={action} className="space-y-2">
+        <input name="url" placeholder="https://example.com/bills.json or .csv"
+               className="w-full rounded-lg border border-white/10 bg-transparent p-2" />
+        <button className="rounded-lg border border-white/10 px-3 py-1.5 hover:border-emerald-400/40">
+          Ingest
+        </button>
+      </form>
+      <p className="text-sm text-neutral-400">
+        JSON array or CSV with columns: <code>id,title,stage,introduced,sponsor,summary,progress</code>.
+      </p>
+    </main>
+  );
+}

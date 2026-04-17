@@ -3,22 +3,18 @@ import {
   View,
   Text,
   ScrollView,
-  StyleSheet,
   Pressable,
   RefreshControl,
 } from 'react-native';
-import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNewsStories, NewsStory } from '../hooks/useNewsStories';
 import { filterPoliticalStories } from '../hooks/usePersonalisedFeed';
-import { CoverageBar } from '../components/CoverageBar';
+import { useBlindspots, BlindspotCategory } from '../hooks/useBlindspots';
 import { NewsCardSkeleton } from '../components/NewsCardSkeleton';
+import { EnhancedStoryCard } from '../components/EnhancedStoryCard';
 import { useTheme } from '../context/ThemeContext';
-import { topicBg, topicText, topicIcon } from '../constants/topicColors';
 import { timeAgo } from '../lib/timeAgo';
-
-// ── Filter config ──────────────────────────────────────────────────────────────
 
 const LEANING_FILTERS = ['All', 'Left', 'Centre', 'Right'];
 const CATEGORY_FILTERS = ['Economy', 'Health', 'Defence', 'Housing', 'Climate', 'Immigration'];
@@ -31,65 +27,24 @@ const LEANING_SLUG_MAP: Record<string, string | undefined> = {
   All: undefined, Left: 'left', Centre: 'center', Right: 'right',
 };
 
-// ── Story Card ─────────────────────────────────────────────────────────────────
+type TopTab = 'feed' | 'blindspots';
 
-function StoryCard({ story, onPress }: { story: NewsStory; onPress: () => void }) {
-  const { colors } = useTheme();
-  const cat = story.category;
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.storyCard, { backgroundColor: colors.card }, pressed && { opacity: 0.87 }]}
-      onPress={onPress}
-    >
-      <View style={styles.storyCardTop}>
-        <View style={[styles.catBadge, { backgroundColor: topicBg(cat) }]}>
-          <Text style={[styles.catBadgeText, { color: topicText(cat) }]}>
-            {(cat ?? 'politics').toUpperCase()}
-          </Text>
-        </View>
-        <Text style={[styles.timeAgo, { color: colors.textMuted }]}>{timeAgo(story.first_seen)}</Text>
-      </View>
-      <View style={styles.storyBody}>
-        <Text style={[styles.storyHeadline, { color: colors.text, flex: story.image_url ? 1 : undefined }]} numberOfLines={3}>{story.headline}</Text>
-        {story.image_url ? (
-          <Image source={{ uri: story.image_url }} style={styles.storyThumbnail} />
-        ) : (
-          <View style={[styles.storyThumbnailPlaceholder, { backgroundColor: topicBg(cat) }]}>
-            <Text style={[styles.storyThumbnailIcon, { color: topicText(cat) }]}>
-              {topicIcon(cat)}
-            </Text>
-          </View>
-        )}
-      </View>
-      <View style={styles.coverageBarWrap}>
-        <CoverageBar
-          left={story.left_count}
-          center={story.center_count}
-          right={story.right_count}
-          height={8}
-        />
-      </View>
-      <View style={styles.storyCardBottom}>
-        <View style={styles.leaningDots}>
-          {story.left_count > 0 && <View style={[styles.leaningDot, { backgroundColor: '#4C9BE8' }]} />}
-          {story.center_count > 0 && <View style={[styles.leaningDot, { backgroundColor: '#9aabb8' }]} />}
-          {story.right_count > 0 && <View style={[styles.leaningDot, { backgroundColor: '#DC3545' }]} />}
-        </View>
-        <Text style={[styles.sourceCount, { color: colors.textMuted }]}>
-          Covered by {story.article_count} source{story.article_count !== 1 ? 's' : ''}
-        </Text>
-        <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
-      </View>
-    </Pressable>
-  );
-}
+const BLINDSPOT_TABS: { key: BlindspotCategory; label: string; description: string }[] = [
+  { key: 'left',           label: 'Left blindspots',           description: 'Right + centre covered, no left-leaning outlets' },
+  { key: 'right',          label: 'Right blindspots',          description: 'Left + centre covered, no right-leaning outlets' },
+  { key: 'establishment',  label: 'Establishment blindspots',  description: 'Only independent outlets covered this' },
+  { key: 'parliamentary',  label: 'Parliamentary blindspots',  description: 'Significant parliamentary events with zero news coverage' },
+  { key: 'mp',             label: 'MP blindspots',             description: 'Highly active MPs with zero media mentions in 30 days' },
+];
 
 // ── Main screen ────────────────────────────────────────────────────────────────
 
 export function NewsScreen({ navigation }: any) {
   const { colors } = useTheme();
+  const [topTab, setTopTab] = useState<TopTab>('feed');
   const [activeLeaning, setActiveLeaning] = useState('All');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [blindspotCat, setBlindspotCat] = useState<BlindspotCategory>('left');
 
   const leaningSlug = LEANING_SLUG_MAP[activeLeaning];
   const categorySlug = activeCategory ? CATEGORY_SLUG_MAP[activeCategory] : undefined;
@@ -98,6 +53,8 @@ export function NewsScreen({ navigation }: any) {
   const stories = filterPoliticalStories(rawStories);
   const [refreshing, setRefreshing] = useState(false);
 
+  const { stories: blindspotStories, parliamentary, mps, loading: blindspotLoading } = useBlindspots(blindspotCat);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await refresh();
@@ -105,195 +62,258 @@ export function NewsScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable style={[styles.backBtn, { backgroundColor: colors.cardAlt }]} onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={22} color={colors.text} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>News</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, gap: 10 }}>
+        {navigation.canGoBack() && (
+          <Pressable
+            style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
+            onPress={() => navigation.goBack()}
+            hitSlop={8}
+          >
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
+          </Pressable>
+        )}
+        <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>News</Text>
       </View>
 
-      {/* Filters */}
-      <View style={styles.filtersWrap}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
-          {LEANING_FILTERS.map(f => (
+      {/* Top tabs */}
+      <View style={{ flexDirection: 'row', paddingHorizontal: 20, marginBottom: 8 }}>
+        {[
+          { key: 'feed' as TopTab, label: 'Feed', icon: 'newspaper-outline' },
+          { key: 'blindspots' as TopTab, label: 'Blindspots', icon: 'eye-off-outline' },
+        ].map(tab => {
+          const active = topTab === tab.key;
+          return (
             <Pressable
-              key={f}
-              style={[styles.pill, activeLeaning === f && styles.pillActive, !( activeLeaning === f) && { borderColor: colors.border }]}
-              onPress={() => setActiveLeaning(f)}
+              key={tab.key}
+              style={{
+                flex: 1, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+                borderBottomWidth: 2,
+                borderBottomColor: active ? '#00843D' : 'transparent',
+              }}
+              onPress={() => setTopTab(tab.key)}
             >
-              <Text style={[styles.pillText, { color: colors.textBody }, activeLeaning === f && styles.pillTextActive]}>{f}</Text>
+              <Ionicons name={tab.icon as any} size={16} color={active ? '#00843D' : colors.textMuted} />
+              <Text style={{ fontSize: 14, fontWeight: active ? '700' : '500', color: active ? '#00843D' : colors.textBody }}>
+                {tab.label}
+              </Text>
             </Pressable>
-          ))}
-          <View style={[styles.pillDivider, { backgroundColor: colors.border }]} />
-          {CATEGORY_FILTERS.map(f => {
-            const isActive = activeCategory === f;
-            return (
-              <Pressable
-                key={f}
-                style={[styles.pill, isActive && styles.pillActive, !isActive && { borderColor: colors.border }]}
-                onPress={() => setActiveCategory(isActive ? null : f)}
-              >
-                <Text style={[styles.pillText, { color: colors.textBody }, isActive && styles.pillTextActive]}>{f}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+          );
+        })}
       </View>
 
-      {/* Story list */}
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#00843D" />
-        }
-      >
-        {loading ? (
-          [1, 2, 3, 4, 5].map(i => <NewsCardSkeleton key={i} />)
-        ) : stories.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="newspaper-outline" size={36} color={colors.textMuted} />
-            <Text style={[styles.emptyText, { color: colors.textBody }]}>No stories found</Text>
-            <Text style={[styles.emptySubText, { color: colors.textMuted }]}>Try a different filter or check back soon</Text>
+      {/* Feed tab content */}
+      {topTab === 'feed' && (
+        <>
+          {/* Filters */}
+          <View style={{ paddingHorizontal: 20, paddingVertical: 8 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, paddingRight: 20 }}
+            >
+              {LEANING_FILTERS.map(f => {
+                const active = activeLeaning === f;
+                return (
+                  <Pressable
+                    key={f}
+                    style={{
+                      paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20,
+                      backgroundColor: active ? '#00843D' : 'transparent',
+                      borderWidth: 1, borderColor: active ? '#00843D' : colors.border,
+                    }}
+                    onPress={() => setActiveLeaning(f)}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: active ? '#fff' : colors.textBody }}>{f}</Text>
+                  </Pressable>
+                );
+              })}
+              <View style={{ width: 1, backgroundColor: colors.border, marginHorizontal: 4 }} />
+              {CATEGORY_FILTERS.map(f => {
+                const active = activeCategory === f;
+                return (
+                  <Pressable
+                    key={f}
+                    style={{
+                      paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20,
+                      backgroundColor: active ? '#00843D' : 'transparent',
+                      borderWidth: 1, borderColor: active ? '#00843D' : colors.border,
+                    }}
+                    onPress={() => setActiveCategory(active ? null : f)}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: active ? '#fff' : colors.textBody }}>{f}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </View>
-        ) : (
-          stories.map(story => (
-            <StoryCard
-              key={story.id}
-              story={story}
-              onPress={() => navigation.navigate('NewsStoryDetail', { story })}
-            />
-          ))
-        )}
-        {!loading && stories.length > 0 && (
-          <Text style={[styles.sourceNote, { color: colors.textMuted }]}>
-            Only stories covered by 5+ news sources are shown to ensure balanced perspective.
-          </Text>
-        )}
-        <View style={{ height: 24 }} />
-      </ScrollView>
+
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#00843D" />}
+          >
+            {loading ? (
+              [1, 2, 3, 4, 5].map(i => <NewsCardSkeleton key={i} />)
+            ) : stories.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingVertical: 64, paddingHorizontal: 32, gap: 12 }}>
+                <Ionicons name="newspaper-outline" size={48} color={colors.textMuted} />
+                <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, textAlign: 'center' }}>
+                  Nothing to show yet
+                </Text>
+                <Text style={{ fontSize: 15, color: colors.textBody, textAlign: 'center', lineHeight: 22 }}>
+                  News coverage of Australian politics is updated continuously. Check back soon for the latest stories.
+                </Text>
+                <Pressable
+                  style={{ backgroundColor: '#00843D', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 12, marginTop: 8 }}
+                  onPress={handleRefresh}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>Refresh</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                {stories.map(story => (
+                  <EnhancedStoryCard
+                    key={story.id}
+                    story={story}
+                    onPress={() => navigation.navigate('NewsStoryDetail', { story })}
+                  />
+                ))}
+                {stories.length < 5 && (
+                  <View style={{ alignItems: 'center', paddingVertical: 32, paddingHorizontal: 32, gap: 10, marginTop: 8 }}>
+                    <Ionicons name="newspaper-outline" size={48} color={colors.textMuted} />
+                    <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, textAlign: 'center' }}>
+                      That's all for now
+                    </Text>
+                    <Text style={{ fontSize: 15, color: colors.textBody, textAlign: 'center', lineHeight: 22 }}>
+                      News coverage of Australian politics is updated continuously. Check back soon for the latest stories.
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+          </ScrollView>
+        </>
+      )}
+
+      {/* Blindspots tab content */}
+      {topTab === 'blindspots' && (
+        <>
+          {/* Blindspot category pills */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingVertical: 8 }}
+            style={{ maxHeight: 44 }}
+          >
+            {BLINDSPOT_TABS.map(bt => {
+              const active = blindspotCat === bt.key;
+              return (
+                <Pressable
+                  key={bt.key}
+                  style={{
+                    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20,
+                    backgroundColor: active ? '#D97706' : 'transparent',
+                    borderWidth: 1, borderColor: active ? '#D97706' : colors.border,
+                  }}
+                  onPress={() => setBlindspotCat(bt.key)}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: active ? '#fff' : colors.textBody }}>
+                    {bt.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Description banner */}
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#FEF3C7', borderRadius: 10, padding: 12, marginBottom: 16 }}>
+              <Ionicons name="eye-off-outline" size={16} color="#D97706" style={{ marginTop: 1 }} />
+              <Text style={{ flex: 1, fontSize: 13, color: '#92400E', lineHeight: 19 }}>
+                {BLINDSPOT_TABS.find(b => b.key === blindspotCat)?.description}
+              </Text>
+            </View>
+
+            {blindspotLoading ? (
+              [1, 2, 3].map(i => <NewsCardSkeleton key={i} />)
+            ) : blindspotCat === 'parliamentary' ? (
+              parliamentary.length === 0 ? (
+                <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                  <Text style={{ fontSize: 14, color: colors.textBody }}>No parliamentary blindspots detected</Text>
+                </View>
+              ) : (
+                parliamentary.map(item => (
+                  <View key={item.id} style={{ backgroundColor: colors.card, borderRadius: 12, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <View style={{ backgroundColor: item.type === 'division' ? '#EEF2FF' : '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: item.type === 'division' ? '#4338CA' : '#92400E' }}>
+                          {item.type === 'division' ? 'DIVISION' : 'SPEECH'}
+                        </Text>
+                      </View>
+                      {item.chamber && <Text style={{ fontSize: 11, color: '#9CA3AF' }}>{item.chamber}</Text>}
+                      <Text style={{ fontSize: 11, color: '#9CA3AF', marginLeft: 'auto' }}>{timeAgo(item.date)}</Text>
+                    </View>
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text, lineHeight: 21 }} numberOfLines={3}>
+                      {item.title}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4, fontStyle: 'italic' }}>
+                      No news coverage detected
+                    </Text>
+                  </View>
+                ))
+              )
+            ) : blindspotCat === 'mp' ? (
+              mps.length === 0 ? (
+                <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                  <Text style={{ fontSize: 14, color: colors.textBody }}>No MP blindspots detected</Text>
+                </View>
+              ) : (
+                mps.map(mp => (
+                  <Pressable
+                    key={mp.id}
+                    style={{ backgroundColor: colors.card, borderRadius: 12, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                    onPress={() => navigation.navigate('MemberProfile', { memberId: mp.id })}
+                  >
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#FEF3C7', justifyContent: 'center', alignItems: 'center' }}>
+                      <Ionicons name="person-outline" size={20} color="#D97706" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>{mp.name}</Text>
+                      <Text style={{ fontSize: 12, color: '#6B7280' }}>
+                        {mp.party ?? 'Independent'} · {mp.activity_count} speech{mp.activity_count !== 1 ? 'es' : ''} in last 30 days
+                      </Text>
+                      <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2, fontStyle: 'italic' }}>
+                        Zero media mentions
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                  </Pressable>
+                ))
+              )
+            ) : blindspotStories.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                <Text style={{ fontSize: 14, color: colors.textBody }}>No blindspots detected in this category</Text>
+              </View>
+            ) : (
+              blindspotStories.map(story => (
+                <EnhancedStoryCard
+                  key={story.id}
+                  story={story}
+                  onPress={() => navigation.navigate('NewsStoryDetail', { story })}
+                />
+              ))
+            )}
+          </ScrollView>
+        </>
+      )}
     </SafeAreaView>
   );
 }
-
-// ── Styles ─────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FAFBFC' },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-    gap: 10,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#1a2332',
-  },
-
-  filtersWrap: { marginBottom: 8 },
-  filterRow: {
-    paddingHorizontal: 20,
-    gap: 8,
-    alignItems: 'center',
-    paddingBottom: 4,
-  },
-  pill: {
-    backgroundColor: 'transparent',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
-  pillActive: { backgroundColor: '#00843D', borderColor: '#00843D' },
-  pillText: { fontSize: 13, fontWeight: '600', color: '#5a6a7a' },
-  pillTextActive: { color: '#ffffff' },
-  pillDivider: {
-    width: 1,
-    height: 20,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: 4,
-  },
-
-  scroll: { flex: 1 },
-  listContent: { paddingHorizontal: 20, paddingTop: 4 },
-
-  storyCard: {
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  storyCardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  catBadge: {
-    borderRadius: 4,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-  },
-  catBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  timeAgo: { fontSize: 11, color: '#9aabb8' },
-  storyBody: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 10 },
-  storyHeadline: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1a2332',
-    lineHeight: 23,
-  },
-  storyThumbnail: { width: 72, height: 72, borderRadius: 8, flexShrink: 0, backgroundColor: '#f3f4f6' },
-  storyThumbnailPlaceholder: { width: 72, height: 72, borderRadius: 8, flexShrink: 0, justifyContent: 'center', alignItems: 'center' },
-  storyThumbnailIcon: { fontSize: 28 },
-  coverageBarWrap: { marginBottom: 10 },
-  storyCardBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  leaningDots: { flexDirection: 'row', gap: 4, marginRight: 2 },
-  leaningDot: { width: 8, height: 8, borderRadius: 4 },
-  sourceCount: { flex: 1, fontSize: 12, color: '#9aabb8' },
-
-  emptyState: {
-    alignItems: 'center',
-    paddingTop: 60,
-    gap: 8,
-  },
-  emptyText: { fontSize: 16, fontWeight: '700', color: '#5a6a7a' },
-  emptySubText: { fontSize: 13, color: '#9aabb8', textAlign: 'center' },
-  sourceNote: {
-    fontSize: 11, color: '#9aabb8', textAlign: 'center',
-    paddingHorizontal: 20, paddingBottom: 8,
-  },
-});

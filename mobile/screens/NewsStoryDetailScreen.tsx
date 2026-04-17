@@ -15,6 +15,8 @@ import { Image as ExpoImage } from 'expo-image';
 import { NewsStory } from '../hooks/useNewsStories';
 import { useNewsStoryArticles, StoryArticle } from '../hooks/useNewsStoryArticles';
 import { CoverageBar } from '../components/CoverageBar';
+import { TwoRowCoverageBar } from '../components/TwoRowCoverageBar';
+import { VerityRealityCheck } from '../components/VerityRealityCheck';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
@@ -28,6 +30,7 @@ import { useSave } from '../hooks/useSaves';
 import { AuthPromptSheet } from '../components/AuthPromptSheet';
 import { useAuthGate } from '../hooks/useAuthGate';
 import { track } from '../lib/analytics';
+import { trackEvent } from '../lib/engagementTracker';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 
 // ── Leaning config ─────────────────────────────────────────────────────────────
@@ -205,16 +208,34 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
   const { colors } = useTheme();
   const { story: storyParam, storyId } = route.params as { story?: NewsStory; storyId?: number };
   const [story, setStory] = useState<NewsStory | null>(storyParam ?? null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     if (!story && storyId) {
-      supabase.from('news_stories').select('*').eq('id', storyId).single()
-        .then(({ data }) => { if (data) setStory(data as NewsStory); });
+      let cancelled = false;
+      (async () => {
+        try {
+          const { data } = await supabase
+            .from('v_civic_news_stories')
+            .select('*')
+            .eq('id', storyId)
+            .maybeSingle();
+          if (cancelled) return;
+          if (data) setStory(data as NewsStory);
+          else setLoadFailed(true);
+        } catch {
+          if (!cancelled) setLoadFailed(true);
+        }
+      })();
+      return () => { cancelled = true; };
     }
   }, [storyId]);
 
   useEffect(() => {
-    if (story) track('news_story_view', { story_id: story.id, headline: story.headline, category: story.category }, 'NewsStoryDetail');
+    if (story) {
+      track('news_story_view', { story_id: story.id, headline: story.headline, category: story.category }, 'NewsStoryDetail');
+      trackEvent('news_read', { story_id: story.id });
+    }
   }, [story?.id]);
 
   const { articles, loading } = useNewsStoryArticles(story?.id ?? 0);
@@ -255,6 +276,36 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
   }, [myMP?.party_id, story?.category, relatedVote]);
 
   if (!story) {
+    if (loadFailed) {
+      return (
+        <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+          <View style={{ paddingHorizontal: 20, paddingTop: 12 }}>
+            <Pressable
+              style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
+              onPress={() => navigation.goBack()}
+              hitSlop={8}
+            >
+              <Ionicons name="arrow-back" size={22} color={colors.text} />
+            </Pressable>
+          </View>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 12 }}>
+            <Ionicons name="newspaper-outline" size={48} color={colors.textMuted} />
+            <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, textAlign: 'center' }}>
+              Story unavailable
+            </Text>
+            <Text style={{ fontSize: 15, color: colors.textBody, textAlign: 'center', lineHeight: 22 }}>
+              This story is no longer in Verity's civic news feed. It may have been removed because it wasn't about Australian politics.
+            </Text>
+            <Pressable
+              style={{ backgroundColor: '#00843D', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 12, marginTop: 8 }}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>Go back</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      );
+    }
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
         <SkeletonLoader width="100%" height={200} />
@@ -298,7 +349,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => { if (story?.id) { supabase.from('news_stories').select('*').eq('id', story.id).single().then(({ data }) => { if (data) setStory(data as NewsStory); }); } }} tintColor="#00843D" />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => { if (story?.id) { supabase.from('v_civic_news_stories').select('*').eq('id', story.id).maybeSingle().then(({ data }) => { if (data) setStory(data as NewsStory); }); } }} tintColor="#00843D" />}
       >
         {/* Headline */}
         <Text style={[styles.headline, { color: colors.text }]}>{story.headline}</Text>
@@ -315,62 +366,38 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
           </View>
         ) : null}
 
-        {/* Coverage bar */}
-        <View style={styles.barWrap}>
-          <CoverageBar
-            left={story.left_count}
-            center={story.center_count}
-            right={story.right_count}
-            height={14}
-            showLabel
-          />
-        </View>
-
-        {/* Leaning breakdown */}
-        <View style={styles.breakdownRow}>
-          {story.left_count > 0 && (
-            <Text style={[styles.breakdownCount, { color: '#4C9BE8' }]}>
-              {story.left_count} Left
+        {/* Two-row coverage bar — bias (top) + Australian ownership (bottom) */}
+        <View style={{ marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textMuted, letterSpacing: 0.6 }}>
+              COVERAGE
             </Text>
-          )}
-          {story.center_count > 0 && (
-            <>
-              {story.left_count > 0 && <Text style={[styles.breakdownSep, { color: colors.textMuted }]}> · </Text>}
-              <Text style={[styles.breakdownCount, { color: '#9aabb8' }]}>
-                {story.center_count} Centre
-              </Text>
-            </>
-          )}
-          {story.right_count > 0 && (
-            <>
-              {(story.left_count > 0 || story.center_count > 0) && (
-                <Text style={[styles.breakdownSep, { color: colors.textMuted }]}> · </Text>
-              )}
-              <Text style={[styles.breakdownCount, { color: '#DC3545' }]}>
-                {story.right_count} Right
-              </Text>
-            </>
-          )}
-          {total > 0 && (
-            <Text style={[styles.breakdownTotal, { color: colors.textMuted }]}> · {total} source{total !== 1 ? 's' : ''}</Text>
+            <Text style={{ fontSize: 11, color: colors.textMuted }}>
+              {articles.length > 0 ? articles.length : total} outlet{(articles.length || total) !== 1 ? 's' : ''}
+            </Text>
+          </View>
+          <TwoRowCoverageBar
+            articles={articles.length > 0 ? articles : []}
+            height={10}
+            showLabels={articles.length > 0}
+          />
+          {articles.length === 0 && total > 0 && (
+            <CoverageBar
+              left={story.left_count}
+              center={story.center_count}
+              right={story.right_count}
+              height={10}
+            />
           )}
         </View>
 
-        {/* Legend */}
-        <View style={styles.legend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#4C9BE8' }]} />
-            <Text style={[styles.legendLabel, { color: colors.textBody }]}>Left</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#9aabb8' }]} />
-            <Text style={[styles.legendLabel, { color: colors.textBody }]}>Centre</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#DC3545' }]} />
-            <Text style={[styles.legendLabel, { color: colors.textBody }]}>Right</Text>
-          </View>
-        </View>
+        {/* Reality check — related bills + MP position */}
+        <VerityRealityCheck
+          storyId={story.id}
+          headline={story.headline}
+          category={story.category}
+          onPressBill={bill => navigation.navigate('BillDetail', { billId: bill.id })}
+        />
 
         {/* Blindspot alert */}
         {blindspotSide ? (
@@ -387,8 +414,86 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
 
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
+        {/* ── Framing comparison ───────────────────────────── */}
+        {articles.length > 0 && (() => {
+          const leftArticle = articles.find(a => a.source?.leaning === 'left' || a.source?.leaning === 'center-left');
+          const centerArticle = articles.find(a => a.source?.leaning === 'center');
+          const rightArticle = articles.find(a => a.source?.leaning === 'right' || a.source?.leaning === 'center-right');
+          if (!leftArticle && !centerArticle && !rightArticle) return null;
+
+          const renderPanel = (article: typeof leftArticle, label: string, color: string) => (
+            <View style={{ flex: 1, backgroundColor: colors.card, borderRadius: 10, padding: 12, borderTopWidth: 3, borderTopColor: color }}>
+              <Text style={{ fontSize: 10, fontWeight: '700', color, letterSpacing: 0.5, marginBottom: 6 }}>{label}</Text>
+              {article ? (
+                <>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text, lineHeight: 18, marginBottom: 6 }} numberOfLines={4}>
+                    {article.title}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: '#9CA3AF' }} numberOfLines={1}>
+                    {article.source?.name ?? 'Unknown'}
+                  </Text>
+                </>
+              ) : (
+                <Text style={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>Not covered</Text>
+              )}
+            </View>
+          );
+
+          return (
+            <View style={{ marginBottom: 20 }}>
+              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 10 }]}>How Headlines Differ</Text>
+              <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 12, lineHeight: 17 }}>
+                The same event, framed by different outlets:
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {renderPanel(leftArticle, 'LEFT', '#2563EB')}
+                {renderPanel(centerArticle, 'CENTRE', '#8B5CF6')}
+                {renderPanel(rightArticle, 'RIGHT', '#DC2626')}
+              </View>
+            </View>
+          );
+        })()}
+
+        {/* ── Ownership analysis ─────────────────────────────── */}
+        {articles.length > 0 && (() => {
+          const ownerCounts = new Map<string, number>();
+          for (const a of articles) {
+            const owner = a.source?.owner ?? 'Independent / Other';
+            ownerCounts.set(owner, (ownerCounts.get(owner) ?? 0) + 1);
+          }
+          const sorted = Array.from(ownerCounts.entries()).sort((a, b) => b[1] - a[1]);
+          if (sorted.length === 0) return null;
+
+          return (
+            <View style={{ marginBottom: 20 }}>
+              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 10 }]}>Coverage by Owner</Text>
+              <View style={{ backgroundColor: colors.card, borderRadius: 10, padding: 12 }}>
+                {sorted.map(([owner, count], i) => {
+                  const pct = Math.round((count / articles.length) * 100);
+                  return (
+                    <View key={i} style={{ marginBottom: i === sorted.length - 1 ? 0 : 10 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '500', color: colors.text, flex: 1 }} numberOfLines={1}>{owner}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textMuted }}>
+                          {count} outlet{count !== 1 ? 's' : ''} ({pct}%)
+                        </Text>
+                      </View>
+                      <View style={{ height: 4, borderRadius: 2, backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
+                        <View style={{ width: `${pct}%`, height: 4, backgroundColor: '#00843D', borderRadius: 2 }} />
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 6, fontStyle: 'italic' }}>
+                {articles.length} outlet{articles.length !== 1 ? 's' : ''} across {sorted.length} owner{sorted.length !== 1 ? 's' : ''}
+              </Text>
+            </View>
+          );
+        })()}
+
         {/* Coverage section */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Coverage</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>All outlets covering this story</Text>
 
         {loading ? (
           [1, 2, 3].map(i => (

@@ -26,18 +26,21 @@ export function useVotes(memberId: string | null) {
     let cancelled = false;
     setLoading(true);
 
-    supabase
-      .from('division_votes')
-      .select('id, vote_cast, rebelled, member_id, created_at, division:divisions(id, name, date, chamber, aye_votes, no_votes)')
-      .eq('member_id', memberId)
-      .order('created_at', { ascending: false })
-      .limit(100)
-      .then(({ data, error }) => {
-        if (!cancelled) {
-          if (!error) setVotes((data as unknown as DivisionVote[]) || []);
-          setLoading(false);
-        }
-      });
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('division_votes')
+          .select('id, vote_cast, rebelled, member_id, created_at, division:divisions(id, name, date, chamber, aye_votes, no_votes)')
+          .eq('member_id', memberId)
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (cancelled) return;
+        if (!error) setVotes((data as unknown as DivisionVote[]) || []);
+      } catch {
+        // Network/Supabase failure — leave votes empty so UI shows empty state
+      }
+      if (!cancelled) setLoading(false);
+    })();
 
     return () => { cancelled = true; };
   }, [memberId]);
