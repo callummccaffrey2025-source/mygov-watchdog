@@ -18,6 +18,7 @@ import { CoverageBar } from '../components/CoverageBar';
 import { TwoRowCoverageBar } from '../components/TwoRowCoverageBar';
 import { VerityRealityCheck } from '../components/VerityRealityCheck';
 import { ReceiptsBlock } from '../components/ReceiptsBlock';
+import { FollowTheMoneyCard } from '../components/FollowTheMoneyCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
@@ -34,6 +35,7 @@ import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
 import { useStoryPrimarySources } from '../hooks/useStoryPrimarySources';
 import { useReceiptTelemetry } from '../hooks/useReceiptTelemetry';
+import { StoryTimeline } from '../components/StoryTimeline';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 
 // ── Leaning config ─────────────────────────────────────────────────────────────
@@ -410,6 +412,22 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
           headline={story.headline}
           onPressBill={(billId) => navigation.navigate('BillDetail', { billId })}
           onPressMember={(memberId) => navigation.navigate('MemberProfile', { memberId })}
+        />
+
+        {/* Follow the money — financial connections behind the reporting */}
+        <FollowTheMoneyCard
+          storyId={story.id}
+          headline={story.headline}
+          category={story.category}
+          onPressMember={(memberId) => navigation.navigate('MemberProfile', { memberId })}
+        />
+
+        {/* Story timeline — full arc of this political story */}
+        <StoryTimeline
+          storyId={story.id}
+          onPressBill={(billId) => navigation.navigate('BillDetail', { billId })}
+          onPressMember={(memberId) => navigation.navigate('MemberProfile', { memberId })}
+          onPressStory={(sid) => navigation.push('NewsStoryDetail', { storyId: sid })}
         />
 
         {/* Blindspot alert */}
