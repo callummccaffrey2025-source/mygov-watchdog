@@ -142,7 +142,7 @@ export function StoryTimeline({ storyId, onPressBill, onPressMember, onPressStor
         const dotColor = DOT_COLORS[event.type];
         const badgeLabel = BADGE_LABELS[event.type];
         const isLast = idx === visibleEvents.length - 1;
-        const isTodayEvent = showTodayMarker && isLast && expanded || (showTodayMarker && isLast && !shouldCollapse);
+        const isTodayEvent = showTodayMarker && isLast;
 
         // Gap label: compute from original event order
         // For collapsed view, don't show gap between item 2 (idx=2) and item 3 (idx=3) since those are non-contiguous

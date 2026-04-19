@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { useDailyBrief, DailyBriefData } from './useDailyBrief';
@@ -53,13 +53,16 @@ export function useMorningSignal(electorate: string | null = null, mpName: strin
   // Fallback: use existing daily brief if no morning_signals row exists
   const { brief: dailyBrief, loading: briefLoading } = useDailyBrief(electorate, mpName);
 
-  const refresh = useCallback(async (cancelled = false) => {
+  const cancelledRef = useRef(false);
+
+  const refresh = useCallback(async () => {
+    cancelledRef.current = false;
     setLoading(true);
 
     // ── Load cached signal instantly (offline-first) ────────────────────
     try {
       const cached = await AsyncStorage.getItem(SIGNAL_CACHE_KEY);
-      if (cached && !cancelled) {
+      if (cached && !cancelledRef.current) {
         const { signal: cachedSignal, timestamp } = JSON.parse(cached);
         if (Date.now() - timestamp < SIGNAL_CACHE_TTL) {
           setSignal(cachedSignal as MorningSignalData);
@@ -90,17 +93,17 @@ export function useMorningSignal(electorate: string | null = null, mpName: strin
       baseData = fallback as MorningSignalData | null;
     }
 
-    if (baseData && !cancelled) {
+    if (baseData && !cancelledRef.current) {
       setSignal(baseData);
       AsyncStorage.setItem(
         SIGNAL_CACHE_KEY,
         JSON.stringify({ signal: baseData, timestamp: Date.now() }),
       ).catch(() => {});
     }
-    if (!cancelled) setLoading(false);
+    if (!cancelledRef.current) setLoading(false);
 
     // ── 2. Try electorate-specific signal if electorate is known ────────
-    if (!electorate || cancelled) return;
+    if (!electorate || cancelledRef.current) return;
 
     const { data: electorateSignal } = await supabase
       .from('morning_signals')
@@ -109,7 +112,7 @@ export function useMorningSignal(electorate: string | null = null, mpName: strin
       .eq('electorate', electorate)
       .maybeSingle();
 
-    if (electorateSignal && !cancelled) {
+    if (electorateSignal && !cancelledRef.current) {
       setSignal(electorateSignal as MorningSignalData);
       AsyncStorage.setItem(
         SIGNAL_CACHE_KEY,
@@ -123,7 +126,7 @@ export function useMorningSignal(electorate: string | null = null, mpName: strin
       const { data: genData, error } = await supabase.functions.invoke('generate-morning-signal', {
         body: { electorate, mp_name: mpName },
       });
-      if (!cancelled && genData && !error) {
+      if (!cancelledRef.current && genData && !error) {
         setSignal(genData as MorningSignalData);
         AsyncStorage.setItem(
           SIGNAL_CACHE_KEY,
@@ -136,9 +139,9 @@ export function useMorningSignal(electorate: string | null = null, mpName: strin
   }, [electorate, mpName]);
 
   useEffect(() => {
-    let cancelled = false;
-    refresh(cancelled);
-    return () => { cancelled = true; };
+    cancelledRef.current = false;
+    refresh();
+    return () => { cancelledRef.current = true; };
   }, [refresh]);
 
   // Graceful migration: if no signal data exists at all, adapt daily brief

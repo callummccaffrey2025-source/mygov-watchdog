@@ -74,7 +74,7 @@ export function useFollowTheMoney(storyId: number | null): FollowTheMoneyData {
             memberEntities.map(async (entity) => {
               const { data: memberData } = await supabase
                 .from('members')
-                .select('first_name, last_name, party')
+                .select('first_name, last_name, party:parties(name, short_name, colour)')
                 .eq('id', entity.member_id)
                 .maybeSingle();
 
@@ -95,7 +95,9 @@ export function useFollowTheMoney(storyId: number | null): FollowTheMoneyData {
               const memberName = memberData
                 ? `${memberData.first_name} ${memberData.last_name}`
                 : entity.entity_value;
-              const party = memberData?.party || '';
+              const partyRaw = memberData?.party as any;
+              const partyObj = Array.isArray(partyRaw) ? partyRaw[0] : partyRaw;
+              const party = partyObj?.short_name || partyObj?.name || '';
 
               return {
                 memberId: entity.member_id,
