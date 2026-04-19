@@ -150,21 +150,23 @@ def extract_entities_for_story(
 
     # Parse response
     text = response.content[0].text.strip()
-    # Strip markdown code fences if present
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text)
 
     usage = {
         "input_tokens": response.usage.input_tokens,
         "output_tokens": response.usage.output_tokens,
     }
 
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        log.warning("Failed to parse JSON from Haiku response for story %s", story["id"])
-        parsed = {"members": [], "bills": [], "quotes": []}
+    # Extract JSON from response — Haiku often wraps in code fences or adds trailing notes
+    parsed = {"members": [], "bills": [], "quotes": []}
+    # Try to find JSON object in the response
+    json_start = text.find("{")
+    json_end = text.rfind("}")
+    if json_start >= 0 and json_end > json_start:
+        try:
+            parsed = json.loads(text[json_start:json_end + 1])
+        except json.JSONDecodeError:
+            log.warning("Failed to parse JSON from Haiku response for story %s: %s",
+                        story["id"], text[json_start:json_start + 200])
 
     return {**parsed, "_usage": usage}
 
@@ -263,12 +265,11 @@ def run(*, backfill: bool = False, limit: int = 50) -> dict:
     # Create tracking row
     run_row = sb.table("entity_extraction_runs").insert({
         "started_at": datetime.now(tz=timezone.utc).isoformat(),
-        "status": "running",
     }).execute()
     run_id = run_row.data[0]["id"]
 
     # Query unprocessed stories
-    query = sb.table("news_stories").select("id, headline, category, first_seen")
+    query = sb.table("v_civic_news_stories").select("id, headline, category, first_seen")
     if not backfill:
         # Get already-processed story IDs
         processed = sb.table("story_entities").select("story_id").execute()
@@ -332,10 +333,10 @@ def run(*, backfill: bool = False, limit: int = 50) -> dict:
                 entities_to_insert.append({
                     "story_id": story["id"],
                     "entity_type": "member",
-                    "entity_name": name,
+                    "entity_value": name,
                     "member_id": matched["id"],
                     "confidence": member_info.get("confidence", 0.7),
-                    "metadata": {"role_mentioned": member_info.get("role_mentioned")},
+                    "raw_mention": member_info.get("role_mentioned") or name,
                 })
 
             # Process bill entities
@@ -355,12 +356,10 @@ def run(*, backfill: bool = False, limit: int = 50) -> dict:
                     entities_to_insert.append({
                         "story_id": story["id"],
                         "entity_type": "bill",
-                        "entity_name": fragment,
+                        "entity_value": fragment,
                         "bill_id": matched_bill["id"],
                         "confidence": bill_info.get("confidence", 0.7),
-                        "metadata": {
-                            "title": matched_bill.get("short_title") or matched_bill.get("title"),
-                        },
+                        "raw_mention": matched_bill.get("short_title") or matched_bill.get("title") or fragment,
                     })
 
             # Process quotes
@@ -372,9 +371,9 @@ def run(*, backfill: bool = False, limit: int = 50) -> dict:
                 entity = {
                     "story_id": story["id"],
                     "entity_type": "quote",
-                    "entity_name": speaker,
+                    "entity_value": speaker,
                     "confidence": quote_info.get("confidence", 0.7),
-                    "metadata": {"text": (quote_info.get("text") or "")[:500]},
+                    "raw_mention": (quote_info.get("text") or "")[:500],
                 }
                 if speaker_member:
                     entity["member_id"] = speaker_member["id"]
@@ -384,7 +383,7 @@ def run(*, backfill: bool = False, limit: int = 50) -> dict:
             if entities_to_insert:
                 sb.table("story_entities").upsert(
                     entities_to_insert,
-                    on_conflict="story_id,entity_type,entity_name",
+                    on_conflict="story_id,entity_type,entity_value",
                 ).execute()
                 entities_inserted += len(entities_to_insert)
 
@@ -403,13 +402,12 @@ def run(*, backfill: bool = False, limit: int = 50) -> dict:
 
     # Update run record
     sb.table("entity_extraction_runs").update({
-        "completed_at": datetime.now(tz=timezone.utc).isoformat(),
-        "status": "succeeded" if errors == 0 else "partial",
+        "finished_at": datetime.now(tz=timezone.utc).isoformat(),
         "stories_processed": stories_processed,
-        "entities_extracted": entities_inserted,
+        "entities_found": entities_inserted,
         "tokens_used": total_tokens_in + total_tokens_out,
         "cost_usd": round(cost_usd, 4),
-        "errors": errors,
+        "error": None if errors == 0 else f"{errors} stories failed",
     }).eq("id", run_id).execute()
 
     metrics = {

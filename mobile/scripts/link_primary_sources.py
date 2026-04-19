@@ -127,7 +127,7 @@ def link_division_votes(
     # Get division votes for this member
     votes_result = (
         sb.table("division_votes")
-        .select("id, division_id, vote")
+        .select("id, division_id, vote_cast")
         .eq("member_id", member_id)
         .limit(50)
         .execute()
@@ -148,7 +148,7 @@ def link_division_votes(
     )
 
     # Map division_id → vote cast
-    vote_map = {v["division_id"]: v["vote"] for v in votes_result.data}
+    vote_map = {v["division_id"]: v["vote_cast"] for v in votes_result.data}
 
     scored = []
     for div in (divisions_result.data or []):
