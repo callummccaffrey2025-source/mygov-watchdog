@@ -31,6 +31,11 @@ import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
 import { useAccountabilityScore, useParticipationIndex } from '../hooks/useAccountabilityScore';
 import { AccountabilityScoreCard } from '../components/AccountabilityScore';
+import { useRegisteredInterests } from '../hooks/useRegisteredInterests';
+import { useContradictions } from '../hooks/useContradictions';
+import { ContradictionCard } from '../components/ContradictionCard';
+import { useElectorateDemographics } from '../hooks/useElectorateDemographics';
+import { useGovernmentContracts } from '../hooks/useGovernmentContracts';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { supabase } from '../lib/supabase';
 import { decodeHtml } from '../utils/decodeHtml';
@@ -67,7 +72,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
     }
   }, [memberId]);
 
-  const [activeTab, setActiveTab] = useState<'posts' | 'votes' | 'statements' | 'about' | 'funding' | 'speeches'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'votes' | 'statements' | 'about' | 'funding' | 'speeches' | 'interests' | 'watchlist'>('posts');
   const [expandedStatements, setExpandedStatements] = useState<Set<number>>(new Set());
   const [fundingView, setFundingView] = useState<'party' | 'personal'>('party');
   const [visibleCount, setVisibleCount] = useState(20);
@@ -90,6 +95,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const { current: committees, loading: committeesLoading } = useCommittees(member?.id);
   const { entries: hansardEntries, loading: hansardLoading } = useHansard(member?.id);
   const { statements, loading: statementsLoading } = useMemberStatements(member?.id ?? null);
+  const { grouped: interestsGrouped, interests: allInterests, loading: interestsLoading } = useRegisteredInterests(member?.id);
+  const { contradictions, loading: contradictionsLoading } = useContradictions({ memberId: member?.id });
+  const { demographics } = useElectorateDemographics(member?.electorate_id ?? undefined);
+  const { summary: contractSummary } = useGovernmentContracts(member?.electorate_id ?? undefined);
 
   const party = member?.party;
   const partyColour = party?.colour || '#9aabb8';
@@ -332,6 +341,12 @@ export function MemberProfileScreen({ route, navigation }: any) {
           </Pressable>
           <Pressable style={[styles.tab, { paddingHorizontal: 16 }, activeTab === 'speeches' && styles.activeTab]} onPress={() => setActiveTab('speeches')}>
             <Text style={[styles.tabText, { color: activeTab === 'speeches' ? colors.green : colors.textMuted }]}>Speeches</Text>
+          </Pressable>
+          <Pressable style={[styles.tab, { paddingHorizontal: 16 }, activeTab === 'interests' && styles.activeTab]} onPress={() => setActiveTab('interests')}>
+            <Text style={[styles.tabText, { color: activeTab === 'interests' ? colors.green : colors.textMuted }]}>Interests</Text>
+          </Pressable>
+          <Pressable style={[styles.tab, { paddingHorizontal: 16 }, activeTab === 'watchlist' && styles.activeTab]} onPress={() => setActiveTab('watchlist')}>
+            <Text style={[styles.tabText, { color: activeTab === 'watchlist' ? colors.green : colors.textMuted }]}>Watchlist</Text>
           </Pressable>
         </ScrollView>
 
@@ -763,6 +778,69 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 );
               })()}
             </View>
+          ) : activeTab === 'interests' ? (
+            interestsLoading ? (
+              [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={10} style={{ marginBottom: 10 }} />)
+            ) : allInterests.length === 0 ? (
+              <View style={styles.speechEmptyState}>
+                <Ionicons name="document-text-outline" size={28} color={colors.borderStrong} />
+                <Text style={[styles.speechEmptyText, { color: colors.textMuted }]}>No registered interests on file.</Text>
+                <Text style={[styles.speechEmptySubtext, { color: colors.textMuted }]}>
+                  {member.chamber === 'house'
+                    ? 'House of Representatives interest data coming soon.'
+                    : 'Interest declarations will appear once filed with the Senate.'}
+                </Text>
+              </View>
+            ) : (
+              <>
+                <Text style={[styles.fundingSubhead, { color: colors.textMuted }]}>
+                  Declared Financial Interests ({allInterests.length})
+                </Text>
+                {Object.entries(interestsGrouped).map(([category, items]) => (
+                  <View key={category} style={{ marginBottom: SPACING.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <Ionicons
+                        name={
+                          category === 'Shareholdings' ? 'trending-up-outline' :
+                          category === 'Real Estate' ? 'home-outline' :
+                          category === 'Gifts' ? 'gift-outline' :
+                          category === 'Directorships' ? 'briefcase-outline' :
+                          category === 'Sponsored Travel & Hospitality' ? 'airplane-outline' :
+                          category === 'Family & Business Trusts' ? 'people-outline' :
+                          category === 'Liabilities' ? 'card-outline' :
+                          category === 'Other Income Sources' ? 'cash-outline' :
+                          'document-outline'
+                        }
+                        size={15}
+                        color={colors.green}
+                      />
+                      <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: colors.text }}>
+                        {category} ({items.length})
+                      </Text>
+                    </View>
+                    {items.map(item => (
+                      <View key={item.id} style={[styles.speechCard, { backgroundColor: colors.card, marginBottom: 6 }]}>
+                        <Text style={{ fontSize: FONT_SIZE.small, color: colors.textBody, lineHeight: 18 }}>
+                          {decodeHtml(item.description)}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+                {allInterests[0]?.source_url && (
+                  <Pressable onPress={() => Linking.openURL(allInterests[0].source_url!)}>
+                    <Text style={[styles.fundingFooter, { color: colors.green }]}>
+                      Source: Senate Register of Interests <Ionicons name="open-outline" size={11} color={colors.green} />
+                    </Text>
+                  </Pressable>
+                )}
+                {allInterests[0]?.date_registered && (
+                  <Text style={[styles.fundingFooter, { color: colors.textMuted, marginTop: 4 }]}>
+                    Last updated: {allInterests[0].date_registered}
+                  </Text>
+                )}
+              </>
+            )
           ) : activeTab === 'speeches' ? (
             hansardLoading ? (
               [1, 2, 3].map(i => <SkeletonLoader key={i} height={80} borderRadius={10} style={{ marginBottom: 10 }} />)
@@ -797,6 +875,26 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 ))}
                 <Text style={[styles.fundingFooter, { color: colors.textMuted }]}>Source: OpenAustralia / APH Hansard</Text>
               </>
+            )
+          ) : activeTab === 'watchlist' ? (
+            contradictionsLoading ? (
+              [1, 2, 3].map(i => <SkeletonLoader key={i} height={100} borderRadius={14} style={{ marginBottom: 10 }} />)
+            ) : contradictions.length === 0 ? (
+              <View style={styles.speechEmptyState}>
+                <Ionicons name="shield-checkmark-outline" size={28} color={colors.borderStrong} />
+                <Text style={[styles.speechEmptyText, { color: colors.textMuted }]}>No contradictions found</Text>
+                <Text style={[styles.speechEmptySubtext, { color: colors.textMuted }]}>
+                  Verity monitors this MP's statements against their parliamentary record.
+                </Text>
+              </View>
+            ) : (
+              contradictions.map(c => (
+                <ContradictionCard
+                  key={c.id}
+                  contradiction={c}
+                  onPress={(id) => navigation.navigate('ContradictionDetail', { contradictionId: id })}
+                />
+              ))
             )
           ) : (
             <View style={styles.aboutSection}>
@@ -854,6 +952,103 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   ))}
                 </>
               ) : null}
+
+              {/* Electorate Demographics (Census 2021) */}
+              {demographics && member.electorate && (
+                <View style={{ marginTop: 20 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                    <Ionicons name="people-outline" size={16} color={colors.green} />
+                    <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                      {member.electorate.name} Demographics
+                    </Text>
+                    <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>(Census 2021)</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {demographics.median_household_income_weekly != null && (
+                      <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, minWidth: '45%', flex: 1 }}>
+                        <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Median Household Income</Text>
+                        <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>${Math.round(demographics.median_household_income_weekly * 52).toLocaleString()}/yr</Text>
+                      </View>
+                    )}
+                    {demographics.median_age != null && (
+                      <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, minWidth: '45%', flex: 1 }}>
+                        <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Median Age</Text>
+                        <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>{demographics.median_age}</Text>
+                      </View>
+                    )}
+                    {demographics.median_rent_weekly != null && (
+                      <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, minWidth: '45%', flex: 1 }}>
+                        <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Median Rent</Text>
+                        <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>${demographics.median_rent_weekly}/wk</Text>
+                      </View>
+                    )}
+                    {demographics.pct_renting != null && (
+                      <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, minWidth: '45%', flex: 1 }}>
+                        <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Renters</Text>
+                        <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>{demographics.pct_renting}%</Text>
+                      </View>
+                    )}
+                  </View>
+                  {demographics.top_industries && demographics.top_industries.length > 0 && (
+                    <View style={{ marginTop: 10 }}>
+                      <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginBottom: 4 }}>Top Industries</Text>
+                      {demographics.top_industries.slice(0, 3).map((ind, idx) => (
+                        <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: FONT_SIZE.caption, color: colors.text }}>{ind.name}</Text>
+                          </View>
+                          <View style={{ backgroundColor: colors.green + '22', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1 }}>
+                            <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold, color: colors.green }}>{ind.pct}%</Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* Government Contracts in Electorate */}
+              {contractSummary.contract_count > 0 && member.electorate && (
+                <View style={{ marginTop: 20 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <Ionicons name="document-text-outline" size={16} color={colors.green} />
+                    <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                      Federal Contracts in {member.electorate.name}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                    <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, flex: 1 }}>
+                      <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Total Value (30d)</Text>
+                      <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                        ${contractSummary.total_value >= 1000000
+                          ? `${(contractSummary.total_value / 1000000).toFixed(1)}M`
+                          : contractSummary.total_value >= 1000
+                            ? `${(contractSummary.total_value / 1000).toFixed(0)}K`
+                            : contractSummary.total_value.toLocaleString()}
+                      </Text>
+                    </View>
+                    <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, flex: 1 }}>
+                      <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Contracts</Text>
+                      <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                        {contractSummary.contract_count}
+                      </Text>
+                    </View>
+                  </View>
+                  {contractSummary.top_agencies.length > 0 && (
+                    <>
+                      <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginBottom: 4 }}>Top Agencies</Text>
+                      {contractSummary.top_agencies.slice(0, 3).map((a, idx) => (
+                        <Text key={idx} style={{ fontSize: FONT_SIZE.caption, color: colors.textBody, marginBottom: 2 }}>
+                          {a.agency} ({a.count})
+                        </Text>
+                      ))}
+                    </>
+                  )}
+                  <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginTop: 6, fontStyle: 'italic' }}>
+                    Source: AusTender. Contracts linked by supplier postcode.
+                  </Text>
+                </View>
+              )}
             </View>
           )}
           {/* Claim profile link — only shown if not yet claimed */}

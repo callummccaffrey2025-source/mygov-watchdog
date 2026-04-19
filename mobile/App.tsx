@@ -2,7 +2,8 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking, Platform } from 'react-native';
-import { initAnalytics, track, setAnalyticsUser } from './lib/analytics';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
+import { initAnalytics, track, trackScreen, setAnalyticsUser } from './lib/analytics';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -19,6 +20,7 @@ import { CreateCommunityPostScreen } from './screens/CreateCommunityPostScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
 import { NotificationPermissionModal } from './components/NotificationPermissionModal';
+import { NotificationBanner, BannerNotification } from './components/NotificationBanner';
 import { HomeScreen } from './screens/HomeScreen';
 import { ExploreScreen } from './screens/ExploreScreen';
 import { NewsScreen } from './screens/NewsScreen';
@@ -47,14 +49,16 @@ import { SavedScreen } from './screens/SavedScreen';
 import { PromiseTrackerScreen } from './screens/PromiseTrackerScreen';
 import { CompareMPsScreen } from './screens/CompareMPsScreen';
 import { LocalAnnouncementsScreen } from './screens/LocalAnnouncementsScreen';
+import { ContradictionDetailScreen } from './screens/ContradictionDetailScreen';
 import { supabase } from './lib/supabase';
+import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
 
-// Show notifications when app is in foreground
+// Suppress system notification UI when app is in foreground — we show our own banner instead
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
+    shouldShowAlert: false,
+    shouldShowBanner: false,
+    shouldShowList: false,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
@@ -230,14 +234,17 @@ function ThemedStatusBar() {
   return <StatusBar style={colors.statusBar} />;
 }
 
-export default function App() {
+function App() {
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
+  const [bannerNotif, setBannerNotif] = useState<BannerNotification | null>(null);
   const notifResponseSub = useRef<Notifications.Subscription | null>(null);
+  const notifReceivedSub = useRef<Notifications.Subscription | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem('onboarding_complete').then(val => {
       setOnboardingDone(val !== null);
     });
+    initErrorReporting();
     initAnalytics().then(() => track('app_open'));
   }, []);
 
@@ -258,21 +265,42 @@ export default function App() {
     return () => sub.remove();
   }, []);
 
-  // Handle notification taps — deep link to relevant screen
+  // Handle notification received while app is in foreground — show in-app banner
+  useEffect(() => {
+    notifReceivedSub.current = Notifications.addNotificationReceivedListener(notification => {
+      const content = notification.request.content;
+      setBannerNotif({
+        id: notification.request.identifier,
+        title: content.title ?? 'Verity',
+        body: content.body ?? '',
+        data: (content.data as Record<string, any>) ?? {},
+      });
+    });
+    return () => {
+      notifReceivedSub.current?.remove();
+    };
+  }, []);
+
+  const handleBannerPress = (data: Record<string, any>) => {
+    if (!navigationRef.isReady()) return;
+    if (data?.screen === 'bill' && data.billId) {
+      navigationRef.navigate('BillDetail', { billId: data.billId });
+    } else if (data?.screen === 'member' && data.memberId) {
+      navigationRef.navigate('MemberProfile', { memberId: data.memberId });
+    } else if (data?.screen === 'news' && data.storyId) {
+      navigationRef.navigate('NewsStoryDetail', { storyId: data.storyId });
+    } else if (data?.screen === 'DailyBrief') {
+      navigationRef.navigate('DailyBrief');
+    } else if (data?.screen === 'ContradictionDetail' && data.contradictionId) {
+      navigationRef.navigate('ContradictionDetail', { contradictionId: data.contradictionId });
+    }
+  };
+
+  // Handle notification taps (from background/killed) — deep link to relevant screen
   useEffect(() => {
     notifResponseSub.current = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data as any;
-      if (!navigationRef.isReady()) return;
-      if (data?.screen === 'bill' && data.billId) {
-        navigationRef.navigate('BillDetail', { billId: data.billId });
-      } else if (data?.screen === 'member' && data.memberId) {
-        navigationRef.navigate('MemberProfile', { memberId: data.memberId });
-      } else if (data?.screen === 'news' && data.storyId) {
-        navigationRef.navigate('NewsStoryDetail', { storyId: data.storyId });
-      } else if (data?.screen === 'DailyBrief') {
-        navigationRef.navigate('DailyBrief');
-      }
-      // screen === 'home' or missing → app just opens, no navigation needed
+      handleBannerPress(data);
     });
     return () => {
       notifResponseSub.current?.remove();
@@ -295,18 +323,29 @@ export default function App() {
   }
 
   return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
     <ErrorBoundary>
       <ThemeProvider>
         <UserProvider>
           <NavigationContainer
             ref={navigationRef}
+            onReady={() => {
+              if (sentryRoutingInstrumentation) {
+                sentryRoutingInstrumentation.registerNavigationContainer(navigationRef);
+              }
+            }}
             onStateChange={(state) => {
               const route = state?.routes?.[state.index ?? 0];
-              if (route?.name) track('screen_view', { screen: route.name }, route.name);
+              if (route?.name) trackScreen(route.name);
             }}
           >
             <ThemedStatusBar />
             <OfflineBanner />
+            <NotificationBanner
+              notification={bannerNotif}
+              onPress={handleBannerPress}
+              onDismiss={() => setBannerNotif(null)}
+            />
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Main" component={HomeTabs} />
               <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
@@ -336,11 +375,15 @@ export default function App() {
               <Stack.Screen name="PromiseTracker" component={PromiseTrackerScreen} />
               <Stack.Screen name="CompareMPs" component={CompareMPsScreen} />
               <Stack.Screen name="LocalAnnouncements" component={LocalAnnouncementsScreen} />
+              <Stack.Screen name="ContradictionDetail" component={ContradictionDetailScreen} options={{ headerShown: false }} />
             </Stack.Navigator>
             <AppNotificationGate />
           </NavigationContainer>
         </UserProvider>
       </ThemeProvider>
     </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }
+
+export default withSentry(App);

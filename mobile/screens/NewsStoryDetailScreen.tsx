@@ -17,6 +17,7 @@ import { useNewsStoryArticles, StoryArticle } from '../hooks/useNewsStoryArticle
 import { CoverageBar } from '../components/CoverageBar';
 import { TwoRowCoverageBar } from '../components/TwoRowCoverageBar';
 import { VerityRealityCheck } from '../components/VerityRealityCheck';
+import { ReceiptsBlock } from '../components/ReceiptsBlock';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
@@ -31,6 +32,8 @@ import { AuthPromptSheet } from '../components/AuthPromptSheet';
 import { useAuthGate } from '../hooks/useAuthGate';
 import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
+import { useStoryPrimarySources } from '../hooks/useStoryPrimarySources';
+import { useReceiptTelemetry } from '../hooks/useReceiptTelemetry';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 
 // ── Leaning config ─────────────────────────────────────────────────────────────
@@ -239,6 +242,8 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
   }, [story?.id]);
 
   const { articles, loading } = useNewsStoryArticles(story?.id ?? 0);
+  const { sources: primarySources } = useStoryPrimarySources(story?.id ?? null);
+  useReceiptTelemetry(story?.id ?? null, primarySources);
   const { saved: bookmarked, toggle: toggleBookmark } = useSave('news_story', String(story?.id ?? ''));
   const { requireAuth, authSheetProps } = useAuthGate();
 
@@ -397,6 +402,14 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
           headline={story.headline}
           category={story.category}
           onPressBill={bill => navigation.navigate('BillDetail', { billId: bill.id })}
+        />
+
+        {/* Primary sources — parliamentary receipts beneath the reporting */}
+        <ReceiptsBlock
+          storyId={story.id}
+          headline={story.headline}
+          onPressBill={(billId) => navigation.navigate('BillDetail', { billId })}
+          onPressMember={(memberId) => navigation.navigate('MemberProfile', { memberId })}
         />
 
         {/* Blindspot alert */}

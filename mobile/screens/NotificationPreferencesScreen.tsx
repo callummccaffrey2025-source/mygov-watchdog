@@ -22,6 +22,9 @@ interface Prefs {
   breaking_news: boolean;
   weekly_summary: boolean;
   email_digest_enabled: boolean;
+  morning_signal: boolean;
+  contradiction_alerts: boolean;
+  blindspot_alerts: boolean;
 }
 
 const DEFAULT_PREFS: Prefs = {
@@ -33,6 +36,9 @@ const DEFAULT_PREFS: Prefs = {
   breaking_news: true,
   weekly_summary: false,
   email_digest_enabled: true,
+  morning_signal: true,
+  contradiction_alerts: true,
+  blindspot_alerts: false,
 };
 
 const PREF_ITEMS: { key: keyof Prefs; label: string; desc: string; icon: string }[] = [
@@ -44,6 +50,9 @@ const PREF_ITEMS: { key: keyof Prefs; label: string; desc: string; icon: string 
   { key: 'local_announcements',label: 'Local Announcements',     desc: 'Funding and projects in your area',        icon: 'location-outline' },
   { key: 'weekly_summary',     label: 'Weekly Summary',          desc: 'A wrap-up of the week in parliament',      icon: 'calendar-outline' },
   { key: 'email_digest_enabled', label: 'Weekly Email Digest',   desc: 'Your personal weekly briefing sent every Sunday', icon: 'mail-outline' },
+  { key: 'morning_signal',       label: 'Morning Signal',        desc: 'Daily civic intelligence briefing at 7am',  icon: 'sunny-outline' },
+  { key: 'contradiction_alerts', label: 'Contradiction alerts',  desc: 'When a followed MP\'s record contradicts their statements', icon: 'alert-circle-outline' },
+  { key: 'blindspot_alerts',     label: 'Blindspot alerts',      desc: 'Stories only covered by one side of the media', icon: 'eye-off-outline' },
 ];
 
 export function NotificationPreferencesScreen({ navigation }: any) {
@@ -79,6 +88,9 @@ export function NotificationPreferencesScreen({ navigation }: any) {
             breaking_news:        data.breaking_news        ?? true,
             weekly_summary:       data.weekly_summary       ?? false,
             email_digest_enabled: data.email_digest_enabled ?? true,
+            morning_signal:       data?.morning_signal       ?? true,
+            contradiction_alerts: data?.contradiction_alerts ?? true,
+            blindspot_alerts:     data?.blindspot_alerts     ?? false,
           });
         }
       }
