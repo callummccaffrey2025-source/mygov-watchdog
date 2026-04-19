@@ -17,8 +17,6 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { CommunityScreen } from './screens/CommunityScreen';
 import { CommunityPostDetailScreen } from './screens/CommunityPostDetailScreen';
 import { CreateCommunityPostScreen } from './screens/CreateCommunityPostScreen';
-import { PollsScreen } from './screens/PollsScreen';
-import { PollDetailScreen } from './screens/PollDetailScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
 import { NotificationPermissionModal } from './components/NotificationPermissionModal';
@@ -49,8 +47,6 @@ import { DailyBriefScreen } from './screens/DailyBriefScreen';
 import { ActivityScreen } from './screens/ActivityScreen';
 import { SavedScreen } from './screens/SavedScreen';
 import { PromiseTrackerScreen } from './screens/PromiseTrackerScreen';
-import { HeadlineComparisonScreen } from './screens/HeadlineComparisonScreen';
-import { MemberProfileEditorialScreen } from './screens/MemberProfileEditorialScreen';
 import { CompareMPsScreen } from './screens/CompareMPsScreen';
 import { LocalAnnouncementsScreen } from './screens/LocalAnnouncementsScreen';
 import { ContradictionDetailScreen } from './screens/ContradictionDetailScreen';
@@ -104,7 +100,7 @@ function HomeTabs() {
             Home:      ['home',        'home-outline'],
             Explore:   ['search',      'search-outline'],
             News:      ['newspaper',   'newspaper-outline'],
-            Polls:     ['bar-chart',   'bar-chart-outline'],
+            Community: ['chatbubbles', 'chatbubbles-outline'],
             Profile:   ['person',      'person-outline'],
           };
           const [active, inactive] = icons[route.name] ?? ['ellipse', 'ellipse-outline'];
@@ -121,7 +117,7 @@ function HomeTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Explore" component={ExploreScreen} />
       <Tab.Screen name="News" component={NewsScreen} />
-      <Tab.Screen name="Polls" component={PollsScreen} />
+      <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -297,10 +293,6 @@ function App() {
       navigationRef.navigate('DailyBrief');
     } else if (data?.screen === 'ContradictionDetail' && data.contradictionId) {
       navigationRef.navigate('ContradictionDetail', { contradictionId: data.contradictionId });
-    } else if (data?.screen === 'PollDetail' && data.pollId) {
-      navigationRef.navigate('PollDetail', { pollId: data.pollId });
-    } else if (data?.screen === 'Polls') {
-      navigationRef.navigate('Main', { screen: 'Polls' });
     }
   };
 
@@ -356,7 +348,7 @@ function App() {
             />
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Main" component={HomeTabs} />
-              <Stack.Screen name="MemberProfile" component={MemberProfileEditorialScreen} />
+              <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
               <Stack.Screen name="BillDetail" component={BillDetailScreen} />
               <Stack.Screen name="PartyProfile" component={PartyProfileScreen} />
               <Stack.Screen name="PostDetail" component={PostDetailScreen} />
@@ -383,9 +375,7 @@ function App() {
               <Stack.Screen name="PromiseTracker" component={PromiseTrackerScreen} />
               <Stack.Screen name="CompareMPs" component={CompareMPsScreen} />
               <Stack.Screen name="LocalAnnouncements" component={LocalAnnouncementsScreen} />
-              <Stack.Screen name="HeadlineComparison" component={HeadlineComparisonScreen} />
               <Stack.Screen name="ContradictionDetail" component={ContradictionDetailScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="PollDetail" component={PollDetailScreen} />
             </Stack.Navigator>
             <AppNotificationGate />
           </NavigationContainer>
