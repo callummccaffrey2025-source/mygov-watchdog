@@ -34,6 +34,8 @@ import { useAuthGate } from '../hooks/useAuthGate';
 import { useWeeklyPoll } from '../hooks/useWeeklyPoll';
 import { WeeklyPollCard } from '../components/WeeklyPollCard';
 import { useSittingCalendar } from '../hooks/useSittingCalendar';
+import { useBillSwipe } from '../hooks/useBillSwipe';
+import * as Haptics from 'expo-haptics';
 import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
 
@@ -135,6 +137,8 @@ export function HomeScreen({ navigation }: any) {
     postcode,
     electorateName,
   );
+
+  const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
 
   // ── Personalised news feed ──
   const filteredStories = filterPoliticalStories(newsStories);
@@ -652,6 +656,138 @@ export function HomeScreen({ navigation }: any) {
                 }}
                 requireAuth={requireAuth}
               />
+            </View>
+            <SectionDivider />
+          </>
+        )}
+
+        {/* ═══ 4b. HAVE YOUR SAY — Bill Swipe ═══ */}
+        {currentBill && (
+          <>
+            <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+              <SectionHeader color="#00843D" label="HAVE YOUR SAY" rightLabel={`${billsRemaining} bills`} />
+              <Text style={{ fontSize: 13, color: colors.textMuted, marginBottom: 14 }}>
+                Swipe on bills currently before parliament
+              </Text>
+
+              {/* Bill card */}
+              <View style={{
+                backgroundColor: colors.card,
+                borderRadius: BORDER_RADIUS.xl,
+                padding: 20,
+                ...SHADOWS.md,
+              }}>
+                {/* Status + chamber */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <View style={{ backgroundColor: '#E8F5EE', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
+                    <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.bold, color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      {currentBill.current_status ?? 'Before Parliament'}
+                    </Text>
+                  </View>
+                  {currentBill.origin_chamber && (
+                    <Text style={{ fontSize: 11, color: colors.textMuted }}>
+                      {currentBill.origin_chamber === 'house' ? 'House' : 'Senate'}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Title */}
+                <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: colors.text, marginBottom: 8, lineHeight: 24 }}>
+                  {currentBill.short_title ?? currentBill.title}
+                </Text>
+
+                {/* TLDR explainer */}
+                {currentBill.tldr && (
+                  <Text style={{ fontSize: 14, color: colors.textBody, lineHeight: 20, marginBottom: 16 }}>
+                    {currentBill.tldr}
+                  </Text>
+                )}
+
+                {/* For / Against arguments */}
+                {(currentBill.supporters_argument || currentBill.critics_argument) && (
+                  <View style={{ marginBottom: 16 }}>
+                    {currentBill.supporters_argument && (
+                      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,132,61,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="checkmark" size={12} color="#00843D" />
+                        </View>
+                        <Text style={{ flex: 1, fontSize: 12.5, color: colors.textBody, lineHeight: 17 }}>
+                          <Text style={{ fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>For: </Text>
+                          {currentBill.supporters_argument}
+                        </Text>
+                      </View>
+                    )}
+                    {currentBill.critics_argument && (
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(220,38,38,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="close" size={12} color="#DC2626" />
+                        </View>
+                        <Text style={{ flex: 1, fontSize: 12.5, color: colors.textBody, lineHeight: 17 }}>
+                          <Text style={{ fontWeight: FONT_WEIGHT.semibold, color: '#DC2626' }}>Against: </Text>
+                          {currentBill.critics_argument}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* Vote counts */}
+                {(currentBill.agree_count + currentBill.disagree_count) > 0 && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <Text style={{ fontSize: 11, color: colors.textMuted }}>
+                      {currentBill.agree_count + currentBill.disagree_count} opinions
+                    </Text>
+                    <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden', flexDirection: 'row' }}>
+                      <View style={{ flex: currentBill.agree_count || 0.01, backgroundColor: '#00843D', borderRadius: 2 }} />
+                      <View style={{ flex: currentBill.disagree_count || 0.01, backgroundColor: '#DC2626', borderRadius: 2 }} />
+                    </View>
+                  </View>
+                )}
+
+                {/* Agree / Disagree / Skip buttons */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      submitOpinion('disagree');
+                      track('bill_opinion', { bill_id: currentBill.id, opinion: 'disagree' }, 'Home');
+                    }}
+                    style={{
+                      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      backgroundColor: 'rgba(220,38,38,0.08)', borderRadius: BORDER_RADIUS.full,
+                      paddingVertical: 12,
+                    }}
+                  >
+                    <Ionicons name="thumbs-down-outline" size={16} color="#DC2626" />
+                    <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: '#DC2626' }}>Disagree</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => { submitOpinion('skip'); }}
+                    style={{
+                      paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: colors.textMuted }}>Skip</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      submitOpinion('agree');
+                      track('bill_opinion', { bill_id: currentBill.id, opinion: 'agree' }, 'Home');
+                    }}
+                    style={{
+                      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      backgroundColor: 'rgba(0,132,61,0.08)', borderRadius: BORDER_RADIUS.full,
+                      paddingVertical: 12,
+                    }}
+                  >
+                    <Ionicons name="thumbs-up-outline" size={16} color="#00843D" />
+                    <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>Agree</Text>
+                  </Pressable>
+                </View>
+              </View>
             </View>
             <SectionDivider />
           </>
