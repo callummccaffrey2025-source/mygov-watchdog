@@ -9,14 +9,17 @@ import { PrimarySource } from './useStoryPrimarySources';
  *
  * Fires once per story view (deduplicated by storyId).
  */
-export function useReceiptTelemetry(storyId: number | null, sources: PrimarySource[]) {
+export function useReceiptTelemetry(
+  storyId: number | null,
+  sources: PrimarySource[],
+  loading: boolean = false,
+) {
   const firedRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!storyId || firedRef.current === storyId) return;
-    // Wait until sources have loaded (empty array on first render is expected,
-    // but we want to track the final state). Fire on any non-null storyId
-    // after sources settle — even if sources is empty (that's a valid signal).
+    // Wait for sources to finish loading before recording telemetry,
+    // otherwise we'd record has_receipts=false while still fetching.
+    if (!storyId || loading || firedRef.current === storyId) return;
     firedRef.current = storyId;
 
     const sourceTypes = [...new Set(sources.map(s => s.source_type))];
@@ -27,5 +30,5 @@ export function useReceiptTelemetry(storyId: number | null, sources: PrimarySour
       receipt_count: sources.length,
       source_types: sourceTypes,
     });
-  }, [storyId, sources]);
+  }, [storyId, sources.length, loading]);
 }

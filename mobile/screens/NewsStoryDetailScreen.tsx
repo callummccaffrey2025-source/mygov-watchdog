@@ -36,6 +36,7 @@ import { trackEvent } from '../lib/engagementTracker';
 import { useStoryPrimarySources } from '../hooks/useStoryPrimarySources';
 import { useReceiptTelemetry } from '../hooks/useReceiptTelemetry';
 import { StoryTimeline } from '../components/StoryTimeline';
+import { ContradictionAlert } from '../components/ContradictionAlert';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { useArticleReadTracker, trackArticleRead } from '../hooks/useArticleReadTracker';
 
@@ -248,8 +249,8 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
   }, [story?.id]);
 
   const { articles, loading } = useNewsStoryArticles(story?.id ?? 0);
-  const { sources: primarySources } = useStoryPrimarySources(story?.id ?? null);
-  useReceiptTelemetry(story?.id ?? null, primarySources);
+  const { sources: primarySources, loading: sourcesLoading } = useStoryPrimarySources(story?.id ?? null);
+  useReceiptTelemetry(story?.id ?? null, primarySources, sourcesLoading);
   const { saved: bookmarked, toggle: toggleBookmark } = useSave('news_story', String(story?.id ?? ''));
   const { requireAuth, authSheetProps } = useAuthGate();
 
@@ -433,6 +434,12 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
           onPressBill={(billId) => navigation.navigate('BillDetail', { billId })}
           onPressMember={(memberId) => navigation.navigate('MemberProfile', { memberId })}
           onPressStory={(sid) => navigation.push('NewsStoryDetail', { storyId: sid })}
+        />
+
+        {/* Contradiction alert — MP's record contradicts their statement */}
+        <ContradictionAlert
+          storyId={story.id}
+          onPress={(contradictionId) => navigation.navigate('ContradictionDetail', { contradictionId })}
         />
 
         {/* Blindspot alert */}

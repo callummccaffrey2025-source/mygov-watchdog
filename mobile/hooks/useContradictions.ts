@@ -5,18 +5,18 @@ export interface Contradiction {
   id: string;
   member_id: string;
   story_id: number | null;
-  entity_id: string | null;
   claim_text: string;
   claim_source: string | null;
-  claim_date: string | null;
-  contra_text: string;
+  claim_date: string;
   contra_type: string;
-  contra_date: string | null;
-  hansard_id: string | null;
+  contra_source_id: string;
+  contra_text: string;
+  contra_date: string;
   confidence: number;
-  ai_explanation: string;
+  ai_explanation: string | null;
   status: string;
   created_at: string;
+  reviewed_at: string | null;
   member?: {
     id: string;
     first_name: string;
