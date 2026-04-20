@@ -24,7 +24,7 @@ import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
 import { useVotes, DivisionVote } from '../hooks/useVotes';
 import { supabase } from '../lib/supabase';
-import { NewsShareCard } from '../components/ShareCards';
+import { NewsShareCard, CoverageShareCard } from '../components/ShareCards';
 import { captureAndShare } from '../utils/shareContent';
 import { decodeHtml } from '../utils/decodeHtml';
 import { useTheme } from '../context/ThemeContext';
@@ -259,6 +259,8 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
 
   const newsCardRef = useRef<any>(null);
   const [capturing, setCapturing] = useState(false);
+  const coverageCardRef = useRef<any>(null);
+  const [sharingCoverage, setSharingCoverage] = useState(false);
 
   useEffect(() => {
     if (capturing && story) {
@@ -266,6 +268,13 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
         .finally(() => setCapturing(false));
     }
   }, [capturing]);
+
+  useEffect(() => {
+    if (sharingCoverage && story) {
+      captureAndShare(coverageCardRef, 'coverage', String(story.id), user?.id)
+        .finally(() => setSharingCoverage(false));
+    }
+  }, [sharingCoverage]);
   const { electorate, member: myMP } = useElectorateByPostcode(postcode);
   const { votes: mpVotes } = useVotes(myMP?.id ?? null);
 
@@ -385,9 +394,14 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
             <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textMuted, letterSpacing: 0.6 }}>
               COVERAGE
             </Text>
-            <Text style={{ fontSize: 11, color: colors.textMuted }}>
-              {articles.length > 0 ? articles.length : total} outlet{(articles.length || total) !== 1 ? 's' : ''}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{ fontSize: 11, color: colors.textMuted }}>
+                {articles.length > 0 ? articles.length : total} outlet{(articles.length || total) !== 1 ? 's' : ''}
+              </Text>
+              <Pressable onPress={() => setSharingCoverage(true)} hitSlop={8}>
+                <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={16} color={colors.textMuted} />
+              </Pressable>
+            </View>
           </View>
           <TwoRowCoverageBar
             articles={articles.length > 0 ? articles : []}
@@ -452,6 +466,9 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
                 ? 'No left-leaning outlets have covered this story.'
                 : 'No right-leaning outlets have covered this story.'}
             </Text>
+            <Pressable onPress={() => setSharingCoverage(true)} hitSlop={8}>
+              <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={16} color="#D97706" />
+            </Pressable>
           </View>
         ) : null}
 
@@ -641,6 +658,23 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
               leftCount={story.left_count}
               centerCount={story.center_count}
               rightCount={story.right_count}
+            />
+          )}
+        </View>
+      </View>
+
+      {/* Hidden coverage share card */}
+      <View style={{ position: 'absolute', left: -9999, top: 0 }} pointerEvents="none">
+        <View ref={coverageCardRef}>
+          {sharingCoverage && (
+            <CoverageShareCard
+              headline={story.headline}
+              leftCount={story.left_count}
+              centerCount={story.center_count}
+              rightCount={story.right_count}
+              articleCount={story.article_count}
+              blindspot={blindspotSide}
+              category={story.category}
             />
           )}
         </View>

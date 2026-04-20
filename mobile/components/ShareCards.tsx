@@ -236,7 +236,149 @@ export function MPReportCard({
   );
 }
 
-// ─── 4. Bill Share Card ───────────────────────────────────────────────────────
+// ─── 4. Coverage Share Card ──────────────────────────────────────────────────
+
+interface CoverageShareCardProps {
+  headline: string;
+  leftCount: number;
+  centerCount: number;
+  rightCount: number;
+  articleCount: number;
+  blindspot: string | null;
+  category: string | null;
+}
+
+export function CoverageShareCard({
+  headline, leftCount, centerCount, rightCount, articleCount, blindspot, category,
+}: CoverageShareCardProps) {
+  const total = leftCount + centerCount + rightCount || 1;
+  const cat = category ?? 'politics';
+  const catColour = topicAccent(cat);
+
+  const BLUE = '#2563EB';
+  const MID  = '#6B7280';
+  const RED  = '#DC3545';
+
+  return (
+    <View style={s.card}>
+      <CardHeader subtitle="COVERAGE ANALYSIS" />
+
+      {/* Category */}
+      <View style={[s.catChip, { backgroundColor: catColour + '18' }]}>
+        <Text style={[s.catChipText, { color: catColour }]}>{cat.toUpperCase()}</Text>
+      </View>
+
+      {/* Headline */}
+      <Text style={s.newsHeadline} numberOfLines={3}>{headline}</Text>
+
+      {/* Large coverage bar */}
+      <View style={s.coverageLargeSection}>
+        <View style={s.coverageLargeBar}>
+          {leftCount   > 0 && <View style={[s.seg, { flex: leftCount,   backgroundColor: BLUE }]} />}
+          {centerCount > 0 && <View style={[s.seg, { flex: centerCount, backgroundColor: MID }]} />}
+          {rightCount  > 0 && <View style={[s.seg, { flex: rightCount,  backgroundColor: RED }]} />}
+        </View>
+        <View style={s.coverageLargeLegend}>
+          <View style={s.coverageLegendItem}>
+            <View style={[s.coverageLegendDot, { backgroundColor: BLUE }]} />
+            <Text style={[s.coverageLegendCount, { color: BLUE }]}>{leftCount}</Text>
+            <Text style={s.coverageLegendLabel}>left</Text>
+          </View>
+          <View style={s.coverageLegendItem}>
+            <View style={[s.coverageLegendDot, { backgroundColor: MID }]} />
+            <Text style={[s.coverageLegendCount, { color: MID }]}>{centerCount}</Text>
+            <Text style={s.coverageLegendLabel}>centre</Text>
+          </View>
+          <View style={s.coverageLegendItem}>
+            <View style={[s.coverageLegendDot, { backgroundColor: RED }]} />
+            <Text style={[s.coverageLegendCount, { color: RED }]}>{rightCount}</Text>
+            <Text style={s.coverageLegendLabel}>right</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Blindspot callout */}
+      {blindspot ? (
+        <View style={s.blindspotBox}>
+          <Text style={[s.blindspotLabel, { color: blindspot === 'left' ? BLUE : RED }]}>BLINDSPOT</Text>
+          <Text style={s.blindspotDesc}>
+            0 {blindspot}-leaning outlets have reported on this story
+          </Text>
+          <Text style={s.blindspotDesc}>
+            while {blindspot === 'left' ? rightCount : leftCount} {blindspot === 'left' ? 'right' : 'left'}-leaning outlets have
+          </Text>
+        </View>
+      ) : null}
+
+      {/* Source attribution */}
+      <Text style={[s.sourceCount, { marginTop: blindspot ? 10 : 14 }]}>
+        Based on <Text style={s.sourceCountBold}>{articleCount}</Text> source{articleCount !== 1 ? 's' : ''} across the political spectrum
+      </Text>
+
+      <CardFooter cta="See full coverage on Verity" />
+    </View>
+  );
+}
+
+// ─── 5. Rebellion Share Card ─────────────────────────────────────────────────
+
+interface RebellionShareCardProps {
+  memberName: string;
+  partyName: string;
+  rebellionCount: number;
+  rebellionRate: number;
+  biggestRebellion: { divisionName: string; date: string; voteCast: string };
+}
+
+export function RebellionShareCard({
+  memberName, partyName, rebellionCount, rebellionRate, biggestRebellion,
+}: RebellionShareCardProps) {
+  const formattedDate = biggestRebellion.date
+    ? new Date(biggestRebellion.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+  const voteLabel = biggestRebellion.voteCast === 'aye' ? 'AYE' : biggestRebellion.voteCast === 'no' ? 'NO' : biggestRebellion.voteCast.toUpperCase();
+  const voteColour = biggestRebellion.voteCast === 'aye' ? GREEN : biggestRebellion.voteCast === 'no' ? '#DC3545' : GREY;
+
+  return (
+    <View style={s.card}>
+      <CardHeader subtitle="INDEPENDENCE REPORT" />
+
+      {/* Hero stat */}
+      <View style={s.rebellionHero}>
+        <Text style={s.rebellionCount}>{rebellionCount}</Text>
+        <Text style={s.rebellionLabel}>
+          time{rebellionCount !== 1 ? 's' : ''} {memberName} voted against {partyName}
+        </Text>
+      </View>
+
+      {/* Rate bar */}
+      <View style={s.rebellionRateSection}>
+        <Text style={s.rebellionRateText}>{rebellionRate}% independence rate</Text>
+        <View style={s.rebellionBar}>
+          <View style={[s.rebellionBarFill, { width: `${Math.min(rebellionRate, 100)}%` }]} />
+        </View>
+      </View>
+
+      {/* Biggest break */}
+      <View style={s.rebellionBreakBox}>
+        <Text style={s.rebellionBreakLabel}>MOST SIGNIFICANT BREAK</Text>
+        <Text style={s.rebellionBreakName} numberOfLines={3}>
+          {biggestRebellion.divisionName.replace(/^Bills?\s*[—\-]\s*/i, '').trim()}
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
+          {formattedDate ? <Text style={s.rebellionBreakDate}>{formattedDate}</Text> : null}
+          <View style={[s.rebellionVoteBadge, { backgroundColor: voteColour + '18' }]}>
+            <Text style={[s.rebellionVoteBadgeText, { color: voteColour }]}>Voted {voteLabel}</Text>
+          </View>
+        </View>
+      </View>
+
+      <CardFooter cta="See full voting record on Verity" />
+    </View>
+  );
+}
+
+// ─── 6. Bill Share Card ───────────────────────────────────────────────────────
 
 interface BillShareCardProps {
   title: string;
@@ -505,4 +647,101 @@ const s = StyleSheet.create({
   billVoteLabel: { fontSize: 9, fontWeight: '700', color: GREY, letterSpacing: 1.5 },
   billVoteBar: { height: 10, borderRadius: 5, overflow: 'hidden', flexDirection: 'row' },
   billVoteLegend: { flexDirection: 'row', gap: 16 },
+
+  // Coverage card
+  coverageLargeSection: { marginHorizontal: 20, marginTop: 16, gap: 10 },
+  coverageLargeBar: { height: 16, borderRadius: 8, overflow: 'hidden', flexDirection: 'row' },
+  coverageLargeLegend: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4 },
+  coverageLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  coverageLegendDot: { width: 8, height: 8, borderRadius: 4 },
+  coverageLegendCount: { fontSize: 16, fontWeight: '800' },
+  coverageLegendLabel: { fontSize: 12, color: GREY, fontWeight: '600' },
+  blindspotBox: {
+    marginHorizontal: 20,
+    marginTop: 14,
+    backgroundColor: '#FFF8F0',
+    borderRadius: 10,
+    padding: 14,
+    gap: 4,
+  },
+  blindspotLabel: { fontSize: 11, fontWeight: '900', letterSpacing: 1.5 },
+  blindspotDesc: { fontSize: 13, color: '#5a6a7a', lineHeight: 20 },
+
+  // Rebellion card
+  rebellionHero: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 8,
+    alignItems: 'center',
+  },
+  rebellionCount: {
+    fontSize: 64,
+    fontWeight: '900',
+    color: '#b45309',
+    lineHeight: 72,
+  },
+  rebellionLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: DARK,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginTop: 4,
+  },
+  rebellionRateSection: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    gap: 6,
+  },
+  rebellionRateText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#92400E',
+    textAlign: 'center',
+  },
+  rebellionBar: {
+    height: 8,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  rebellionBarFill: {
+    height: 8,
+    backgroundColor: '#b45309',
+    borderRadius: 4,
+  },
+  rebellionBreakBox: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 12,
+    padding: 16,
+    gap: 4,
+  },
+  rebellionBreakLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#92400E',
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+  rebellionBreakName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: DARK,
+    lineHeight: 22,
+  },
+  rebellionBreakDate: {
+    fontSize: 12,
+    color: '#92400E',
+  },
+  rebellionVoteBadge: {
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  rebellionVoteBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
 });

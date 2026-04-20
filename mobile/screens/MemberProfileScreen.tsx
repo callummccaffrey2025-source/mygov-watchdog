@@ -31,6 +31,7 @@ import { useAccountabilityScore, useParticipationIndex } from '../hooks/useAccou
 import { useRegisteredInterests } from '../hooks/useRegisteredInterests';
 import { useContradictions } from '../hooks/useContradictions';
 import { ContradictionCard } from '../components/ContradictionCard';
+import { RebellionCard } from '../components/RebellionCard';
 import { useElectorateDemographics } from '../hooks/useElectorateDemographics';
 import { useGovernmentContracts } from '../hooks/useGovernmentContracts';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
@@ -410,6 +411,22 @@ export function MemberProfileScreen({ route, navigation }: any) {
               <Text style={{ fontSize: 12.5, fontWeight: '600', color: '#00843D' }}>How we calculate →</Text>
             </Pressable>
           </View>
+        )}
+
+        {/* ───── 6b. REBELLION CARD ───── */}
+        {!votesLoading && member && party && (
+          <RebellionCard
+            memberId={member.id}
+            memberName={displayName}
+            partyName={party.short_name || party.name}
+            userId={user?.id}
+            onPressRebellion={(divisionId) => {
+              const vote = votes.find(v => v.division?.id === divisionId);
+              if (vote?.division) {
+                navigation.navigate('BillDetail', { billId: vote.division.id });
+              }
+            }}
+          />
         )}
 
         {/* ───── 7. TAB BAR ───── */}
