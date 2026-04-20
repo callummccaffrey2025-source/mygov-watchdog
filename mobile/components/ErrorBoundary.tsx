@@ -2,6 +2,7 @@ import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { reportError } from '../lib/errorReporting';
 
 interface Props {
   children: ReactNode;
@@ -22,8 +23,11 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(_error: Error, _info: ErrorInfo) {
-    // Error logged to crash reporting service in production
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    reportError(error, {
+      componentStack: info.componentStack ?? undefined,
+      severity: 'fatal',
+    });
   }
 
   render() {

@@ -15,6 +15,7 @@ import { UserProvider } from './context/UserContext';
 import { useUser } from './context/UserContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { CommunityScreen } from './screens/CommunityScreen';
+import { PollsScreen } from './screens/PollsScreen';
 import { CommunityPostDetailScreen } from './screens/CommunityPostDetailScreen';
 import { CreateCommunityPostScreen } from './screens/CreateCommunityPostScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -100,7 +101,7 @@ function HomeTabs() {
             Home:      ['home',        'home-outline'],
             Explore:   ['search',      'search-outline'],
             News:      ['newspaper',   'newspaper-outline'],
-            Community: ['chatbubbles', 'chatbubbles-outline'],
+            Polls:     ['bar-chart', 'bar-chart-outline'],
             Profile:   ['person',      'person-outline'],
           };
           const [active, inactive] = icons[route.name] ?? ['ellipse', 'ellipse-outline'];
@@ -117,7 +118,7 @@ function HomeTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Explore" component={ExploreScreen} />
       <Tab.Screen name="News" component={NewsScreen} />
-      <Tab.Screen name="Community" component={CommunityScreen} />
+      <Tab.Screen name="Polls" component={PollsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

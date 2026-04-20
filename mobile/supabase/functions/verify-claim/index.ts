@@ -18,8 +18,13 @@
 //
 // deno-lint-ignore-file no-explicit-any
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const MODEL = 'claude-haiku-4-5-20251001';
+const MAX_CLAIMS_PER_DAY = 10;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,6 +49,44 @@ Deno.serve(async (req: Request) => {
   if (!ANTHROPIC_API_KEY) {
     return jsonResponse({ error: 'ANTHROPIC_API_KEY not configured' }, 500);
   }
+
+  // ── Auth: require authenticated user ──────────────────────────────────
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return jsonResponse({ error: 'Authentication required' }, 401);
+  }
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return jsonResponse({ error: 'Invalid or expired token' }, 401);
+  }
+
+  // ── Rate limit: max 10 claims per user per day ────────────────────────
+  const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { count } = await db
+    .from('analytics_events')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('event_name', 'verify_claim')
+    .gte('created_at', today + 'T00:00:00');
+
+  if ((count ?? 0) >= MAX_CLAIMS_PER_DAY) {
+    return jsonResponse({
+      error: `Rate limit exceeded — maximum ${MAX_CLAIMS_PER_DAY} claim verifications per day`,
+    }, 429);
+  }
+
+  // Log this claim for rate limiting
+  await db.from('analytics_events').insert({
+    user_id: user.id,
+    event_name: 'verify_claim',
+    event_data: {},
+  }).catch(() => {});
 
   let body: any;
   try {

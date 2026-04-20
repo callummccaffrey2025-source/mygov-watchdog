@@ -44,6 +44,10 @@
 - ingest_aph_profiles.py — scrapes APH for ministerial_role, aph_id, committee_memberships (run to refresh)
 - ingest_mp_emails.py — generates APH email addresses for all members and writes to Supabase (dry-run by default, `--write` to commit). All 225 active members now have emails.
 - ingest_individual_donations.py --zip-dir /tmp --download — AEC bulk CSV donations
+- ingest_registered_interests.py — Senate Register API (structured JSON, 14 categories, 76 senators). Phase 2: House PDF parsing TODO.
+- ingest_abs_demographics.py — ABS Census 2021 DataPack + API for electorate demographics (income, age, tenure, industries)
+- ingest_austender.py --days N — AusTender OCDS API for government contracts. Maps supplier postcodes to electorates.
+- fix_senator_photos.py — scrapes APH for senator MPID + photo URLs. Backfills aph_id.
 - seed_senators.py
 - seed_party_policies_manual.py
 - seed_councils.py
@@ -126,7 +130,10 @@
 - 64 bill_arguments rows across 16 bills (AI generated, balanced for/against)
 - 12 official_posts (all real, all with verified source URLs)
 - Today's brief: Bennelong with full ai_text
-- 225 active federal members, 6,400+ bills, 1,929 divisions, 140,000+ vote records
+- 225 active federal members (100% with photos), 6,400+ bills, 1,929 divisions, 140,000+ vote records
+- 1,753 registered interests rows across 76 senators (14 categories from Senate Register API)
+- 148 electorates with Census 2021 demographics (income, age, tenure, industries)
+- 4,851 government contracts ($8.6B) from AusTender OCDS API, 87% mapped to electorates
 
 ## Current Priorities (in order)
 1. App Store submission — icon needs re-export as RGB (no transparency/pre-rounded corners); ascAppId + appleTeamId missing in eas.json

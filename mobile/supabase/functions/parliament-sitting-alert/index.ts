@@ -70,11 +70,25 @@ Deno.serve(async (req: Request) => {
       ? `Parliament resumes today. ${description}`
       : "Parliament resumes today. Here's what's coming up this week.";
 
-    // Get all push tokens
-    const { data: tokens } = await supabase
+    // Get push tokens — only for users who have election_updates enabled (or no preference row = default on)
+    const { data: allTokens } = await supabase
       .from('push_tokens')
-      .select('token')
+      .select('token, user_id')
       .not('token', 'is', null);
+
+    // Check which users opted out of election updates
+    const userIdsWithTokens = [...new Set((allTokens || []).map((t: any) => t.user_id).filter(Boolean))];
+    const { data: notifPrefs } = userIdsWithTokens.length > 0
+      ? await supabase
+          .from('notification_preferences')
+          .select('user_id, election_updates')
+          .in('user_id', userIdsWithTokens)
+          .eq('election_updates', false)
+      : { data: [] };
+
+    const optedOut = new Set((notifPrefs || []).map((p: any) => p.user_id));
+
+    const tokens = (allTokens || []).filter((t: any) => !t.user_id || !optedOut.has(t.user_id));
 
     if (!tokens?.length) {
       return new Response(

@@ -25,6 +25,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
+    // Generate a unique device_id on first launch if not already set
+    AsyncStorage.getItem('device_id').then(existing => {
+      if (!existing) {
+        const id = `device_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        AsyncStorage.setItem('device_id', id);
+      }
+    });
+
     AsyncStorage.getItem('postcode').then(v => { if (v) setPostcodeState(v); });
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {

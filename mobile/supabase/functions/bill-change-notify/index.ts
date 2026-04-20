@@ -113,11 +113,23 @@ Deno.serve(async (req: Request) => {
 
       if (userIds.size === 0) continue;
 
-      // Get push tokens for those users
+      // Filter out users who opted out of bill update notifications
+      const { data: optedOutPrefs } = await supabase
+        .from('notification_preferences')
+        .select('user_id')
+        .in('user_id', Array.from(userIds))
+        .eq('new_bills', false);
+
+      const optedOutIds = new Set((optedOutPrefs || []).map((p: any) => p.user_id));
+      const eligibleUserIds = Array.from(userIds).filter(uid => !optedOutIds.has(uid));
+
+      if (!eligibleUserIds.length) continue;
+
+      // Get push tokens for eligible users
       const { data: tokens } = await supabase
         .from('push_tokens')
         .select('token')
-        .in('user_id', Array.from(userIds))
+        .in('user_id', eligibleUserIds)
         .not('token', 'is', null);
 
       if (!tokens?.length) continue;

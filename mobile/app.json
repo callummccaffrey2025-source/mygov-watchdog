@@ -5,33 +5,6 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "verity",
-    "intentFilters": [
-      {
-        "action": "VIEW",
-        "autoVerify": true,
-        "data": [
-          {
-            "scheme": "https",
-            "host": "verity.au",
-            "pathPrefix": "/mp"
-          },
-          {
-            "scheme": "https",
-            "host": "verity.au",
-            "pathPrefix": "/bill"
-          },
-          {
-            "scheme": "https",
-            "host": "verity.au",
-            "pathPrefix": "/news"
-          }
-        ],
-        "category": [
-          "BROWSABLE",
-          "DEFAULT"
-        ]
-      }
-    ],
     "icon": "./assets/icon-appstore.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -47,7 +20,9 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryAddUsageDescription": "Verity saves share cards to your photo library when you tap Save from the share sheet.",
-        "NSUserActivityTypes": ["NSUserActivityTypeBrowsingWeb"]
+        "NSUserActivityTypes": [
+          "NSUserActivityTypeBrowsingWeb"
+        ]
       }
     },
     "android": {
@@ -57,7 +32,34 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#00843D"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "verity.au",
+              "pathPrefix": "/mp"
+            },
+            {
+              "scheme": "https",
+              "host": "verity.au",
+              "pathPrefix": "/bill"
+            },
+            {
+              "scheme": "https",
+              "host": "verity.au",
+              "pathPrefix": "/news"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -78,7 +80,9 @@
           "icon": "./assets/icon-appstore.png",
           "color": "#00843D"
         }
-      ]
+      ],
+      "expo-localization",
+      "expo-font"
     ],
     "owner": "callummccaffrey",
     "runtimeVersion": {

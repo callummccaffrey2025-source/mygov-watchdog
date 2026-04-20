@@ -28,6 +28,7 @@ export function ProfileScreen({ navigation }: any) {
   const [articlesRead, setArticlesRead] = useState(0);
   const [mpsFollowed, setMpsFollowed] = useState(0);
   const [daysActive, setDaysActive] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -47,7 +48,7 @@ export function ProfileScreen({ navigation }: any) {
         const diffDays = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1);
         setDaysActive(diffDays);
 
-        // MPs followed from Supabase
+        // MPs followed from Supabase + streak
         if (user) {
           const { count } = await supabase
             .from('user_follows')
@@ -55,6 +56,16 @@ export function ProfileScreen({ navigation }: any) {
             .eq('user_id', user.id)
             .eq('entity_type', 'member');
           setMpsFollowed(count ?? 0);
+
+          // Fetch latest streak from engagement stats
+          const { data: streakRow } = await supabase
+            .from('user_engagement_stats')
+            .select('streak_days')
+            .eq('user_id', user.id)
+            .order('stat_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (streakRow?.streak_days) setStreakDays(streakRow.streak_days);
         } else {
           const deviceId = await AsyncStorage.getItem('device_id');
           if (deviceId) {
@@ -139,6 +150,36 @@ export function ProfileScreen({ navigation }: any) {
     } catch {
       Alert.alert('Onboarding reset', 'Close and reopen the app to trigger onboarding.');
     }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all associated data. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase.functions.invoke('delete-account', {
+                method: 'POST',
+              });
+              if (error) {
+                Alert.alert('Error', 'Failed to delete account. Please try again.');
+                return;
+              }
+              await AsyncStorage.clear();
+              await signOut();
+              Alert.alert('Account Deleted', 'Your account and all data have been permanently removed.');
+            } catch {
+              Alert.alert('Error', 'Failed to delete account. Please contact support@verity.au');
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleSavePostcode = () => {
@@ -288,11 +329,12 @@ export function ProfileScreen({ navigation }: any) {
         {/* Your Verity Stats */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Verity Stats</Text>
-          <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
+          <View style={{ flexDirection: 'row', gap: SPACING.sm, flexWrap: 'wrap' }}>
             {[
               { label: 'Articles Read', value: articlesRead, icon: 'newspaper-outline' as const },
               { label: 'MPs Followed', value: mpsFollowed, icon: 'people-outline' as const },
               { label: 'Days Active', value: daysActive, icon: 'calendar-outline' as const },
+              ...(streakDays > 0 ? [{ label: 'Day Streak', value: streakDays, icon: 'flame-outline' as const }] : []),
             ].map((stat) => (
               <View
                 key={stat.label}
@@ -443,6 +485,19 @@ export function ProfileScreen({ navigation }: any) {
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
 
+        {/* Delete account */}
+        {user && (
+          <Pressable
+            style={styles.deleteAccountBtn}
+            onPress={handleDeleteAccount}
+          >
+            <Ionicons name="trash-outline" size={14} color={colors.textMuted} />
+            <Text style={[styles.deleteAccountText, { color: colors.textMuted }]}>
+              Delete Account
+            </Text>
+          </Pressable>
+        )}
+
         <Text style={[styles.version, { color: colors.borderStrong }]}>
           Verity v{Constants.expoConfig?.version ?? '1.0.0'}
         </Text>
@@ -530,6 +585,11 @@ const styles = StyleSheet.create({
   resetOnboardingText: { fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold, color: '#B45309' },
   signOutBtn: { borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.lg, alignItems: 'center' },
   signOutText: { fontSize: FONT_SIZE.subtitle - 1, fontWeight: FONT_WEIGHT.semibold, color: '#d32f2f' },
+  deleteAccountBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.xs,
+    paddingVertical: SPACING.md, marginTop: SPACING.sm,
+  },
+  deleteAccountText: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.medium },
   version: { textAlign: 'center', fontSize: FONT_SIZE.small - 1, marginTop: SPACING.lg },
 
   // Civic score

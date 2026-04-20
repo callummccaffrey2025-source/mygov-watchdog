@@ -37,6 +37,7 @@ import { useStoryPrimarySources } from '../hooks/useStoryPrimarySources';
 import { useReceiptTelemetry } from '../hooks/useReceiptTelemetry';
 import { StoryTimeline } from '../components/StoryTimeline';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
+import { useArticleReadTracker, trackArticleRead } from '../hooks/useArticleReadTracker';
 
 // ── Leaning config ─────────────────────────────────────────────────────────────
 
@@ -131,7 +132,7 @@ function extractDomain(url: string | undefined): string | null {
 
 // ── Article card ───────────────────────────────────────────────────────────────
 
-function ArticleCard({ article }: { article: StoryArticle }) {
+function ArticleCard({ article, storyId, userId }: { article: StoryArticle; storyId?: number; userId?: string | null }) {
   const { colors } = useTheme();
   const [faviconFailed, setFaviconFailed] = useState(false);
   const leaning = article.source?.leaning ?? 'center';
@@ -149,7 +150,10 @@ function ArticleCard({ article }: { article: StoryArticle }) {
   const handleOpen = async () => {
     try {
       const supported = await Linking.canOpenURL(article.url);
-      if (supported) Linking.openURL(article.url);
+      if (supported) {
+        Linking.openURL(article.url);
+        if (storyId) trackArticleRead(article.id, storyId, article.source?.name ?? '', article.source?.leaning ?? null, userId ?? null);
+      }
     } catch {}
   };
 
@@ -250,6 +254,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
   const { requireAuth, authSheetProps } = useAuthGate();
 
   const { postcode, user } = useUser();
+  useArticleReadTracker(story?.id, user?.id);
 
   const newsCardRef = useRef<any>(null);
   const [capturing, setCapturing] = useState(false);
@@ -443,6 +448,26 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
           </View>
         ) : null}
 
+        {/* Compare Headlines — show when 3+ articles from different bias categories */}
+        {(() => {
+          const biasCategories = new Set(articles.map(a => a.source?.leaning).filter(Boolean));
+          if (articles.length >= 3 && biasCategories.size >= 2) {
+            return (
+              <Pressable
+                onPress={() => navigation.navigate('HeadlineComparison', { storyId: story.id, headline: story.headline, category: story.category })}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: 10, padding: 12, marginHorizontal: 16, marginTop: 8 }}
+              >
+                <Ionicons name="git-compare-outline" size={18} color="#00843D" />
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#00843D' }}>
+                  Compare how {articles.length} outlets covered this
+                </Text>
+                <Ionicons name="chevron-forward" size={14} color="#00843D" />
+              </Pressable>
+            );
+          }
+          return null;
+        })()}
+
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
         {/* ── Framing comparison ───────────────────────────── */}
@@ -545,12 +570,12 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
                   <Text style={[styles.groupCountText, { color: group.color }]}>{group.items.length}</Text>
                 </View>
               </View>
-              {group.items.map(a => <ArticleCard key={a.id} article={a} />)}
+              {group.items.map(a => <ArticleCard key={a.id} article={a} storyId={story?.id} userId={user?.id} />)}
             </View>
           ))
         ) : (
           // Flat list when only one leaning group
-          articles.map(a => <ArticleCard key={a.id} article={a} />)
+          articles.map(a => <ArticleCard key={a.id} article={a} storyId={story?.id} userId={user?.id} />)
         )}
 
         {/* How this affects you */}

@@ -45,6 +45,9 @@ export function BillCard({ bill, onPress, horizontal }: Props) {
       ]}
       onPress={onPress}
       android_ripple={{ color: colors.border }}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={`${displayTitle}, status ${bill.current_status || bill.status || 'unknown'}${chamberLabel ? `, ${chamberLabel}` : ''}`}
     >
       <View style={styles.topRow}>
         <StatusBadge status={bill.current_status || bill.status} />
