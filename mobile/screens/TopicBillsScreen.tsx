@@ -1,101 +1,107 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import React, { useMemo, useCallback } from 'react';
+import { View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
-import { useBills } from '../hooks/useBills';
+import { useBills, Bill } from '../hooks/useBills';
 import { BillCard } from '../components/BillCard';
 import { SkeletonLoader } from '../components/SkeletonLoader';
+import { enrichBill } from '../lib/billEnrichment';
+import { SPACING, FONT_SIZE, FONT_WEIGHT } from '../constants/design';
 
-const TOPIC_ICONS: Record<string, string> = {
-  housing:        '🏠',
-  healthcare:     '🏥',
-  economy:        '💰',
-  climate:        '🌿',
-  immigration:    '✈️',
-  defence:        '🛡️',
-  education:      '📚',
-  cost_of_living: '🛒',
-  indigenous:     '🪃',
-  technology:     '💻',
-  agriculture:    '🌾',
-  infrastructure: '🚧',
-  foreign_policy: '🌏',
-  justice:        '⚖️',
+const TOPIC_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  housing:        'home-outline',
+  healthcare:     'medkit-outline',
+  economy:        'trending-up-outline',
+  climate:        'leaf-outline',
+  immigration:    'airplane-outline',
+  defence:        'shield-outline',
+  education:      'school-outline',
+  cost_of_living: 'cart-outline',
+  indigenous:     'earth-outline',
+  technology:     'hardware-chip-outline',
+  agriculture:    'nutrition-outline',
+  infrastructure: 'construct-outline',
+  foreign_policy: 'globe-outline',
+  justice:        'scale-outline',
 };
 
 export function TopicBillsScreen({ route, navigation }: any) {
   const { colors } = useTheme();
   const { category, label } = route.params as { category: string; label: string };
   const { bills, loading } = useBills({ category, limit: 60 });
-  const icon = TOPIC_ICONS[category] ?? '📋';
+  const iconName = TOPIC_ICONS[category] ?? 'document-text-outline';
+
+  // Sort: live bills first, then recent, then archived
+  const sortedBills = useMemo(() => {
+    const live: Bill[] = [];
+    const rest: Bill[] = [];
+    bills.forEach(b => {
+      const e = enrichBill(b);
+      if (e.isLive) live.push(b);
+      else rest.push(b);
+    });
+    return [...live, ...rest];
+  }, [bills]);
+
+  const liveCount = useMemo(() => sortedBills.filter(b => enrichBill(b).isLive).length, [sortedBills]);
+
+  const renderItem = useCallback(({ item }: { item: Bill }) => {
+    const e = enrichBill(item);
+    return (
+      <BillCard
+        bill={item}
+        onPress={() => navigation.navigate('BillDetail', { bill: item })}
+        dimmed={!e.isLive}
+      />
+    );
+  }, [navigation]);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable style={styles.back} onPress={() => navigation.goBack()}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+      <View style={{
+        flexDirection: 'row', alignItems: 'center',
+        paddingHorizontal: SPACING.xl, paddingTop: SPACING.lg, paddingBottom: SPACING.lg,
+        gap: SPACING.md,
+      }}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerIcon}>{icon}</Text>
-        <Text style={[styles.title, { color: colors.text }]}>{label}</Text>
+        <Ionicons name={iconName as any} size={22} color={colors.text} />
+        <Text style={{ fontSize: 20, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>{label}</Text>
       </View>
 
       {loading ? (
-        <View style={styles.content}>
+        <View style={{ paddingHorizontal: SPACING.xl }}>
           {[1, 2, 3].map(i => (
-            <SkeletonLoader key={i} height={140} borderRadius={14} style={{ marginBottom: 12 }} />
+            <SkeletonLoader key={i} height={130} borderRadius={14} style={{ marginBottom: 12 }} />
           ))}
         </View>
-      ) : bills.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>{icon}</Text>
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>No {label} bills yet</Text>
-          <Text style={[styles.emptyBody, { color: colors.textMuted }]}>
+      ) : sortedBills.length === 0 ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40, gap: SPACING.md }}>
+          <Ionicons name={iconName as any} size={48} color={colors.textMuted} />
+          <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>No {label} bills</Text>
+          <Text style={{ fontSize: FONT_SIZE.body, color: colors.textMuted, textAlign: 'center', lineHeight: 22 }}>
             Bills tagged with {label} will appear here as Parliament debates them.
           </Text>
         </View>
       ) : (
         <FlatList
-          data={bills}
+          data={sortedBills}
           keyExtractor={b => b.id}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={{ paddingHorizontal: SPACING.xl, paddingBottom: 40 }}
           windowSize={5}
           maxToRenderPerBatch={10}
-          renderItem={({ item }) => (
-            <BillCard
-              bill={item}
-              onPress={() => navigation.navigate('BillDetail', { bill: item })}
-            />
-          )}
+          renderItem={renderItem}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
-            <Text style={[styles.count, { color: colors.textMuted }]}>{bills.length} bill{bills.length !== 1 ? 's' : ''}</Text>
+            <Text style={{ fontSize: 13, color: colors.textMuted, marginBottom: SPACING.md }}>
+              {sortedBills.length} bill{sortedBills.length !== 1 ? 's' : ''}
+              {liveCount > 0 ? ` · ${liveCount} live` : ''}
+            </Text>
           }
         />
       )}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#ffffff' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8ecf0',
-  },
-  back: { padding: 2 },
-  headerIcon: { fontSize: 22 },
-  title: { fontSize: 20, fontWeight: '800', color: '#1a2332' },
-  content: { padding: 20, paddingBottom: 40 },
-  count: { fontSize: 13, color: '#9aabb8', marginBottom: 12 },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40, gap: 12 },
-  emptyIcon: { fontSize: 48 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#1a2332' },
-  emptyBody: { fontSize: 14, color: '#9aabb8', textAlign: 'center', lineHeight: 20 },
-});

@@ -38,6 +38,7 @@ import { useBillSwipe } from '../hooks/useBillSwipe';
 import * as Haptics from 'expo-haptics';
 import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
+import { usePersonalRelevance, useUserProfile } from '../hooks/usePersonalRelevance';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -148,8 +149,49 @@ export function HomeScreen({ navigation }: any) {
     followedTopics: [],
   });
 
+  // ── Personal relevance scoring ──
+  const userProfile = useUserProfile();
+  const { scoreContent } = usePersonalRelevance({
+    ...userProfile,
+    selectedTopics: [], // TODO: load from AsyncStorage
+    trackedIssues: [],
+  });
+
+  // Feed mode: For You / Your Electorate / Trending
+  const [feedMode, setFeedMode] = useState<'for_you' | 'electorate' | 'trending'>('for_you');
+
+  // Score and sort stories by personal relevance
+  const scoredStories = useMemo(() => {
+    return personalised.map(story => {
+      const signals = {
+        title: story.headline,
+        description: story.ai_summary ?? undefined,
+        topic: story.category ?? undefined,
+        articleCount: story.article_count,
+      };
+      const relevance = scoreContent(signals);
+      return { story, relevance };
+    }).sort((a, b) => b.relevance.score - a.relevance.score);
+  }, [personalised, scoreContent]);
+
+  // Filter by feed mode
+  const feedStories = useMemo(() => {
+    switch (feedMode) {
+      case 'electorate':
+        // Prioritize geographic relevance
+        return scoredStories.filter(s => s.relevance.dimension === 'geographic' || s.relevance.score >= 50);
+      case 'trending':
+        // Sort by article count (most covered)
+        return [...scoredStories].sort((a, b) => (b.story.article_count ?? 0) - (a.story.article_count ?? 0));
+      case 'for_you':
+      default:
+        return scoredStories;
+    }
+  }, [scoredStories, feedMode]);
+
   // Hero story + articles
-  const heroStory: NewsStory | null = useMemo(() => personalised[0] ?? null, [personalised]);
+  const heroStory: NewsStory | null = useMemo(() => feedStories[0]?.story ?? null, [feedStories]);
+  const heroRelevance = feedStories[0]?.relevance ?? null;
   const { articles: heroArticles } = useNewsStoryArticles(heroStory?.id);
 
   // ── MP recent substantive votes ──
@@ -335,9 +377,11 @@ export function HomeScreen({ navigation }: any) {
             {greeting}
           </Text>
 
-          {/* Date */}
+          {/* Personal context line */}
           <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.medium, color: 'rgba(255,255,255,0.7)', marginTop: SPACING.xs }}>
-            {dateStr}
+            {myMP
+              ? `${dateStr} · ${electorateName ?? ''}`
+              : dateStr}
           </Text>
 
           {/* Parliament status pills */}
@@ -793,17 +837,41 @@ export function HomeScreen({ navigation }: any) {
           </>
         )}
 
-        {/* ═══ 5. IN THE NEWS ═══ */}
+        {/* ═══ 5. NEWS — PERSONAL FEED ═══ */}
         <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
-          <SectionHeader
-            color="#1A1A17"
-            label="IN THE NEWS"
-            rightLabel="All news \u2192"
-            onRightPress={() => navigation.navigate('News')}
-          />
-          <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginTop: -SPACING.sm, marginBottom: SPACING.lg }}>
-            How outlets are covering what matters
-          </Text>
+          {/* Feed mode tabs */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.lg }}>
+            <View style={{ flexDirection: 'row', gap: 4 }}>
+              {([
+                { id: 'for_you' as const, label: 'For You' },
+                { id: 'electorate' as const, label: electorateName ? `${electorateName}` : 'Your Area' },
+                { id: 'trending' as const, label: 'Trending' },
+              ]).map(tab => {
+                const active = feedMode === tab.id;
+                return (
+                  <Pressable
+                    key={tab.id}
+                    onPress={() => { setFeedMode(tab.id); track('feed_mode_change', { mode: tab.id }, 'Home'); }}
+                    style={{
+                      paddingHorizontal: 12, paddingVertical: 7,
+                      borderRadius: BORDER_RADIUS.full,
+                      backgroundColor: active ? '#1A1A17' : colors.surface,
+                    }}
+                  >
+                    <Text style={{
+                      fontSize: 12, fontWeight: FONT_WEIGHT.bold,
+                      color: active ? '#ffffff' : colors.textMuted,
+                    }}>
+                      {tab.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Pressable onPress={() => navigation.navigate('News')} hitSlop={8}>
+              <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>All {'\u2192'}</Text>
+            </Pressable>
+          </View>
 
           {newsStoriesLoading ? (
             <SkeletonLoader height={200} borderRadius={BORDER_RADIUS.lg} />
@@ -831,6 +899,23 @@ export function HomeScreen({ navigation }: any) {
                   {heroStory.article_count} outlets · {timeAgo(heroStory.first_seen)}
                 </Text>
               </View>
+
+              {/* Personal relevance line */}
+              {heroRelevance && heroRelevance.score >= 20 && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+                  <Ionicons
+                    name={heroRelevance.dimension === 'geographic' ? 'location-outline' :
+                          heroRelevance.dimension === 'interest' ? 'bookmark-outline' :
+                          heroRelevance.dimension === 'demographic' ? 'person-outline' :
+                          'trending-up-outline'}
+                    size={12}
+                    color="#00843D"
+                  />
+                  <Text style={{ fontSize: 12, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>
+                    {heroRelevance.reason}
+                  </Text>
+                </View>
+              )}
 
               {/* Headline */}
               <Text style={{ fontSize: 19, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 25, marginBottom: SPACING.sm }} numberOfLines={2}>
