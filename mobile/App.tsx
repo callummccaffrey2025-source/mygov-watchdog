@@ -24,15 +24,14 @@ import { NotificationPermissionModal } from './components/NotificationPermission
 import { NotificationBanner, BannerNotification } from './components/NotificationBanner';
 import { HomeScreen } from './screens/HomeScreen';
 import { ExploreScreen } from './screens/ExploreScreen';
+// import { NewsScreen } from './screens/NewsScreen'; // preserved for A/B rollback
+import { NewsScreenV2 } from './screens/NewsScreenV2';
 import { NewsScreen } from './screens/NewsScreen';
 import { NewsStoryDetailScreen } from './screens/NewsStoryDetailScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { MemberProfileScreen } from './screens/MemberProfileScreen';
 import { BillDetailScreen } from './screens/BillDetailScreen';
 import { PartyProfileScreen } from './screens/PartyProfileScreen';
-import { PostDetailScreen } from './screens/PostDetailScreen';
-import { ClaimProfileScreen } from './screens/ClaimProfileScreen';
-import { CreatePostScreen } from './screens/CreatePostScreen';
 import { PrivacyPolicyScreen } from './screens/PrivacyPolicyScreen';
 import { TermsScreen } from './screens/TermsScreen';
 import { OnboardingScreen } from './screens/OnboardingScreen';
@@ -117,7 +116,7 @@ function HomeTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Explore" component={ExploreScreen} />
-      <Tab.Screen name="News" component={NewsScreen} />
+      <Tab.Screen name="News" component={NewsScreenV2} />
       <Tab.Screen name="Polls" component={PollsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
@@ -352,9 +351,6 @@ function App() {
               <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
               <Stack.Screen name="BillDetail" component={BillDetailScreen} />
               <Stack.Screen name="PartyProfile" component={PartyProfileScreen} />
-              <Stack.Screen name="PostDetail" component={PostDetailScreen} />
-              <Stack.Screen name="ClaimProfile" component={ClaimProfileScreen} />
-              <Stack.Screen name="CreatePost" component={CreatePostScreen} />
               <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
               <Stack.Screen name="Terms" component={TermsScreen} />
               <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
