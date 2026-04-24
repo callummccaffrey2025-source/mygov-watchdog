@@ -9,6 +9,7 @@ export interface Bill {
   status: string | null;
   summary_plain: string | null;
   summary_full: string | null;
+  expanded_summary: string | null;
   categories: string[] | null;
   date_introduced: string | null;
   last_updated: string | null;
@@ -16,6 +17,13 @@ export interface Bill {
   origin_chamber: string | null;
   level: string | null;
   aph_url: string | null;
+  // Enrichment fields (populated by cron, nullable until first run)
+  sponsor_id: string | null;
+  sponsor_party: string | null;
+  narrative_status: string | null;
+  is_live: boolean | null;
+  days_since_movement: number | null;
+  politics_cache: any | null;
 }
 
 interface Filters {
@@ -42,7 +50,7 @@ export function useBills(filters: Filters = {}) {
         let query = supabase
           .from('bills')
           // eslint-disable-next-line max-len
-          .select('id,title,short_title,current_status,status,summary_plain,summary_full,categories,date_introduced,last_updated,chamber_introduced,origin_chamber,level,aph_url');
+          .select('id,title,short_title,current_status,status,summary_plain,summary_full,expanded_summary,categories,date_introduced,last_updated,chamber_introduced,origin_chamber,level,aph_url,sponsor_id,sponsor_party,narrative_status,is_live,days_since_movement,politics_cache');
 
         if (filters.status) {
           query = query.eq('current_status', filters.status);

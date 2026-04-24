@@ -336,7 +336,7 @@ export function DailyBriefScreen({ route, navigation }: any) {
                     {myMP.first_name} {myMP.last_name}
                   </Text>
                   <Text style={[styles.mpRole, { color: colors.textBody }]}>
-                    {(myMP as any).ministerial_role || (myMP as any).party || ''}
+                    {(myMP as any).ministerial_role || (myMP as any).party?.name || (myMP as any).party?.short_name || ''}
                   </Text>
                 </View>
               </View>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Pressable, ScrollView, TextInput, Alert, Linking,
-  ActivityIndicator, Platform, DevSettings,
+  ActivityIndicator, Platform, DevSettings, Keyboard, InputAccessoryView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -134,12 +134,12 @@ export function ProfileScreen({ navigation }: any) {
         },
       });
       if (error || !data.url) {
-        Alert.alert('Google sign-in coming soon', 'Use Apple or Email for now.');
+        Alert.alert('Google sign-in unavailable', 'Please use Apple Sign-In or Email instead.');
         return;
       }
       await WebBrowser.openAuthSessionAsync(data.url, 'verity://auth-callback');
     } catch {
-      Alert.alert('Google sign-in coming soon', 'Use Apple or Email for now.');
+      Alert.alert('Google sign-in unavailable', 'Please use Apple Sign-In or Email instead.');
     }
   };
 
@@ -370,10 +370,22 @@ export function ProfileScreen({ navigation }: any) {
                 value={postcodeEdit}
                 onChangeText={setPostcodeEdit}
                 keyboardType="number-pad"
+                returnKeyType="done"
+                onSubmitEditing={() => { Keyboard.dismiss(); handleSavePostcode(); }}
                 maxLength={4}
                 placeholder="Enter postcode"
                 placeholderTextColor="#9aabb8"
+                inputAccessoryViewID="profile-postcode-done"
               />
+              {Platform.OS === 'ios' && (
+                <InputAccessoryView nativeID="profile-postcode-done">
+                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: '#F1F1F1', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: '#C8C8C8' }}>
+                    <Pressable onPress={() => { Keyboard.dismiss(); handleSavePostcode(); }} hitSlop={8}>
+                      <Text style={{ fontSize: 17, fontWeight: '600', color: '#007AFF' }}>Done</Text>
+                    </Pressable>
+                  </View>
+                </InputAccessoryView>
+              )}
               <Pressable style={styles.saveBtn} onPress={handleSavePostcode}>
                 <Text style={styles.saveBtnText}>Save</Text>
               </Pressable>

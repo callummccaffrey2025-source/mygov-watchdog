@@ -314,24 +314,7 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // ── Priority 4: Posted an official post ────────────────────────────
-      if (!notifType) {
-        const { data: posts } = await supabase
-          .from('official_posts')
-          .select('id, title, body')
-          .eq('member_id', memberId)
-          .gte('published_at', yesterday + 'T00:00:00')
-          .order('published_at', { ascending: false })
-          .limit(1);
-
-        const latestPost = posts?.[0] as any;
-        if (latestPost) {
-          const postTitle = latestPost.title || latestPost.body || '';
-          title = `${mpName} posted`;
-          body = truncate(postTitle, 80);
-          navData = { screen: 'member', memberId };
-          notifType = 'mp_post';
-        }
+      // Priority 4: removed (official_posts system removed)
       }
 
       // ── Priority 5: Absent on a sitting day ────────────────────────────

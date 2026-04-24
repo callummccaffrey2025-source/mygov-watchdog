@@ -27,23 +27,21 @@ function buildQuery(search: string, status: StatusFilter, offset: number) {
   let q = supabase.from('bills').select(BILL_SELECT);
 
   if (status === 'live') {
-    // Exclude terminal statuses
-    q = q.neq('current_status', 'In search index')
-      .not('current_status', 'ilike', '%passed%')
-      .not('current_status', 'ilike', '%assent%')
+    // Only bills actively before Parliament
+    q = q.neq('current_status', 'Historical')
+      .not('current_status', 'ilike', '%enacted%')
       .not('current_status', 'ilike', '%defeated%')
       .not('current_status', 'ilike', '%withdrawn%')
       .not('current_status', 'ilike', '%lapsed%');
   } else if (status === 'recent') {
-    // Bills updated in last 90 days, excluding "In search index"
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    q = q.neq('current_status', 'In search index')
+    q = q.neq('current_status', 'Historical')
       .gte('last_updated', ninetyDaysAgo);
   } else if (status === 'archived') {
-    q = q.eq('current_status', 'In search index');
+    q = q.eq('current_status', 'Historical');
   } else {
-    // All: exclude "In search index" by default to avoid 6000 archive rows
-    q = q.neq('current_status', 'In search index');
+    // All: exclude Historical to avoid 6000+ archive rows
+    q = q.neq('current_status', 'Historical');
   }
 
   if (search.length > 1) {

@@ -26,6 +26,12 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }>
   'committee': { bg: '#FFF7E6', text: '#B45309', label: 'In Committee' },
   'third reading': { bg: '#E8F0FE', text: '#0066CC', label: 'Active' },
   'first reading': { bg: '#E8F0FE', text: '#0066CC', label: 'Active' },
+
+  // Current real DB values
+  'historical': { bg: '#F3F4F6', text: '#6B7280', label: 'Historical' },
+  'before parliament': { bg: '#E8F0FE', text: '#0066CC', label: 'Before Parliament' },
+  'before house': { bg: '#E8F0FE', text: '#0066CC', label: 'Before House' },
+  'enacted': { bg: '#E8F5EE', text: '#00843D', label: 'Enacted' },
 };
 
 interface Props {

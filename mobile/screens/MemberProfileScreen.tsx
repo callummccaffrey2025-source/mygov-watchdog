@@ -5,9 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Member } from '../hooks/useMembers';
 import { useVotes } from '../hooks/useVotes';
-import { usePostsByMember } from '../hooks/useOfficialPosts';
-import { useMemberStatements, MemberStatement } from '../hooks/useRepresentativeUpdates';
-import { useVerifiedOfficial } from '../hooks/useVerifiedOfficial';
 import { useUser } from '../context/UserContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { usePartyDonations, DONOR_TYPE_LABELS } from '../hooks/useDonations';
@@ -16,7 +13,6 @@ import { useCommittees } from '../hooks/useCommittees';
 import { useHansard } from '../hooks/useHansard';
 import { PartyBadge } from '../components/PartyBadge';
 import { SkeletonLoader } from '../components/SkeletonLoader';
-import { PostCard } from '../components/PostCard';
 import { VoteShareCard } from '../components/ShareCards';
 import { MPReportShareCard } from '../components/MPReportShareCard';
 import { captureAndShare } from '../utils/shareContent';
@@ -49,10 +45,10 @@ function isProcedural(name: string): boolean {
   return PROCEDURAL_PREFIXES.some(p => name.startsWith(p));
 }
 
-type TabId = 'overview' | 'votes' | 'speeches' | 'statements' | 'more';
+type TabId = 'overview' | 'votes' | 'speeches' | 'more';
 
 export function MemberProfileScreen({ route, navigation }: any) {
-  const { member: memberParam, memberId } = route.params as { member?: Member; memberId?: string };
+  const { member: memberParam, memberId } = (route.params ?? {}) as { member?: Member; memberId?: string };
   const [member, setMember] = useState<Member | null>(memberParam ?? null);
 
   useEffect(() => {
@@ -73,7 +69,6 @@ export function MemberProfileScreen({ route, navigation }: any) {
   }, [memberId]);
 
   const [activeTab, setActiveTab] = useState<TabId>('overview');
-  const [expandedStatements, setExpandedStatements] = useState<Set<number>>(new Set());
   const [fundingView, setFundingView] = useState<'party' | 'personal'>('party');
   const [visibleCount, setVisibleCount] = useState(20);
   const [showMethodology, setShowMethodology] = useState(false);
@@ -86,16 +81,12 @@ export function MemberProfileScreen({ route, navigation }: any) {
       trackEvent('mp_view', { member_id: member.id });
     }
   }, [member?.id]);
-  const { posts, loading: postsLoading } = usePostsByMember(member?.id);
-  const { official } = useVerifiedOfficial(member?.id);
   const { user } = useUser();
-  const isOwner = !!user && !!official && official.user_id === user.id;
   const { isPro } = useSubscription(user?.id);
   const { donations, loading: donationsLoading, totalAmount } = usePartyDonations(member?.party_id ?? undefined);
   const { donations: indDonations, total: indTotal, loading: indLoading } = useIndividualDonations(member?.id);
   const { current: committees, loading: committeesLoading } = useCommittees(member?.id);
   const { entries: hansardEntries, loading: hansardLoading } = useHansard(member?.id);
-  const { statements, loading: statementsLoading } = useMemberStatements(member?.id ?? null);
   const { grouped: interestsGrouped, interests: allInterests, loading: interestsLoading } = useRegisteredInterests(member?.id);
   const { contradictions, loading: contradictionsLoading } = useContradictions({ memberId: member?.id });
   const { demographics } = useElectorateDemographics(member?.electorate_id ?? undefined);
@@ -177,7 +168,6 @@ export function MemberProfileScreen({ route, navigation }: any) {
     { id: 'overview', label: 'Overview' },
     { id: 'votes', label: 'Votes' },
     { id: 'speeches', label: 'Speeches' },
-    { id: 'statements', label: 'Statements' },
     { id: 'more', label: 'More' },
   ];
 
@@ -522,15 +512,6 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 )}
               </View>
 
-              {/* Official posts preview */}
-              {!postsLoading && posts.length > 0 && (
-                <View style={{ marginBottom: SPACING.xl }}>
-                  <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>Official Statements</Text>
-                  {posts.slice(0, 2).map(post => (
-                    <PostCard key={post.id} post={post} onPress={() => navigation.navigate('PostDetail', { post })} />
-                  ))}
-                </View>
-              )}
 
               {/* ───── 9. SECONDARY CHIPS ROW ───── */}
               <View style={{ flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.xl }}>
@@ -564,16 +545,6 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 </View>
               </View>
 
-              {/* Claim profile link */}
-              {!official && (
-                <Pressable
-                  onPress={() => navigation.navigate('ClaimProfile', { member })}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingVertical: SPACING.lg }}
-                >
-                  <Ionicons name="shield-checkmark-outline" size={14} color={colors.textMuted} />
-                  <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>Are you this MP? Claim your verified profile</Text>
-                </Pressable>
-              )}
             </>
           )}
 
@@ -680,79 +651,6 @@ export function MemberProfileScreen({ route, navigation }: any) {
             </>
           )}
 
-          {/* ═══════ STATEMENTS TAB ═══════ */}
-          {activeTab === 'statements' && (
-            <>
-              <View style={{ flexDirection: 'row', gap: 6, paddingVertical: 8, marginBottom: 4, alignItems: 'flex-start' }}>
-                <Ionicons name="shield-checkmark-outline" size={12} color={colors.textMuted} style={{ marginTop: 2 }} />
-                <Text style={{ flex: 1, fontSize: 11, fontWeight: '500', color: colors.textMuted, lineHeight: 15 }}>
-                  Verity only displays statements where attribution can be verified through the original source.
-                </Text>
-              </View>
-              {statementsLoading ? (
-                [1, 2, 3].map(i => <SkeletonLoader key={i} height={120} borderRadius={14} style={{ marginBottom: 10 }} />)
-              ) : statements.length === 0 ? (
-                <View style={{ alignItems: 'center', paddingVertical: SPACING.xxxl, gap: SPACING.md }}>
-                  <Ionicons name="document-text-outline" size={48} color={colors.textMuted} />
-                  <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, textAlign: 'center' }}>No statements yet</Text>
-                  <Text style={{ fontSize: 15, color: colors.textBody, textAlign: 'center', lineHeight: 22 }}>
-                    Verity scrapes official media releases daily. Verified statements from {member.first_name} will appear here once published.
-                  </Text>
-                </View>
-              ) : (
-                statements.map((s: MemberStatement) => {
-                  const isExpanded = expandedStatements.has(s.id);
-                  const [firstLine, ...rest] = s.content.split('\n\n');
-                  const title = firstLine.trim();
-                  const body = rest.join('\n\n').trim() || title;
-                  const displayBody = (isExpanded || body.length <= 200) ? body : body.slice(0, 200).trimEnd() + '...';
-                  const canExpand = body.length > 200;
-                  const dateStr = s.published_at
-                    ? new Date(s.published_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
-                    : '';
-
-                  return (
-                    <View
-                      key={s.id}
-                      style={{ backgroundColor: colors.card, borderRadius: 14, padding: 16, marginBottom: 12, ...SHADOWS.sm }}
-                    >
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textMuted }}>{dateStr}</Text>
-                        <View style={{ backgroundColor: colors.greenBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
-                          <Text style={{ fontSize: 10, fontWeight: '700', color: '#00843D', letterSpacing: 0.4 }}>OFFICIAL RELEASE</Text>
-                        </View>
-                      </View>
-                      {title && title !== body && (
-                        <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, lineHeight: 21, marginBottom: 6 }}>{title}</Text>
-                      )}
-                      <Text style={{ fontSize: 14, color: colors.textBody, lineHeight: 20 }}>{displayBody}</Text>
-                      {canExpand && (
-                        <Pressable
-                          onPress={() => setExpandedStatements(prev => {
-                            const next = new Set(prev);
-                            if (next.has(s.id)) next.delete(s.id); else next.add(s.id);
-                            return next;
-                          })}
-                          style={{ marginTop: 6, alignSelf: 'flex-start' }}
-                          hitSlop={8}
-                        >
-                          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.green }}>{isExpanded ? 'Show less' : 'Show more'}</Text>
-                        </Pressable>
-                      )}
-                      <Pressable
-                        onPress={() => Linking.openURL(s.source_url)}
-                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}
-                        hitSlop={8}
-                      >
-                        <Ionicons name="open-outline" size={13} color={colors.green} />
-                        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.green }}>View original source</Text>
-                      </Pressable>
-                    </View>
-                  );
-                })
-              )}
-            </>
-          )}
 
           {/* ═══════ MORE TAB ═══════ */}
           {activeTab === 'more' && (
@@ -1062,7 +960,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '600', color: colors.textMuted }}>No registered interests on file.</Text>
                     <Text style={{ fontSize: FONT_SIZE.small - 1, textAlign: 'center', lineHeight: 17, paddingHorizontal: SPACING.sm, color: colors.textMuted }}>
                       {member.chamber === 'house'
-                        ? 'House of Representatives interest data coming soon.'
+                        ? 'House of Representatives interest data is sourced from PDF registers and is not yet available for this member.'
                         : 'Interest declarations will appear once filed with the Senate.'}
                     </Text>
                   </View>
@@ -1235,16 +1133,6 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 )}
               </View>
 
-              {/* Claim profile link */}
-              {!official && (
-                <Pressable
-                  onPress={() => navigation.navigate('ClaimProfile', { member })}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingVertical: SPACING.lg }}
-                >
-                  <Ionicons name="shield-checkmark-outline" size={14} color={colors.textMuted} />
-                  <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>Are you this MP? Claim your verified profile</Text>
-                </Pressable>
-              )}
             </>
           )}
         </View>
@@ -1289,15 +1177,6 @@ export function MemberProfileScreen({ route, navigation }: any) {
         </View>
       </View>
 
-      {/* FAB — only visible to the verified owner */}
-      {isOwner && (
-        <Pressable
-          onPress={() => navigation.navigate('CreatePost', { member, officialId: official?.id })}
-          style={{ position: 'absolute', bottom: SPACING.xl, right: SPACING.xl, width: 56, height: 56, borderRadius: 28, backgroundColor: '#00843D', justifyContent: 'center', alignItems: 'center', ...SHADOWS.lg }}
-        >
-          <Ionicons name="create" size={24} color="#ffffff" />
-        </Pressable>
-      )}
 
       {/* Methodology Modal */}
       <Modal visible={showMethodology} transparent animationType="slide" onRequestClose={() => setShowMethodology(false)}>

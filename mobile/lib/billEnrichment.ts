@@ -38,8 +38,8 @@ export interface BillEnrichment {
 }
 
 const TERMINAL_KEYWORDS = [
-  'passed both houses', 'royal assent', 'awaiting assent',
-  'defeated', 'not passed', 'withdrawn', 'lapsed', 'in search index',
+  'passed both houses', 'royal assent', 'awaiting assent', 'enacted',
+  'defeated', 'not passed', 'withdrawn', 'lapsed', 'in search index', 'historical',
 ];
 
 export function enrichBill(bill: {
@@ -73,11 +73,11 @@ export function enrichBill(bill: {
   const daysSince = computeDaysSince(bill.last_updated || bill.date_introduced);
 
   let narrativeStatus: NarrativeStatus = 'unknown';
-  if (raw.includes('assent') || (raw.includes('passed') && !raw.includes('not passed'))) {
+  if (raw.includes('enacted') || raw.includes('assent') || (raw.includes('passed') && !raw.includes('not passed'))) {
     narrativeStatus = 'became_law';
   } else if (raw.includes('defeated') || raw.includes('not passed')) {
     narrativeStatus = 'defeated';
-  } else if (raw.includes('withdrawn') || raw.includes('lapsed') || raw === 'in search index') {
+  } else if (raw.includes('withdrawn') || raw.includes('lapsed') || raw === 'in search index' || raw === 'historical') {
     narrativeStatus = 'died_silently';
   } else if (isLive && daysSince !== null && daysSince <= 14) {
     narrativeStatus = 'moving_quickly';
@@ -101,19 +101,22 @@ export function enrichBill(bill: {
 }
 
 function deriveStageKey(status: string): StageKey {
-  if (status.includes('assent') || status.includes('act')) return 'passed';
+  if (status.includes('enacted') || status.includes('assent') || status.includes('act')) return 'passed';
   if (status.includes('passed') && !status.includes('not passed')) return 'passed';
   if (status.includes('defeated') || status.includes('not passed')) return 'failed';
   if (status.includes('withdrawn')) return 'withdrawn';
-  if (status.includes('lapsed') || status === 'in search index') return 'archived';
+  if (status.includes('lapsed') || status === 'in search index' || status === 'historical') return 'archived';
   if (status.includes('third')) return 'third_reading';
   if (status.includes('second') || status.includes('debate')) return 'second_reading';
   if (status.includes('committee') || status.includes('referred') || status.includes('inquiry')) return 'committee';
+  if (status.includes('before senate')) return 'senate_consideration';
+  if (status.includes('before house') || status.includes('before parliament')) return 'first_reading';
   if (status.includes('first')) return 'first_reading';
   return 'introduced';
 }
 
 function deriveStageLabel(status: string): string {
+  if (status.includes('enacted')) return 'Enacted';
   if (status.includes('assent') || status.includes('act')) return 'Became law';
   if (status.includes('passed both')) return 'Passed both houses';
   if (status.includes('passed')) return 'Passed';
@@ -124,10 +127,12 @@ function deriveStageLabel(status: string): string {
   if (status.includes('third')) return 'Third reading';
   if (status.includes('second')) return 'Second reading';
   if (status.includes('committee') || status.includes('inquiry')) return 'In committee';
+  if (status.includes('before parliament')) return 'Before Parliament';
   if (status.includes('before senate')) return 'Before Senate';
   if (status.includes('before house')) return 'Before House';
   if (status.includes('first')) return 'First reading';
   if (status.includes('introduced')) return 'Introduced';
+  if (status === 'historical') return 'Historical';
   return 'Introduced';
 }
 

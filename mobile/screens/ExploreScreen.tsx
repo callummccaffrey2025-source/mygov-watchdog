@@ -486,12 +486,11 @@ export function ExploreScreen({ navigation }: any) {
         </ScrollView>
 
         {isStateFilter && !isNSW ? (
-          /* Coming soon for non-NSW states */
           <View style={[styles.comingSoonCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="time-outline" size={32} color="#c4cdd5" />
+            <Ionicons name="business-outline" size={32} color={colors.textMuted} />
             <Text style={[styles.comingSoonTitle, { color: colors.text }]}>{activeState} Parliament</Text>
             <Text style={[styles.comingSoonText, { color: colors.textMuted }]}>
-              State parliament data for {activeState} is coming soon.
+              State parliament data for {activeState} is not yet available. Verity currently covers Federal and NSW parliaments.
             </Text>
           </View>
         ) : isNSW ? (
@@ -680,11 +679,11 @@ export function ExploreScreen({ navigation }: any) {
             {/* Export Data (Pro) */}
             {isPro ? (
               <View style={[styles.proCard, { backgroundColor: colors.greenBg }]}>
-                <Text style={[styles.proCardText, { color: colors.textMuted }]}>CSV export coming soon.</Text>
+                <Text style={[styles.proCardText, { color: colors.textMuted }]}>CSV export is not yet available.</Text>
               </View>
             ) : (
               <View style={styles.proGate}>
-                <Text style={styles.proGateIcon}>👑</Text>
+                <Ionicons name="diamond-outline" size={28} color="#00843D" style={{ marginBottom: 4 }} />
                 <Text style={[styles.proGateTitle, { color: colors.text }]}>Export Data</Text>
                 <Text style={[styles.proGateBody, { color: colors.textBody }]}>
                   Download voting records and bill data as CSV.

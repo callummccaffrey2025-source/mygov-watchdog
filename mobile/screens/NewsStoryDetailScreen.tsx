@@ -216,7 +216,7 @@ function ArticleCard({ article, storyId, userId }: { article: StoryArticle; stor
 
 export function NewsStoryDetailScreen({ route, navigation }: any) {
   const { colors } = useTheme();
-  const { story: storyParam, storyId } = route.params as { story?: NewsStory; storyId?: number };
+  const { story: storyParam, storyId } = (route.params ?? {}) as { story?: NewsStory; storyId?: number };
   const [story, setStory] = useState<NewsStory | null>(storyParam ?? null);
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -335,7 +335,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
     );
   }
 
-  const total = story.left_count + story.center_count + story.right_count;
+  const total = (story.left_count ?? 0) + (story.center_count ?? 0) + (story.right_count ?? 0);
 
   // Blindspot: prefer DB value, fall back to client-side computation
   const blindspotSide: string | null =

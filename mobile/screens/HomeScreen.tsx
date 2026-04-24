@@ -8,6 +8,8 @@ import {
   Pressable,
   Alert,
   Keyboard,
+  Platform,
+  InputAccessoryView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -540,9 +542,19 @@ export function HomeScreen({ navigation }: any) {
                   placeholderTextColor="#9aabb8"
                   keyboardType="number-pad"
                   maxLength={4}
-                  returnKeyType="search"
+                  returnKeyType="done"
                   onSubmitEditing={handleSetPostcode}
+                  inputAccessoryViewID="home-postcode-done"
                 />
+                {Platform.OS === 'ios' && (
+                  <InputAccessoryView nativeID="home-postcode-done">
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: '#F1F1F1', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: '#C8C8C8' }}>
+                      <Pressable onPress={() => { Keyboard.dismiss(); handleSetPostcode(); }} hitSlop={8}>
+                        <Text style={{ fontSize: 17, fontWeight: '600', color: '#007AFF' }}>Done</Text>
+                      </Pressable>
+                    </View>
+                  </InputAccessoryView>
+                )}
                 <Pressable
                   style={{
                     height: 44, paddingHorizontal: 20,
