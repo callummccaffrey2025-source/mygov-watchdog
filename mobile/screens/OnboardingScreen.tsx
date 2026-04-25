@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Pressable, TextInput, ScrollView,
   ActivityIndicator, Platform, Keyboard, KeyboardAvoidingView,
-  TouchableWithoutFeedback, InputAccessoryView,
+  InputAccessoryView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -222,83 +222,75 @@ export function OnboardingScreen({ onComplete }: Props) {
     };
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+        <View style={styles.stepHeader}>
+          <Pressable onPress={() => setStep(1)} hitSlop={12}>
+            <Ionicons name="arrow-back" size={22} color={colors.text} />
+          </Pressable>
+          <Text style={[styles.stepCount, { color: colors.textMuted }]}>2 of 7</Text>
+          <Pressable onPress={() => setStep(4)} hitSlop={12}>
+            <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip</Text>
+          </Pressable>
+        </View>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={0}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <ScrollView
-              contentContainerStyle={{ flexGrow: 1 }}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-            >
-              <View style={styles.stepHeader}>
-                <Pressable onPress={() => setStep(1)} hitSlop={12}>
-                  <Ionicons name="arrow-back" size={22} color={colors.text} />
-                </Pressable>
-                <Text style={[styles.stepCount, { color: colors.textMuted }]}>2 of 7</Text>
-                <Pressable onPress={() => setStep(4)} hitSlop={12}>
-                  <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip</Text>
-                </Pressable>
+          <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+            <View style={styles.stepContent}>
+              <View style={styles.iconWrap}>
+                <Ionicons name="location-outline" size={36} color="#00843D" />
               </View>
-              <View style={styles.stepContent}>
-                <View style={styles.iconWrap}>
-                  <Ionicons name="location-outline" size={36} color="#00843D" />
+              <Text style={[styles.h1, { color: colors.text }]}>Find Your MP</Text>
+              <Text style={[styles.subText, { color: colors.textBody }]}>Enter your postcode to personalise your experience</Text>
+              <TextInput
+                style={[styles.postcodeInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
+                value={postcode}
+                onChangeText={setPostcode}
+                placeholder="e.g. 2000"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="number-pad"
+                returnKeyType="done"
+                onSubmitEditing={handlePostcodeSubmit}
+                maxLength={4}
+                autoFocus
+                inputAccessoryViewID="postcode-done"
+              />
+              {lookupLoading && <ActivityIndicator color="#00843D" style={{ marginTop: 12 }} />}
+              {lookupError !== null && !lookupLoading && (
+                <Text style={styles.errorText}>{lookupError}</Text>
+              )}
+              {electorate !== null && !lookupLoading && (
+                <View style={styles.resultChip}>
+                  <Ionicons name="checkmark-circle" size={18} color="#00843D" />
+                  <Text style={styles.resultText}>{electorate.name}</Text>
                 </View>
-                <Text style={[styles.h1, { color: colors.text }]}>Find Your MP</Text>
-                <Text style={[styles.subText, { color: colors.textBody }]}>Enter your postcode to personalise your experience</Text>
-                <TextInput
-                  style={[styles.postcodeInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
-                  value={postcode}
-                  onChangeText={setPostcode}
-                  placeholder="e.g. 2000"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="number-pad"
-                  returnKeyType="done"
-                  onSubmitEditing={handlePostcodeSubmit}
-                  maxLength={4}
-                  autoFocus
-                  inputAccessoryViewID="postcode-done"
-                />
-                {Platform.OS === 'ios' && (
-                  <InputAccessoryView nativeID="postcode-done">
-                    <View style={{
-                      flexDirection: 'row', justifyContent: 'flex-end',
-                      backgroundColor: '#F1F1F1', paddingHorizontal: 16, paddingVertical: 8,
-                      borderTopWidth: 0.5, borderTopColor: '#C8C8C8',
-                    }}>
-                      <Pressable onPress={handlePostcodeSubmit} hitSlop={8}>
-                        <Text style={{ fontSize: 17, fontWeight: '600', color: '#007AFF' }}>Done</Text>
-                      </Pressable>
-                    </View>
-                  </InputAccessoryView>
-                )}
-                {lookupLoading && <ActivityIndicator color="#00843D" style={{ marginTop: 12 }} />}
-                {lookupError !== null && !lookupLoading && (
-                  <Text style={styles.errorText}>{lookupError}</Text>
-                )}
-                {electorate !== null && !lookupLoading && (
-                  <View style={styles.resultChip}>
-                    <Ionicons name="checkmark-circle" size={18} color="#00843D" />
-                    <Text style={styles.resultText}>{electorate.name}</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.footer}>
-                <Pressable
-                  style={[styles.btn, !canContinue && styles.btnDisabled]}
-                  onPress={handlePostcodeSubmit}
-                  disabled={!canContinue}
-                >
-                  <Text style={styles.btnText}>Continue</Text>
-                  <Ionicons name="arrow-forward" size={20} color="#fff" />
-                </Pressable>
-              </View>
-            </ScrollView>
-          </TouchableWithoutFeedback>
+              )}
+            </View>
+          </Pressable>
         </KeyboardAvoidingView>
+        <View style={styles.footer}>
+          <Pressable
+            style={[styles.btn, !canContinue && styles.btnDisabled]}
+            onPress={handlePostcodeSubmit}
+            disabled={!canContinue}
+          >
+            <Text style={styles.btnText}>Continue</Text>
+            <Ionicons name="arrow-forward" size={20} color="#fff" />
+          </Pressable>
+        </View>
+        {Platform.OS === 'ios' && (
+          <InputAccessoryView nativeID="postcode-done">
+            <View style={{
+              flexDirection: 'row', justifyContent: 'flex-end',
+              backgroundColor: '#F1F1F1', paddingHorizontal: 16, paddingVertical: 8,
+              borderTopWidth: 0.5, borderTopColor: '#C8C8C8',
+            }}>
+              <Pressable onPress={handlePostcodeSubmit} hitSlop={8}>
+                <Text style={{ fontSize: 17, fontWeight: '600', color: '#007AFF' }}>Done</Text>
+              </Pressable>
+            </View>
+          </InputAccessoryView>
+        )}
       </SafeAreaView>
     );
   }
