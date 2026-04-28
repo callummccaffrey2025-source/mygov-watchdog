@@ -316,9 +316,13 @@ function App() {
 
   if (!onboardingDone) {
     return (
-      <ErrorBoundary>
-        <OnboardingScreen onComplete={handleOnboardingComplete} />
-      </ErrorBoundary>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <OnboardingScreen onComplete={handleOnboardingComplete} />
+          </ThemeProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
     );
   }
 
