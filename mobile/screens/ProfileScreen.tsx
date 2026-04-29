@@ -95,7 +95,10 @@ export function ProfileScreen({ navigation }: any) {
     const trimmed = email.trim();
     if (!trimmed) return;
     setSending(true);
-    const { error } = await supabase.auth.signInWithOtp({ email: trimmed });
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+      options: { emailRedirectTo: 'verity://auth-callback' },
+    });
     setSending(false);
     if (error) Alert.alert('Error', error.message);
     else setSent(true);
@@ -423,6 +426,33 @@ export function ProfileScreen({ navigation }: any) {
             </View>
           </View>
         </View>
+
+        {/* Phone verification CTA for unverified users */}
+        {user && (
+          <View style={styles.section}>
+            <Pressable
+              style={{
+                flexDirection: 'row', alignItems: 'center', gap: 14,
+                backgroundColor: '#E8F5EE', borderRadius: 14, padding: 16,
+              }}
+              onPress={() => navigation.navigate('PhoneVerification')}
+            >
+              <View style={{
+                width: 44, height: 44, borderRadius: 12,
+                backgroundColor: '#00843D18', justifyContent: 'center', alignItems: 'center',
+              }}>
+                <Ionicons name="shield-checkmark-outline" size={22} color="#00843D" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#00843D' }}>Verify your phone</Text>
+                <Text style={{ fontSize: 12, color: '#065F46', marginTop: 2 }}>
+                  Unlock polls, follow MPs, and more
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#00843D" />
+            </Pressable>
+          </View>
+        )}
 
         {/* Settings */}
         <View style={styles.section}>
