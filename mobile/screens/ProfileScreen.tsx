@@ -427,32 +427,7 @@ export function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Phone verification CTA for unverified users */}
-        {user && (
-          <View style={styles.section}>
-            <Pressable
-              style={{
-                flexDirection: 'row', alignItems: 'center', gap: 14,
-                backgroundColor: '#E8F5EE', borderRadius: 14, padding: 16,
-              }}
-              onPress={() => navigation.navigate('PhoneVerification')}
-            >
-              <View style={{
-                width: 44, height: 44, borderRadius: 12,
-                backgroundColor: '#00843D18', justifyContent: 'center', alignItems: 'center',
-              }}>
-                <Ionicons name="shield-checkmark-outline" size={22} color="#00843D" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#00843D' }}>Verify your phone</Text>
-                <Text style={{ fontSize: 12, color: '#065F46', marginTop: 2 }}>
-                  Unlock polls, follow MPs, and more
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#00843D" />
-            </Pressable>
-          </View>
-        )}
+        {/* Phone verification CTA — deferred, see docs/CLEANUP_TODO.md */}
 
         {/* Settings */}
         <View style={styles.section}>
@@ -515,6 +490,15 @@ export function ProfileScreen({ navigation }: any) {
             </Pressable>
           </View>
         </View>
+
+        {/* Admin: Poll management */}
+        <Pressable
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, borderRadius: BORDER_RADIUS.md + 2, borderWidth: 1.5, borderColor: '#00843D', padding: SPACING.md + 2, marginBottom: SPACING.md }}
+          onPress={() => navigation.navigate('AdminPolls')}
+        >
+          <Ionicons name="shield-outline" size={16} color="#00843D" />
+          <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>Poll Admin</Text>
+        </Pressable>
 
         {/* DEV: Reset Onboarding (remove before App Store submission) */}
         <Pressable style={styles.resetOnboardingBtn} onPress={handleResetOnboarding}>

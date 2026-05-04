@@ -38,24 +38,27 @@ export type GatedAction =
 
 /**
  * Minimum tier required for each action.
- * This is the source of truth for UX gating.
+ *
+ * v1 policy: Tier 0 (signed-in via Apple/Google or email) is the maximum
+ * tier required for any current action. No action requires tier_1 or tier_2.
+ * Anonymous (not signed in) users still cannot perform any of these actions.
+ *
+ * Phone verification (tier_1) and ID verification (tier_2) are deferred.
+ * See docs/CLEANUP_TODO.md for the re-enablement plan.
+ *
  * Server-side enforcement mirrors these in RLS policies.
  */
 export const ACTION_TIER_REQUIREMENTS: Record<GatedAction, VerificationTier> = {
-  // Tier 0 — any signed-in user
+  // All current actions require tier_0 (signed in)
   follow_politician: 'tier_0',
   react_to_bill: 'tier_0',
   contact_mp: 'tier_0',
-
-  // Tier 1 — phone-verified
-  vote_national_poll: 'tier_1',
-  vote_electorate_poll: 'tier_1',
-  create_community_post: 'tier_1',
-  create_community_comment: 'tier_1',
-  sign_petition_national: 'tier_1',
-
-  // Tier 2 — ID-verified
-  sign_petition_electorate: 'tier_2',
+  vote_national_poll: 'tier_0',
+  vote_electorate_poll: 'tier_0',
+  create_community_post: 'tier_0',
+  create_community_comment: 'tier_0',
+  sign_petition_national: 'tier_0',
+  sign_petition_electorate: 'tier_0',
 };
 
 /** Ordered tiers from lowest to highest privilege */
