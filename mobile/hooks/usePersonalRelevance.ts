@@ -217,7 +217,7 @@ export function useUserProfile(): UserProfile {
   const { user, postcode } = useUser();
   const { member, electorate } = useElectorateByPostcode(postcode);
 
-  // TODO: Load trackedIssues, housingStatus, readTopics from user_preferences
+  // see BACKLOG.md "personalisation data loading"
   // For now, use selectedTopics from AsyncStorage (set during onboarding)
   // This will be enhanced when the onboarding migration is deployed
 

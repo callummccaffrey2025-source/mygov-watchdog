@@ -427,7 +427,7 @@ export function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Phone verification CTA — deferred, see docs/CLEANUP_TODO.md */}
+        {/* Phone verification CTA — deferred, see docs/BACKLOG.md */}
 
         {/* Settings */}
         <View style={styles.section}>

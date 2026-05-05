@@ -44,7 +44,7 @@ export type GatedAction =
  * Anonymous (not signed in) users still cannot perform any of these actions.
  *
  * Phone verification (tier_1) and ID verification (tier_2) are deferred.
- * See docs/CLEANUP_TODO.md for the re-enablement plan.
+ * See docs/BACKLOG.md for the re-enablement plan.
  *
  * Server-side enforcement mirrors these in RLS policies.
  */

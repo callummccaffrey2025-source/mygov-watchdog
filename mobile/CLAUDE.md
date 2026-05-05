@@ -68,6 +68,7 @@
 - The gear icon is Expo Go dev overlay — ignore it, it disappears in production
 - When fixing bugs, grep the entire src/ directory first to understand the full scope before changing anything
 - Preserve existing functionality when adding new features — don't break what works
+- If you're about to write a TODO, check `docs/BACKLOG.md` first — it's the single source of truth for deferred work
 
 ## Automation Pipelines (LIVE)
 - `ingest-news-daily` — pg_cron jobid 2, `0 20 * * *` (6am AEST), calls `/functions/v1/ingest-news` with service_role key

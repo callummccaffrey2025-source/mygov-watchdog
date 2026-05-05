@@ -48,7 +48,7 @@ import { ActivityScreen } from './screens/ActivityScreen';
 import { SavedScreen } from './screens/SavedScreen';
 import { LocalAnnouncementsScreen } from './screens/LocalAnnouncementsScreen';
 import { ContradictionDetailScreen } from './screens/ContradictionDetailScreen';
-// Phone verification deferred — see docs/CLEANUP_TODO.md
+// Phone verification deferred — see docs/BACKLOG.md
 import { AdminPollsScreen } from './screens/AdminPollsScreen';
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';

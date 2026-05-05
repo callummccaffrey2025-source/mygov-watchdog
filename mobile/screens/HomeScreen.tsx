@@ -149,7 +149,7 @@ export function HomeScreen({ navigation }: any) {
   const userProfile = useUserProfile();
   const { scoreContent } = usePersonalRelevance({
     ...userProfile,
-    selectedTopics: [], // TODO: load from AsyncStorage
+    selectedTopics: [], // see BACKLOG.md "personalisation data loading"
     trackedIssues: [],
   });
 
@@ -438,7 +438,7 @@ export function HomeScreen({ navigation }: any) {
                 )}
               </View>
 
-              {/* TODO: add bold text parsing for bullet strings (e.g. **bold** → <Text fontWeight=700>) */}
+              {/* see BACKLOG.md "bold text parsing in daily brief bullets" */}
               {brief.ai_text.what_happened.slice(0, 3).map((bullet, i) => (
                 <React.Fragment key={i}>
                   <Pressable
@@ -1018,7 +1018,7 @@ export function HomeScreen({ navigation }: any) {
           </View>
         )}
 
-        {/* TODO: add local-to-electorate card when electorate_tags column is added to news_stories */}
+        {/* see BACKLOG.md "electorate-specific news card" */}
 
         <SectionDivider />
 
