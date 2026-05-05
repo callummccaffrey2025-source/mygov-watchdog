@@ -142,6 +142,10 @@
 3. Create Supabase tables: `user_saves`, `user_reads`, `user_notifications` (hooks are ready, tables needed)
 4. Push notifications: test DailyBrief deep link end-to-end
 
+## gstack
+- Use the `/browse` skill from gstack for all web browsing. Never use mcp__claude-in-chrome__* tools.
+- Available skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review, /design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy, /canary, /benchmark, /browse, /connect-chrome, /qa, /qa-only, /design-review, /setup-browser-cookies, /setup-deploy, /setup-gbrain, /retro, /investigate, /document-release, /codex, /cso, /autoplan, /plan-devex-review, /devex-review, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn
+
 ## Autopilot Mode
 - Task queue: AUTOPILOT_TASKS.md
 - Run: ./scripts/autopilot.sh [max_tasks]
