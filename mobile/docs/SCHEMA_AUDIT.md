@@ -61,9 +61,73 @@ Tables moved from `public` to `archived` schema. Data preserved, out of the way.
 
 | Table | Rows | Reason to Keep |
 |-------|------|----------------|
-| `participation_index` | 225 | FK to members. One row per member. May be useful for MP accountability features. |
+| `participation_index` | 225 | FK to members. Used by `calculate_participation_index.py`. |
 | `poll_admin_actions` | 0 | Used by AdminPollsScreen for Daily Question admin |
-| `poll_reports` | 0 | Used by AdminPollsScreen for Daily Question reports |
+| `poll_reports` | 0 | Used by AdminPollsScreen, PollsScreen |
 | `daily_polls` | 0 | Daily Question feature (active) |
 | `daily_poll_responses` | 0 | Daily Question feature (active) |
 | `daily_poll_results` | 0 | Daily Question feature (active, materialized view) |
+
+---
+
+## Schema Drift Audit (Prompt 4b — 2026-05-06)
+
+Production had 89 tables in `public`; `verify_schema.py` tracked only 55. Audit below.
+
+### Tables added to verify_schema.py (referenced in app code)
+
+| Table | Rows | Referenced By |
+|-------|------|---------------|
+| `civic_quiz` | — | `hooks/useCivicQuiz.ts` |
+| `civic_quiz_answers` | — | `hooks/useCivicQuiz.ts` |
+| `local_announcements` | — | `hooks/useLocalAnnouncements.ts`, NotificationPreferencesScreen |
+| `morning_signals` | — | `hooks/useMorningSignal.ts` |
+| `mp_contradictions` | — | `hooks/useContradictions.ts`, ContradictionDetailScreen |
+| `participation_index` | 225 | `scripts/calculate_participation_index.py` |
+| `poll_admin_actions` | 0 | AdminPollsScreen |
+| `poll_reports` | 0 | AdminPollsScreen, PollsScreen |
+| `story_primary_sources` | 3 | `hooks/useStoryPrimarySources.ts` |
+
+### Tables added to verify_schema.py (no app refs, but have data or serve infrastructure)
+
+| Table | Rows | Purpose |
+|-------|------|---------|
+| `media_releases` | 85 | Scraped media releases. No current UI but data exists. |
+| `local_developments` | 74 | Development applications. Seeded data. |
+| `verified_source_domains` | 44 | Official domains for source verification (news intelligence). |
+| `fun_facts` | 25 | Civic education facts. Seeded data. |
+| `source_documents` | 25 | Document store for news intelligence pipeline. |
+| `issues` | 20 | Master issue taxonomy (personalisation schema). |
+| `email_domain_blocklist` | 16 | Auth security — blocks disposable email domains. |
+| `electorate_mapping` | 13 | Postcode-to-electorate mapping supplement. |
+| `industry_topic_mapping` | 10 | Maps industries to political topics (personalisation). |
+| `news_items` | 10 | Legacy news table (pre-news_articles). May be orphan. |
+| `source_ownership_groups` | 7 | Media ownership groups (news intelligence). |
+| `timeline_topics` | 6 | Topic slugs for story timelines (news intelligence). |
+| `data_limitations` | 5 | Disclosures about data gaps. |
+| `election_cycles` | 4 | Federal/state election dates. |
+| `promises` | 0 | Promise Tracker (deferred feature, see BACKLOG.md). |
+| `bill_ingestion_log` | — | Audit trail for bill ingestion pipeline. |
+| `pipeline_heartbeats` | — | Pipeline health monitoring. |
+
+### Empty news intelligence tables (from 20260418 migration, no app refs)
+
+These were created for a planned news intelligence layer. All empty, none referenced in app code. Kept in verify_schema.py to track them — candidates for cleanup if the intelligence layer is abandoned.
+
+| Table | Purpose |
+|-------|---------|
+| `story_coverage_analysis` | Bias coverage breakdown per story |
+| `story_factchecks` | User-submitted fact-checks |
+| `story_money_trails` | Donor connections to story topics |
+| `story_mp_context` | MP involvement context per story |
+| `story_timelines` | Story-to-timeline-topic mapping |
+| `story_verdicts` | AI-generated story verdicts |
+| `timeline_events` | Timeline event entries |
+| `relevance_cache` | Personalisation relevance cache |
+| `election_info` | Election metadata (empty, superseded by election_cycles) |
+
+### System tables (excluded from verify_schema.py)
+
+| Table | Reason |
+|-------|--------|
+| `spatial_ref_sys` | PostGIS system table. Not application-managed. |

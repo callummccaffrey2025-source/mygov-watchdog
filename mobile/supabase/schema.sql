@@ -1,0 +1,33 @@
+-- Verity Database Schema
+-- =====================
+-- This file should be regenerated after schema changes.
+--
+-- To generate:
+--   supabase db dump --schema public --project-ref zmmglikiryuftqmoprqm > supabase/schema.sql
+--
+-- To install supabase CLI:
+--   brew install supabase/tap/supabase
+--
+-- Last updated: 2026-04-17 (placeholder — run the command above to populate)
+-- NOTE: migration_baseline.sql is the hand-maintained baseline (88 tables).
+--       This file is for pg_dump output. Run the command above to populate.
+--
+-- Key tables:
+--   members (225 active federal members)
+--   bills (~6,400 federal bills)
+--   divisions (1,929 parliamentary divisions)
+--   division_votes (140,000+ vote records)
+--   parties (17 parties)
+--   electorates (151 federal electorates)
+--   news_articles, news_stories, news_sources (triple-source news pipeline)
+--   registered_interests (1,753 senator interest declarations)
+--   individual_donations (2,307 AEC donation records)
+--   hansard_speeches (4,780+ speeches)
+--   daily_briefs (AI-generated daily summaries)
+--   community_posts, community_comments, community_votes (community feed)
+--   user_preferences, user_saves, user_follows (user data — RLS protected)
+--   push_tokens, notification_preferences (notification system)
+--   analytics_events (app analytics)
+--   user_engagement_stats (engagement tracking with streaks)
+--   error_reports (error monitoring)
+--   pipeline_runs (data pipeline health)
