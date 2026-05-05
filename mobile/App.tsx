@@ -46,12 +46,9 @@ import { AboutScreen } from './screens/AboutScreen';
 import { DailyBriefScreen } from './screens/DailyBriefScreen';
 import { ActivityScreen } from './screens/ActivityScreen';
 import { SavedScreen } from './screens/SavedScreen';
-import { PromiseTrackerScreen } from './screens/PromiseTrackerScreen';
-// CompareMPsScreen removed
 import { LocalAnnouncementsScreen } from './screens/LocalAnnouncementsScreen';
 import { ContradictionDetailScreen } from './screens/ContradictionDetailScreen';
 // Phone verification deferred — see docs/CLEANUP_TODO.md
-// import { PhoneVerificationScreen } from './screens/PhoneVerificationScreen';
 import { AdminPollsScreen } from './screens/AdminPollsScreen';
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
@@ -376,11 +373,8 @@ function App() {
               <Stack.Screen name="DailyBrief" component={DailyBriefScreen} />
               <Stack.Screen name="Activity" component={ActivityScreen} />
               <Stack.Screen name="Saved" component={SavedScreen} />
-              <Stack.Screen name="PromiseTracker" component={PromiseTrackerScreen} />
-              {/* CompareMPs removed */}
               <Stack.Screen name="LocalAnnouncements" component={LocalAnnouncementsScreen} />
               <Stack.Screen name="ContradictionDetail" component={ContradictionDetailScreen} options={{ headerShown: false }} />
-              {/* PhoneVerification deferred — see docs/CLEANUP_TODO.md */}
               <Stack.Screen name="AdminPolls" component={AdminPollsScreen} />
             </Stack.Navigator>
             <AppNotificationGate />

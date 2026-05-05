@@ -209,6 +209,35 @@ export function PartyProfileScreen({ route, navigation }: any) {
 
         <View style={{ padding: SPACING.xl, paddingTop: SPACING.xl }}>
 
+          {/* ═══ ABOUT ═══ */}
+          {(party as any).description && (
+            <View style={{ marginBottom: SPACING.xl }}>
+              <Text style={{ fontSize: FONT_SIZE.body, color: colors.textBody, lineHeight: 22 }}>
+                {(party as any).description}
+              </Text>
+              {((party as any).leader || (party as any).founded_year || (party as any).website_url) && (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginTop: SPACING.md }}>
+                  {(party as any).leader && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.sm + 2, paddingVertical: SPACING.xs + 1 }}>
+                      <Ionicons name="person-outline" size={12} color={colors.textMuted} />
+                      <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textBody }}>
+                        Leader: {(party as any).leader}
+                      </Text>
+                    </View>
+                  )}
+                  {(party as any).founded_year && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.sm + 2, paddingVertical: SPACING.xs + 1 }}>
+                      <Ionicons name="calendar-outline" size={12} color={colors.textMuted} />
+                      <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textBody }}>
+                        Founded {(party as any).founded_year}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+          )}
+
           {/* ═══ COALITION NOTICE ═══ */}
           {isCoalition && (
             <View style={{

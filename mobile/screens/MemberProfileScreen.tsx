@@ -516,13 +516,6 @@ export function MemberProfileScreen({ route, navigation }: any) {
               {/* ───── 9. SECONDARY CHIPS ROW ───── */}
               <View style={{ flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.xl }}>
                 <Pressable
-                  onPress={() => navigation.navigate('CompareMPs', { member })}
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#F0ECE4', borderRadius: 10, paddingVertical: SPACING.md }}
-                >
-                  <Ionicons name="people-outline" size={15} color="#8B6914" />
-                  <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: '#8B6914' }}>Compare MPs</Text>
-                </Pressable>
-                <Pressable
                   onPress={() => setShowMethodology(true)}
                   style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#E7EEFF', borderRadius: 10, paddingVertical: SPACING.md }}
                 >

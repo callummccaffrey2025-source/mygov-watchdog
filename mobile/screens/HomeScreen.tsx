@@ -33,8 +33,6 @@ import { hapticLight } from '../lib/haptics';
 import { HomeScreenSkeleton } from '../components/HomeScreenSkeleton';
 import { AuthPromptSheet } from '../components/AuthPromptSheet';
 import { useAuthGate } from '../hooks/useAuthGate';
-import { useWeeklyPoll } from '../hooks/useWeeklyPoll';
-import { WeeklyPollCard } from '../components/WeeklyPollCard';
 import { useSittingCalendar } from '../hooks/useSittingCalendar';
 import { useBillSwipe } from '../hooks/useBillSwipe';
 import * as Haptics from 'expo-haptics';
@@ -136,10 +134,6 @@ export function HomeScreen({ navigation }: any) {
 
   const { stories: newsStories, loading: newsStoriesLoading, refresh: refreshNews } = useNewsStories(undefined, undefined, undefined, 15);
 
-  const { poll: weeklyPoll, userVote: weeklyVote, results: weeklyResults, vote: weeklyVoteFn } = useWeeklyPoll(
-    postcode,
-    electorateName,
-  );
 
   const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
 
@@ -695,27 +689,6 @@ export function HomeScreen({ navigation }: any) {
 
         <SectionDivider />
 
-        {/* ═══ 4. THIS WEEK'S POLL ═══ */}
-        {weeklyPoll && (
-          <>
-            <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
-              <SectionHeader color="#D97706" label="THIS WEEK'S POLL" />
-              <WeeklyPollCard
-                poll={weeklyPoll}
-                userVote={weeklyVote}
-                results={weeklyResults}
-                electorate={electorateName}
-                onVote={(i) => {
-                  track('poll_vote', { poll_id: weeklyPoll.id, option: i }, 'Home');
-                  trackEvent('poll_voted', { poll_id: weeklyPoll.id });
-                  weeklyVoteFn(i);
-                }}
-                requireAuth={requireAuth}
-              />
-            </View>
-            <SectionDivider />
-          </>
-        )}
 
         {/* ═══ 4b. HAVE YOUR SAY — Bill Swipe ═══ */}
         {currentBill && (
@@ -726,13 +699,17 @@ export function HomeScreen({ navigation }: any) {
                 Swipe on bills currently before parliament
               </Text>
 
-              {/* Bill card */}
-              <View style={{
-                backgroundColor: colors.card,
-                borderRadius: BORDER_RADIUS.xl,
-                padding: 20,
-                ...SHADOWS.md,
-              }}>
+              {/* Bill card — tappable to open detail */}
+              <Pressable
+                onPress={() => navigation.navigate('BillDetail', { billId: currentBill.id })}
+                style={({ pressed }) => ({
+                  backgroundColor: colors.card,
+                  borderRadius: BORDER_RADIUS.xl,
+                  padding: 20,
+                  ...SHADOWS.md,
+                  opacity: pressed ? 0.95 : 1,
+                })}
+              >
                 {/* Status + chamber */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <View style={{ backgroundColor: '#E8F5EE', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
@@ -800,8 +777,8 @@ export function HomeScreen({ navigation }: any) {
                   </View>
                 )}
 
-                {/* Agree / Disagree / Skip buttons */}
-                <View style={{ flexDirection: 'row', gap: 10 }}>
+                {/* Agree / Disagree / Skip buttons — onStartShouldSetResponder prevents parent Pressable from firing */}
+                <View style={{ flexDirection: 'row', gap: 10 }} onStartShouldSetResponder={() => true}>
                   <Pressable
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -843,7 +820,13 @@ export function HomeScreen({ navigation }: any) {
                     <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>Agree</Text>
                   </Pressable>
                 </View>
-              </View>
+
+                {/* Read more affordance */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14, gap: 4 }}>
+                  <Text style={{ fontSize: 13, fontWeight: FONT_WEIGHT.medium, color: colors.textMuted }}>Read more about this bill</Text>
+                  <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
+                </View>
+              </Pressable>
             </View>
             <SectionDivider />
           </>

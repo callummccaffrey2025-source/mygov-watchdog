@@ -1,7 +1,5 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, Pressable } from 'react-native';
 import { reportError } from '../lib/errorReporting';
 
 interface Props {
@@ -11,16 +9,17 @@ interface Props {
 
 interface State {
   hasError: boolean;
+  errorMessage: string;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, errorMessage: '' };
   }
 
-  static getDerivedStateFromError(): State {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, errorMessage: error?.message ?? 'Unknown error' };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
@@ -34,38 +33,33 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
       return (
-        <SafeAreaView style={styles.safe}>
-          <View style={styles.content}>
-            <Ionicons name="alert-circle-outline" size={56} color="#e8ecf0" />
-            <Text style={styles.title}>Something went wrong</Text>
-            <Text style={styles.body}>
-              An unexpected error occurred. Please try restarting the app.
-            </Text>
-            <Pressable
-              style={styles.btn}
-              onPress={() => this.setState({ hasError: false })}
-            >
-              <Text style={styles.btnText}>Try again</Text>
-            </Pressable>
-          </View>
-        </SafeAreaView>
+        <View style={{
+          flex: 1, backgroundColor: '#ffffff',
+          alignItems: 'center', justifyContent: 'center',
+          padding: 40, paddingTop: 80,
+        }}>
+          <Text style={{ fontSize: 48, marginBottom: 16 }}>!</Text>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: '#1a2332', textAlign: 'center' }}>
+            Something went wrong
+          </Text>
+          <Text style={{ fontSize: 14, color: '#DC3545', textAlign: 'center', marginTop: 12, fontFamily: 'Courier' }}>
+            {this.state.errorMessage}
+          </Text>
+          <Text style={{ fontSize: 15, color: '#5a6a7a', textAlign: 'center', lineHeight: 22, marginTop: 16 }}>
+            Please restart the app. If this keeps happening, contact support@verity.au
+          </Text>
+          <Pressable
+            style={{
+              backgroundColor: '#00843D', borderRadius: 12,
+              paddingHorizontal: 32, paddingVertical: 14, marginTop: 24,
+            }}
+            onPress={() => this.setState({ hasError: false, errorMessage: '' })}
+          >
+            <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 16 }}>Try again</Text>
+          </Pressable>
+        </View>
       );
     }
     return this.props.children;
   }
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#ffffff' },
-  content: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    padding: 40, gap: 16,
-  },
-  title: { fontSize: 20, fontWeight: '700', color: '#1a2332', textAlign: 'center' },
-  body: { fontSize: 15, color: '#5a6a7a', textAlign: 'center', lineHeight: 22 },
-  btn: {
-    backgroundColor: '#00843D', borderRadius: 12,
-    paddingHorizontal: 32, paddingVertical: 14, marginTop: 8,
-  },
-  btnText: { color: '#ffffff', fontWeight: '700', fontSize: 16 },
-});
