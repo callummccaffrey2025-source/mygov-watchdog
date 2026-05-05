@@ -5,7 +5,7 @@
 - Supabase backend: https://zmmglikiryuftqmoprqm.supabase.co
 - Bundle ID: au.com.verity.app
 - Python ingestion scripts in scripts/
-- .env contains: SUPABASE_URL, SUPABASE_KEY, ANTHROPIC_API_KEY, TVFY_API_KEY, NEWSAPI_KEY
+- Environment variables: see `docs/ENVIRONMENT.md` (canonical reference for all env vars, secrets, and setup)
 
 ## What's Built
 - 225 federal members (149 House + 76 Senate) with real photos from TheyVoteForYou API
@@ -54,7 +54,7 @@
 - refresh_all.sh
 
 ## Known Issues
-- APH OpenData API returns 404 — no new 2026 bills until they restore it
+- APH OpenData API returns 404 — replaced with direct HTML scraping of APH bill pages (ingest_federal_bills.py)
 - Gear icon on every screen is Expo Go dev overlay — disappears in production builds
 - NewsAPI free tier doesn't index Australian paywalled outlets — Google News RSS fills that gap
 - Registered interests (APH) are PDF-only and APH URLs restructured — not yet ingested
@@ -122,6 +122,7 @@
 - **Bill arguments**: 16 bills now have AI-generated For/Against arguments via `scripts/generate_bill_arguments.py`. The "Verity Pro lock" placeholder removed — empty state now reads "Arguments for this bill haven't been compiled yet."
 
 ## Cron jobs (local)
+- `0 5 * * *` — `python scripts/ingest_federal_bills.py` (daily APH scrape, 5am AEST, before enrichment crons)
 - `0 6 * * *` — `~/verity/scripts/verity_autopilot.sh` (news ingest + brief generation + Mac notification)
 - `0 2,8,14,20 * * *` — `python scripts/ingest_news.py --fresh` (every 6 hours, keeps freshness window < 6h)
 

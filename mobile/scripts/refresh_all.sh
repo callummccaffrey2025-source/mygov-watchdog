@@ -12,6 +12,9 @@
 set -e
 cd ~/verity/mobile
 
+echo "=== [$(date)] Refreshing bills from APH ==="
+python scripts/ingest_federal_bills.py
+
 echo "=== [$(date)] Refreshing news ==="
 python scripts/ingest_news.py
 

@@ -94,13 +94,13 @@ Features cut from v1, planned for post-launch.
 
 | Item | Severity | Description | Suggested fix |
 |------|----------|-------------|---------------|
-| `politicians` vs `members` table | HIGH | `politicians` (226 rows) exists alongside `members` (225 rows). Likely a duplicate from an earlier schema that was never reconciled. | Investigate in Prompt 4 (schema audit). Determine which tables reference which, merge or drop. |
-| `bill_electorate_sentiment` (790 rows) | MEDIUM | Table with data, unclear if any app code references it. | Check in Prompt 4. |
-| `donor_influence` (637 rows) | MEDIUM | Table with data, unclear if any app code references it. | Check in Prompt 4. |
-| `political_risk` (226 rows) | MEDIUM | Table with data, unclear if any app code references it. | Check in Prompt 4. |
-| `digest_log` table | LOW | 0 rows. May be referenced by weekly-digest Edge Function. | Check in Prompt 4. Drop if unreferenced. |
-| `poll_admin_actions`, `poll_reports` tables | LOW | Created for Daily Question admin. Verify AdminPollsScreen uses them. | Check in Prompt 4. |
+| ~~`politicians` vs `members` table~~ | ~~HIGH~~ | ~~Resolved in Prompt 4. `politicians` dropped, backed up to `archived.politicians`.~~ | Done |
+| ~~`bill_electorate_sentiment`, `donor_influence`, `political_risk`~~ | ~~MEDIUM~~ | ~~Resolved in Prompt 4. Moved to `archived` schema.~~ | Done |
+| ~~`digest_log` table~~ | ~~LOW~~ | ~~Resolved in Prompt 4. Dropped (0 rows, no refs).~~ | Done |
+| ~~`poll_admin_actions`, `poll_reports`~~ | ~~LOW~~ | ~~Resolved in Prompt 4. Kept — used by AdminPollsScreen.~~ | Done |
+| 4 Edge Functions without local source | HIGH | `revenuecat-webhook`, `send-push-alerts`, `ingest-news`, `send-notification` are deployed in production but have no source code in the repo. Production blackbox — can't audit, update, or recover from bugs. `revenuecat-webhook` may be unnecessary if switching to direct Apple IAP. | Recovery options: (a) `supabase functions download <name> --project-ref zmmglikiryuftqmoprqm` (b) Rewrite from scratch if source is lost. Needs dedicated session. |
 | `email_domain_blocklist` (16 rows) | LOW | Used by verify-phone-send-otp. Keep while phone verification is mothballed. | Leave until phone verification re-enabled. |
+| Env var naming inconsistency | LOW | `TVFY_API_KEY` vs `THEYVOTEFORYOU_API_KEY` and `SUPABASE_KEY` vs `SUPABASE_SERVICE_ROLE_KEY` used interchangeably across 40+ scripts. Both work via fallback chains but inconsistent. | Standardize to `THEYVOTEFORYOU_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` everywhere. Mechanical find-replace. |
 | NewsScreen vs NewsScreenV2 | MEDIUM | Both exist. NewsScreen used as stack screen, NewsScreenV2 used as tab. Confusing. | Consolidate: rename NewsScreenV2 to NewsScreen, update all references. |
 | Personalisation data loading | MEDIUM | `usePersonalRelevance` returns empty `selectedTopics` and `trackedIssues`. Data exists in `user_preferences` but isn't loaded into the hook. | Load from `user_preferences` via Supabase query in the hook. |
 | Bold text parsing in daily brief | LOW | Daily brief bullets contain `**bold**` markdown that renders as literal asterisks. | Add a simple `parseBold()` function that splits on `**` and wraps in `<Text fontWeight='700'>`. |
