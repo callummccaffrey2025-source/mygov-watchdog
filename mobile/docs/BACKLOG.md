@@ -14,8 +14,8 @@ Things that MUST be done before App Store submission.
 | Item | Why it's a blocker | Roadmap prompt |
 |------|-------------------|----------------|
 | **IAP integration (RevenueCat)** | Subscription is a database flag (`is_pro` on `user_preferences`). No StoreKit, no receipt validation. Apple will reject. | Not yet assigned — needs dedicated session |
-| **Privacy Policy update** | Missing ABN/business entity name, cross-border data disclosure (Supabase in US, Anthropic in US), PostHog tracking disclosure. Required by Australian Privacy Act 1988 APP 1 and APP 8. | Prompt 39 |
-| **Terms of Service update** | Missing AI-specific disclaimer section. No indemnification for user-generated content. Contact emails inconsistent (verity.run vs verity.au). | Prompt 39 |
+| ~~**Privacy Policy update**~~ | ~~Resolved in Prompt 9. Added: operator identity (sole trader, ABN pending), cross-border data disclosure (Supabase/Anthropic/Expo/Apple in US), AI data handling, children's privacy, OAIC complaint right. Emails standardised to verity.au.~~ | Done |
+| ~~**Terms of Service update**~~ | ~~Resolved in Prompt 9. Added: AI-generated content disclaimer, UGC indemnification clause, changes notification clause. Emails standardised to verity.au.~~ | Done |
 | **Accessibility labels** | ~4 of 600+ interactive elements have accessibilityLabel. VoiceOver is non-functional. Apple may flag. Disability Discrimination Act 1992 obligation. | Prompt 37 |
 | **App icon verification** | Verify icon is 1024x1024 RGB PNG with no transparency and no pre-rounded corners. Currently appears correct but needs final check. | Callum manual check |
 | **Supabase Site URL** | Must be set to `verity://auth-callback` for email magic links to work. Currently set (verify it's still correct before submission). | Done — verify only |

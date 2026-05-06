@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-const LAST_UPDATED = '28 March 2026';
+const LAST_UPDATED = 'May 2026';
 
 export function TermsScreen({ navigation }: any) {
   return (
@@ -57,13 +57,28 @@ export function TermsScreen({ navigation }: any) {
           constitute endorsement of any political position.
         </Section>
 
-        <Section title="User-generated content">
-          You retain ownership of content you post. By posting, you grant Verity a non-exclusive
-          licence to display that content within the app. We reserve the right to remove content
-          that violates these terms without notice.
+        <Section title="AI-Generated Content">
+          Verity uses artificial intelligence (Anthropic's Claude) to generate daily briefs,
+          bill summaries, claim verification results, and other content. AI-generated content
+          is provided for informational purposes only and is clearly labelled throughout the app.
+          {'\n\n'}AI outputs may contain errors, omissions, or biases. Verity does not guarantee
+          the accuracy, completeness, or impartiality of AI-generated content. You should not
+          rely on AI-generated summaries as a substitute for reading primary parliamentary sources.
+          {'\n\n'}Verity is not responsible for decisions made based on AI-generated content.
         </Section>
 
-        <Section title="Limitation of liability">
+        <Section title="User-Generated Content">
+          You retain ownership of content you post. By posting, you grant Verity a non-exclusive,
+          royalty-free, worldwide licence to display, reproduce, and distribute that content
+          within the app and in promotional materials for the app.
+          {'\n\n'}You are solely responsible for the content you post. You represent and warrant
+          that your content does not infringe any third-party rights and does not violate any
+          applicable law. You agree to indemnify and hold harmless Verity and its operator from
+          any claims, damages, or expenses arising from content you post.
+          {'\n\n'}We reserve the right to remove content that violates these terms without notice.
+        </Section>
+
+        <Section title="Limitation of Liability">
           To the maximum extent permitted by Australian law, Verity is provided "as is" without
           warranty of any kind. We are not liable for any loss or damage arising from your use
           of the app, including reliance on information displayed.
@@ -71,6 +86,12 @@ export function TermsScreen({ navigation }: any) {
 
         <Section title="Governing law">
           These terms are governed by the laws of the Australian Capital Territory, Australia.
+        </Section>
+
+        <Section title="Changes to These Terms">
+          We may update these terms from time to time. Material changes will be communicated
+          via an in-app notification. Continued use of Verity after changes constitutes
+          acceptance of the updated terms.
         </Section>
 
         <Section title="Contact">
