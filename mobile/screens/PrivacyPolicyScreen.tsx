@@ -18,7 +18,7 @@ export function PrivacyPolicyScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
-      <Pressable style={{ padding: 20, paddingBottom: 0 }} onPress={() => navigation.goBack()}>
+      <Pressable style={{ padding: 20, paddingBottom: 0 }} onPress={() => navigation.goBack()} accessibilityLabel="Go back" accessibilityRole="button">
         <Ionicons name="arrow-back" size={22} color={colors.text} />
       </Pressable>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 24 }} showsVerticalScrollIndicator={false}>

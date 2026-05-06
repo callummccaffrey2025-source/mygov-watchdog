@@ -16,7 +16,7 @@ export function AboutScreen({ navigation }: any) {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn} accessibilityLabel="Go back" accessibilityRole="button">
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.text }]}>About Verity</Text>
@@ -79,6 +79,8 @@ export function AboutScreen({ navigation }: any) {
           <Pressable
             style={[styles.linkRow, { backgroundColor: colors.surface }]}
             onPress={() => Linking.openURL('https://verity.au')}
+            accessibilityLabel="Visit verity.au website"
+            accessibilityRole="button"
           >
             <Ionicons name="globe-outline" size={20} color="#00843D" />
             <Text style={[styles.linkText, { color: colors.text }]}>verity.au</Text>
@@ -87,6 +89,8 @@ export function AboutScreen({ navigation }: any) {
           <Pressable
             style={[styles.linkRow, { backgroundColor: colors.surface }]}
             onPress={() => Linking.openURL('mailto:hello@verity.au')}
+            accessibilityLabel="Email hello@verity.au"
+            accessibilityRole="button"
           >
             <Ionicons name="mail-outline" size={20} color="#00843D" />
             <Text style={[styles.linkText, { color: colors.text }]}>hello@verity.au</Text>

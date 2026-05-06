@@ -111,6 +111,8 @@ function AnnouncementCard({ item, colors }: { item: LocalAnnouncement; colors: a
           borderTopColor: colors.border,
         }}
         hitSlop={8}
+        accessibilityLabel="View original source"
+        accessibilityRole="button"
       >
         <Ionicons name="open-outline" size={13} color={colors.green} />
         <Text style={{ fontSize: 12, fontWeight: '600', color: colors.green }}>
@@ -159,6 +161,8 @@ export function LocalAnnouncementsScreen({ navigation }: any) {
             justifyContent: 'center',
             alignItems: 'center',
           }}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>

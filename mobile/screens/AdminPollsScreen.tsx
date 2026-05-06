@@ -137,7 +137,7 @@ export function AdminPollsScreen({ navigation }: any) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
         <View style={{ padding: SPACING.xl }}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={12} accessibilityLabel="Go back" accessibilityRole="button">
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
         </View>
@@ -173,7 +173,7 @@ export function AdminPollsScreen({ navigation }: any) {
       >
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingHorizontal: SPACING.xl, paddingTop: SPACING.md, paddingBottom: SPACING.lg }}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={12} accessibilityLabel="Go back" accessibilityRole="button">
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
           <Text style={{ fontSize: 22, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
@@ -207,7 +207,7 @@ export function AdminPollsScreen({ navigation }: any) {
             <Text style={{ fontSize: FONT_SIZE.small, color: colors.textBody, marginBottom: SPACING.md }}>B: {todayPoll.option_b_text}</Text>
 
             {/* Source */}
-            <Pressable onPress={() => Linking.openURL(todayPoll.source_article_url)} style={{ marginBottom: SPACING.md }}>
+            <Pressable onPress={() => Linking.openURL(todayPoll.source_article_url)} style={{ marginBottom: SPACING.md }} accessibilityLabel="Open source article" accessibilityRole="button">
               <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
                 Source: {todayPoll.source_article_outlet ?? 'Unknown'} — {todayPoll.source_article_title ?? todayPoll.source_article_url}
               </Text>
@@ -238,6 +238,8 @@ export function AdminPollsScreen({ navigation }: any) {
                 <Pressable
                   onPress={() => setWithdrawTarget(todayPoll)}
                   style={{ flex: 1, backgroundColor: RED + '10', borderRadius: BORDER_RADIUS.md, paddingVertical: SPACING.md, alignItems: 'center' }}
+                  accessibilityLabel="Withdraw poll"
+                  accessibilityRole="button"
                 >
                   <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: RED }}>Withdraw</Text>
                 </Pressable>
@@ -245,6 +247,8 @@ export function AdminPollsScreen({ navigation }: any) {
                   onPress={handleGenerateReplacement}
                   disabled={generating}
                   style={{ flex: 1, backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.md, paddingVertical: SPACING.md, alignItems: 'center', opacity: generating ? 0.5 : 1 }}
+                  accessibilityLabel="Replace poll"
+                  accessibilityRole="button"
                 >
                   {generating ? (
                     <ActivityIndicator color={GREEN} size="small" />
@@ -273,6 +277,8 @@ export function AdminPollsScreen({ navigation }: any) {
               onPress={handleGenerateReplacement}
               disabled={generating}
               style={{ marginTop: SPACING.md, backgroundColor: GREEN, borderRadius: BORDER_RADIUS.md, paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm }}
+              accessibilityLabel="Generate poll now"
+              accessibilityRole="button"
             >
               {generating ? (
                 <ActivityIndicator color="#fff" size="small" />
@@ -307,7 +313,7 @@ export function AdminPollsScreen({ navigation }: any) {
                 {responseCounts[poll.id] ?? 0} votes
               </Text>
               {poll.status === 'published' && (
-                <Pressable onPress={() => setWithdrawTarget(poll)}>
+                <Pressable onPress={() => setWithdrawTarget(poll)} accessibilityLabel={`Withdraw poll: ${poll.question}`} accessibilityRole="button">
                   <Text style={{ fontSize: FONT_SIZE.caption, color: RED }}>Withdraw</Text>
                 </Pressable>
               )}
@@ -340,11 +346,14 @@ export function AdminPollsScreen({ navigation }: any) {
               onChangeText={setWithdrawReason}
               placeholder="Why is this poll being withdrawn?"
               placeholderTextColor={colors.textMuted}
+              accessibilityLabel="Withdrawal reason"
             />
             <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.lg }}>
               <Pressable
                 onPress={() => { setWithdrawTarget(null); setWithdrawReason(''); }}
                 style={{ flex: 1, borderRadius: BORDER_RADIUS.md, paddingVertical: SPACING.md, alignItems: 'center', backgroundColor: colors.surface }}
+                accessibilityLabel="Cancel withdrawal"
+                accessibilityRole="button"
               >
                 <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: colors.text }}>Cancel</Text>
               </Pressable>
@@ -352,6 +361,8 @@ export function AdminPollsScreen({ navigation }: any) {
                 onPress={handleWithdraw}
                 disabled={!withdrawReason.trim() || withdrawing}
                 style={{ flex: 1, borderRadius: BORDER_RADIUS.md, paddingVertical: SPACING.md, alignItems: 'center', backgroundColor: RED, opacity: withdrawReason.trim() ? 1 : 0.4 }}
+                accessibilityLabel="Confirm withdrawal"
+                accessibilityRole="button"
               >
                 {withdrawing ? (
                   <ActivityIndicator color="#fff" size="small" />

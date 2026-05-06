@@ -44,7 +44,7 @@ export function CouncilProfileScreen({ route, navigation }: any) {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Nav */}
-        <Pressable style={styles.back} onPress={() => navigation.goBack()}>
+        <Pressable style={styles.back} onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
 
@@ -103,6 +103,8 @@ export function CouncilProfileScreen({ route, navigation }: any) {
                 <Pressable
                   style={styles.infoRow}
                   onPress={() => Linking.openURL(`tel:${council.phone!.replace(/\s/g, '')}`)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Call ${council.name}`}
                 >
                   <Ionicons name="call-outline" size={18} color={colors.textBody} />
                   <View style={styles.infoText}>
@@ -132,6 +134,8 @@ export function CouncilProfileScreen({ route, navigation }: any) {
                 <Pressable
                   style={styles.infoRow}
                   onPress={() => Linking.openURL(council.website!)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open ${council.name} website`}
                 >
                   <Ionicons name="globe-outline" size={18} color="#00843D" />
                   <View style={styles.infoText}>

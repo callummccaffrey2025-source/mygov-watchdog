@@ -70,6 +70,8 @@ export function NewsScreen({ navigation }: any) {
             style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
             onPress={() => navigation.goBack()}
             hitSlop={8}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
@@ -93,6 +95,8 @@ export function NewsScreen({ navigation }: any) {
                 borderBottomColor: active ? '#00843D' : 'transparent',
               }}
               onPress={() => setTopTab(tab.key)}
+              accessibilityLabel={`${tab.label} tab`}
+              accessibilityRole="button"
             >
               <Ionicons name={tab.icon as any} size={16} color={active ? '#00843D' : colors.textMuted} />
               <Text style={{ fontSize: 14, fontWeight: active ? '700' : '500', color: active ? '#00843D' : colors.textBody }}>
@@ -124,6 +128,8 @@ export function NewsScreen({ navigation }: any) {
                       borderWidth: 1, borderColor: active ? '#00843D' : colors.border,
                     }}
                     onPress={() => setActiveLeaning(f)}
+                    accessibilityLabel={`Filter by ${f} leaning`}
+                    accessibilityRole="button"
                   >
                     <Text style={{ fontSize: 13, fontWeight: '600', color: active ? '#fff' : colors.textBody }}>{f}</Text>
                   </Pressable>
@@ -141,6 +147,8 @@ export function NewsScreen({ navigation }: any) {
                       borderWidth: 1, borderColor: active ? '#00843D' : colors.border,
                     }}
                     onPress={() => setActiveCategory(active ? null : f)}
+                    accessibilityLabel={`Filter by ${f}`}
+                    accessibilityRole="button"
                   >
                     <Text style={{ fontSize: 13, fontWeight: '600', color: active ? '#fff' : colors.textBody }}>{f}</Text>
                   </Pressable>
@@ -169,6 +177,8 @@ export function NewsScreen({ navigation }: any) {
                 <Pressable
                   style={{ backgroundColor: '#00843D', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 12, marginTop: 8 }}
                   onPress={handleRefresh}
+                  accessibilityLabel="Refresh news"
+                  accessibilityRole="button"
                 >
                   <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>Refresh</Text>
                 </Pressable>
@@ -220,6 +230,8 @@ export function NewsScreen({ navigation }: any) {
                     borderWidth: 1, borderColor: active ? '#D97706' : colors.border,
                   }}
                   onPress={() => setBlindspotCat(bt.key)}
+                  accessibilityLabel={`Filter by ${bt.label}`}
+                  accessibilityRole="button"
                 >
                   <Text style={{ fontSize: 13, fontWeight: '600', color: active ? '#fff' : colors.textBody }}>
                     {bt.label}
@@ -281,6 +293,8 @@ export function NewsScreen({ navigation }: any) {
                     key={mp.id}
                     style={{ backgroundColor: colors.card, borderRadius: 12, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}
                     onPress={() => navigation.navigate('MemberProfile', { memberId: mp.id })}
+                    accessibilityLabel={`View profile of ${mp.name}`}
+                    accessibilityRole="button"
                   >
                     <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#FEF3C7', justifyContent: 'center', alignItems: 'center' }}>
                       <Ionicons name="person-outline" size={20} color="#D97706" />

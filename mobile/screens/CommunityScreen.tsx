@@ -45,6 +45,8 @@ export function CommunityScreen({ navigation }: any) {
       <Pressable
         style={[styles.postCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => navigation.navigate('CommunityPostDetail', { postId: item.id })}
+        accessibilityLabel={`Open discussion: ${item.title}`}
+        accessibilityRole="button"
       >
         <View style={styles.postCardTop}>
           <View style={[styles.typePill, { backgroundColor: typeColor + '18' }]}>
@@ -75,7 +77,7 @@ export function CommunityScreen({ navigation }: any) {
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
         <View style={styles.navBar}>
           {navigation.canGoBack() ? (
-            <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+            <Pressable onPress={() => navigation.goBack()} hitSlop={8} accessibilityLabel="Go back" accessibilityRole="button">
               <Ionicons name="chevron-back" size={24} color={colors.text} />
             </Pressable>
           ) : <View style={{ width: 24 }} />}
@@ -98,7 +100,7 @@ export function CommunityScreen({ navigation }: any) {
       {/* Nav */}
       <View style={[styles.navBar, { borderBottomColor: colors.border }]}>
         {navigation.canGoBack() ? (
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8} accessibilityLabel="Go back" accessibilityRole="button">
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </Pressable>
         ) : <View style={{ width: 24 }} />}
@@ -115,6 +117,8 @@ export function CommunityScreen({ navigation }: any) {
             key={t}
             style={[styles.tab, tab === t && styles.tabActive]}
             onPress={() => setTab(t)}
+            accessibilityLabel={`Show ${t === 'latest' ? 'Latest' : t === 'top' ? 'Top' : 'My Posts'} posts`}
+            accessibilityRole="button"
           >
             <Text style={[styles.tabText, { color: tab === t ? '#00843D' : colors.textMuted }]}>
               {t === 'latest' ? 'Latest' : t === 'top' ? 'Top' : 'My Posts'}
@@ -151,6 +155,8 @@ export function CommunityScreen({ navigation }: any) {
       <Pressable
         style={styles.fab}
         onPress={() => requireAuth('join the discussion', () => { track('discussion_post_created', { electorate: electorateName }, 'Community'); trackEvent('discussion_posted', { electorate: electorateName }); navigation.navigate('CreateCommunityPost', { electorate: electorateName }); })}
+        accessibilityLabel="Create new post"
+        accessibilityRole="button"
       >
         <Ionicons name="add" size={28} color="#ffffff" />
       </Pressable>

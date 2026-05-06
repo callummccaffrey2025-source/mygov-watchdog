@@ -321,6 +321,8 @@ export function PollsScreen({ navigation }: any) {
                   <View style={{ gap: SPACING.sm }}>
                     <Pressable
                       onPress={() => handleVote('a')}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Vote: ${todayPoll.option_a_text}`}
                       style={({ pressed }) => ({
                         borderWidth: 1.5, borderColor: GREEN, borderRadius: BORDER_RADIUS.md,
                         paddingVertical: SPACING.md, paddingHorizontal: SPACING.lg,
@@ -335,6 +337,8 @@ export function PollsScreen({ navigation }: any) {
 
                     <Pressable
                       onPress={() => handleVote('b')}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Vote: ${todayPoll.option_b_text}`}
                       style={({ pressed }) => ({
                         borderWidth: 1.5, borderColor: GREEN, borderRadius: BORDER_RADIUS.md,
                         paddingVertical: SPACING.md, paddingHorizontal: SPACING.lg,
@@ -349,6 +353,8 @@ export function PollsScreen({ navigation }: any) {
 
                     <Pressable
                       onPress={() => handleVote('skip')}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Vote: ${todayPoll.skip_text || 'Not sure'}`}
                       style={{ paddingVertical: SPACING.sm, alignItems: 'center' }}
                     >
                       <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
@@ -374,6 +380,8 @@ export function PollsScreen({ navigation }: any) {
                 {todayPoll.source_article_title && (
                   <Pressable
                     onPress={() => { if (todayPoll.source_article_url) Linking.openURL(todayPoll.source_article_url); }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View source: ${todayPoll.source_article_title}`}
                     style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.xs, marginTop: SPACING.lg, paddingTop: SPACING.md, borderTopWidth: 0.5, borderTopColor: colors.border }}
                   >
                     <Ionicons name="link-outline" size={13} color={colors.textMuted} style={{ marginTop: 1 }} />
@@ -442,6 +450,8 @@ export function PollsScreen({ navigation }: any) {
             {yesterdayPoll.source_article_title && (
               <Pressable
                 onPress={() => { if (yesterdayPoll.source_article_url) Linking.openURL(yesterdayPoll.source_article_url); }}
+                accessibilityRole="button"
+                accessibilityLabel={`View source: ${yesterdayPoll.source_article_outlet ?? 'Source'}`}
                 style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.xs, marginTop: SPACING.md, paddingTop: SPACING.sm, borderTopWidth: 0.5, borderTopColor: colors.border }}
               >
                 <Ionicons name="link-outline" size={12} color={colors.textMuted} style={{ marginTop: 1 }} />
@@ -457,6 +467,8 @@ export function PollsScreen({ navigation }: any) {
         {todayPoll && todayPoll.status === 'published' && user && (
           <Pressable
             onPress={() => setShowReport(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Report this poll"
             style={{ alignSelf: 'center', marginTop: SPACING.md, paddingVertical: SPACING.xs }}
           >
             <Text style={{ fontSize: FONT_SIZE.caption - 1, color: colors.textMuted }}>
@@ -549,6 +561,9 @@ export function PollsScreen({ navigation }: any) {
             >
               <Pressable
                 onPress={() => setSelectedPollster(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Show all pollsters"
+                accessibilityState={{ selected: !selectedPollster }}
                 style={{
                   paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
                   backgroundColor: !selectedPollster ? GREEN : colors.cardAlt,
@@ -563,6 +578,9 @@ export function PollsScreen({ navigation }: any) {
                 <Pressable
                   key={p}
                   onPress={() => setSelectedPollster(selectedPollster === p ? null : p)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Filter by ${p}`}
+                  accessibilityState={{ selected: selectedPollster === p }}
                   style={{
                     paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
                     backgroundColor: selectedPollster === p ? GREEN : colors.cardAlt,
@@ -600,6 +618,8 @@ export function PollsScreen({ navigation }: any) {
               <Pressable
                 key={poll.id}
                 onPress={() => navigation.navigate('PollDetail', { poll })}
+                accessibilityRole="button"
+                accessibilityLabel={`View ${poll.pollster} poll from ${timeAgo(poll.publish_date)}`}
                 style={({ pressed }) => ({
                   backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
                   padding: SPACING.lg, marginBottom: SPACING.sm, ...SHADOWS.sm,
@@ -680,6 +700,9 @@ export function PollsScreen({ navigation }: any) {
               <Pressable
                 key={r.id}
                 onPress={() => setReportReason(r.id)}
+                accessibilityRole="button"
+                accessibilityLabel={r.label}
+                accessibilityState={{ selected: reportReason === r.id }}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: SPACING.sm }}
               >
                 <Ionicons
@@ -702,11 +725,14 @@ export function PollsScreen({ navigation }: any) {
               onChangeText={setReportText}
               placeholder="Additional details (optional)"
               placeholderTextColor={colors.textMuted}
+              accessibilityLabel="Additional details for report"
             />
 
             <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.lg }}>
               <Pressable
                 onPress={() => { setShowReport(false); setReportText(''); }}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel report"
                 style={{ flex: 1, borderRadius: BORDER_RADIUS.md, paddingVertical: SPACING.md, alignItems: 'center', backgroundColor: colors.surface }}
               >
                 <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: colors.text }}>Cancel</Text>
@@ -714,6 +740,8 @@ export function PollsScreen({ navigation }: any) {
               <Pressable
                 onPress={handleSubmitReport}
                 disabled={submittingReport}
+                accessibilityRole="button"
+                accessibilityLabel="Submit report"
                 style={{ flex: 1, borderRadius: BORDER_RADIUS.md, paddingVertical: SPACING.md, alignItems: 'center', backgroundColor: '#DC3545', opacity: submittingReport ? 0.5 : 1 }}
               >
                 {submittingReport ? (

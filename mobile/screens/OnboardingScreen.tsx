@@ -203,7 +203,7 @@ export function OnboardingScreen({ onComplete }: Props) {
           </Text>
         </View>
         <View style={styles.footer}>
-          <Pressable style={styles.btn} onPress={() => setStep(2)}>
+          <Pressable style={styles.btn} onPress={() => setStep(2)} accessibilityRole="button" accessibilityLabel="Get Started">
             <Text style={styles.btnText}>Get Started</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
           </Pressable>
@@ -223,11 +223,11 @@ export function OnboardingScreen({ onComplete }: Props) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <View style={styles.stepHeader}>
-          <Pressable onPress={() => setStep(1)} hitSlop={12}>
+          <Pressable onPress={() => setStep(1)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
           <Text style={[styles.stepCount, { color: colors.textMuted }]}>2 of 7</Text>
-          <Pressable onPress={() => setStep(4)} hitSlop={12}>
+          <Pressable onPress={() => setStep(4)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Skip step">
             <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip</Text>
           </Pressable>
         </View>
@@ -235,7 +235,7 @@ export function OnboardingScreen({ onComplete }: Props) {
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+          <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss} accessibilityRole="button" accessibilityLabel="Dismiss keyboard">
             <View style={styles.stepContent}>
               <View style={styles.iconWrap}>
                 <Ionicons name="location-outline" size={36} color="#00843D" />
@@ -254,6 +254,7 @@ export function OnboardingScreen({ onComplete }: Props) {
                 maxLength={4}
                 autoFocus
                 inputAccessoryViewID="postcode-done"
+                accessibilityLabel="Enter your postcode"
               />
               {lookupLoading && <ActivityIndicator color="#00843D" style={{ marginTop: 12 }} />}
               {lookupError !== null && !lookupLoading && (
@@ -273,6 +274,8 @@ export function OnboardingScreen({ onComplete }: Props) {
             style={[styles.btn, !canContinue && styles.btnDisabled]}
             onPress={handlePostcodeSubmit}
             disabled={!canContinue}
+            accessibilityRole="button"
+            accessibilityLabel="Continue"
           >
             <Text style={styles.btnText}>Continue</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
@@ -285,7 +288,7 @@ export function OnboardingScreen({ onComplete }: Props) {
               backgroundColor: '#F1F1F1', paddingHorizontal: 16, paddingVertical: 8,
               borderTopWidth: 0.5, borderTopColor: '#C8C8C8',
             }}>
-              <Pressable onPress={handlePostcodeSubmit} hitSlop={8}>
+              <Pressable onPress={handlePostcodeSubmit} hitSlop={8} accessibilityRole="button" accessibilityLabel="Done">
                 <Text style={{ fontSize: 17, fontWeight: '600', color: '#007AFF' }}>Done</Text>
               </Pressable>
             </View>
@@ -303,11 +306,11 @@ export function OnboardingScreen({ onComplete }: Props) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <View style={styles.stepHeader}>
-          <Pressable onPress={() => setStep(2)} hitSlop={12}>
+          <Pressable onPress={() => setStep(2)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
           <Text style={[styles.stepCount, { color: colors.textMuted }]}>3 of 7</Text>
-          <Pressable onPress={() => setStep(4)} hitSlop={12}>
+          <Pressable onPress={() => setStep(4)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Skip step">
             <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip</Text>
           </Pressable>
         </View>
@@ -340,11 +343,11 @@ export function OnboardingScreen({ onComplete }: Props) {
           </View>
         </View>
         <View style={styles.footer}>
-          <Pressable style={styles.btn} onPress={() => setStep(4)}>
+          <Pressable style={styles.btn} onPress={() => setStep(4)} accessibilityRole="button" accessibilityLabel="Confirm MP">
             <Ionicons name="checkmark" size={20} color="#fff" />
             <Text style={styles.btnText}>That's my MP</Text>
           </Pressable>
-          <Pressable style={styles.ghostBtn} onPress={() => setStep(2)}>
+          <Pressable style={styles.ghostBtn} onPress={() => setStep(2)} accessibilityRole="button" accessibilityLabel="Change postcode">
             <Text style={[styles.ghostBtnText, { color: colors.textMuted }]}>Not me — change postcode</Text>
           </Pressable>
         </View>
@@ -360,11 +363,11 @@ export function OnboardingScreen({ onComplete }: Props) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <View style={styles.stepHeader}>
-          <Pressable onPress={() => setStep(member ? 3 : 2)} hitSlop={12}>
+          <Pressable onPress={() => setStep(member ? 3 : 2)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
           <Text style={[styles.stepCount, { color: colors.textMuted }]}>4 of 7</Text>
-          <Pressable onPress={() => setStep(5)} hitSlop={12}>
+          <Pressable onPress={() => setStep(5)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Skip step">
             <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip</Text>
           </Pressable>
         </View>
@@ -385,6 +388,8 @@ export function OnboardingScreen({ onComplete }: Props) {
                   key={t.id}
                   style={[styles.topicChip, { backgroundColor: colors.background, borderColor: colors.border }, selected && styles.topicChipSelected]}
                   onPress={() => toggleTopic(t.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${selected ? 'Deselect' : 'Select'} ${t.label}`}
                 >
                   <Text style={styles.topicIcon}>{t.icon}</Text>
                   <Text style={[styles.topicLabel, { color: colors.textBody }, selected && styles.topicLabelSelected]}>
@@ -401,6 +406,8 @@ export function OnboardingScreen({ onComplete }: Props) {
             style={[styles.btn, !canContinue && styles.btnDisabled]}
             onPress={() => { if (canContinue) setStep(5); }}
             disabled={!canContinue}
+            accessibilityRole="button"
+            accessibilityLabel={remaining > 0 ? `Select ${remaining} more topics` : 'Continue'}
           >
             <Text style={styles.btnText}>
               {remaining > 0 ? `Select ${remaining} more` : 'Continue'}
@@ -442,11 +449,11 @@ export function OnboardingScreen({ onComplete }: Props) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <View style={styles.stepHeader}>
-          <Pressable onPress={() => setStep(4)} hitSlop={12}>
+          <Pressable onPress={() => setStep(4)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
           <Text style={[styles.stepCount, { color: colors.textMuted }]}>5 of 7</Text>
-          <Pressable onPress={() => setStep(6)} hitSlop={12}>
+          <Pressable onPress={() => setStep(6)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Skip step">
             <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip</Text>
           </Pressable>
         </View>
@@ -469,6 +476,8 @@ export function OnboardingScreen({ onComplete }: Props) {
                   key={issue.id}
                   style={[styles.topicChip, { backgroundColor: colors.background, borderColor: colors.border }, selected && styles.topicChipSelected]}
                   onPress={() => toggleIssue(issue.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${selected ? 'Deselect' : 'Select'} ${issue.label}`}
                 >
                   <Ionicons name={issue.icon as any} size={16} color={selected ? '#00843D' : colors.textMuted} />
                   <Text style={[styles.topicLabel, { color: colors.textBody }, selected && styles.topicLabelSelected]}>
@@ -484,6 +493,8 @@ export function OnboardingScreen({ onComplete }: Props) {
           <Pressable
             style={styles.btn}
             onPress={() => setStep(6)}
+            accessibilityRole="button"
+            accessibilityLabel="Continue"
           >
             <Text style={styles.btnText}>
               {trackedIssues.length > 0 ? `Continue (${trackedIssues.length} selected)` : 'Continue'}
@@ -507,11 +518,11 @@ export function OnboardingScreen({ onComplete }: Props) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <View style={styles.stepHeader}>
-          <Pressable onPress={() => setStep(5)} hitSlop={12}>
+          <Pressable onPress={() => setStep(5)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
           <Text style={[styles.stepCount, { color: colors.textMuted }]}>6 of 7</Text>
-          <Pressable onPress={() => setStep(7)} hitSlop={12}>
+          <Pressable onPress={() => setStep(7)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Skip step">
             <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip</Text>
           </Pressable>
         </View>
@@ -537,6 +548,8 @@ export function OnboardingScreen({ onComplete }: Props) {
                     borderColor: selected ? '#00843D' : 'transparent',
                   }}
                   onPress={() => setHousingStatus(selected ? null : opt.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${selected ? 'Deselect' : 'Select'} ${opt.label}`}
                 >
                   <View style={{
                     width: 44, height: 44, borderRadius: 12,
@@ -563,7 +576,7 @@ export function OnboardingScreen({ onComplete }: Props) {
           </Text>
         </View>
         <View style={styles.footer}>
-          <Pressable style={styles.btn} onPress={() => setStep(7)}>
+          <Pressable style={styles.btn} onPress={() => setStep(7)} accessibilityRole="button" accessibilityLabel="Continue">
             <Text style={styles.btnText}>Continue</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
           </Pressable>
@@ -577,7 +590,7 @@ export function OnboardingScreen({ onComplete }: Props) {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <View style={styles.stepHeader}>
-        <Pressable onPress={() => setStep(6)} hitSlop={12}>
+        <Pressable onPress={() => setStep(6)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <Text style={[styles.stepCount, { color: colors.textMuted }]}>7 of 7</Text>
@@ -604,11 +617,13 @@ export function OnboardingScreen({ onComplete }: Props) {
             }
             saveAndComplete();
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Enable notifications"
         >
           <Ionicons name="notifications-outline" size={20} color="#fff" />
           <Text style={styles.btnText}>Enable Notifications</Text>
         </Pressable>
-        <Pressable style={styles.ghostBtn} onPress={saveAndComplete}>
+        <Pressable style={styles.ghostBtn} onPress={saveAndComplete} accessibilityRole="button" accessibilityLabel="Skip notifications">
           <Text style={[styles.ghostBtnText, { color: colors.textMuted }]}>Skip for now</Text>
         </Pressable>
       </View>

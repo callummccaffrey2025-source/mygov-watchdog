@@ -143,6 +143,8 @@ function SavedCard({
         SHADOWS.sm,
         pressed && { opacity: 0.92 },
       ]}
+      accessibilityLabel={`Open saved ${badge.label.toLowerCase()}: ${title ?? 'loading'}`}
+      accessibilityRole="button"
     >
       <View style={styles.cardTop}>
         <View style={[styles.badge, { backgroundColor: badge.color + '18' }]}>
@@ -228,7 +230,7 @@ export function SavedScreen({ navigation }: any) {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12} accessibilityLabel="Go back" accessibilityRole="button">
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Saved</Text>
@@ -249,6 +251,8 @@ export function SavedScreen({ navigation }: any) {
                   backgroundColor: isActive ? colors.green : colors.cardAlt,
                 },
               ]}
+              accessibilityLabel={`Filter by ${tab.label}`}
+              accessibilityRole="button"
             >
               <Text
                 style={[

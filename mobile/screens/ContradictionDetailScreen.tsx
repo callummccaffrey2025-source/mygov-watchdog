@@ -95,7 +95,7 @@ export function ContradictionDetailScreen({ route, navigation }: any) {
           paddingHorizontal: SPACING.lg,
           paddingVertical: SPACING.md,
         }}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
           <Text style={{
@@ -105,7 +105,7 @@ export function ContradictionDetailScreen({ route, navigation }: any) {
           }}>
             Contradiction evidence
           </Text>
-          <Pressable onPress={() => setSharing(true)} hitSlop={8}>
+          <Pressable onPress={() => setSharing(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share contradiction">
             <Ionicons
               name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'}
               size={20}

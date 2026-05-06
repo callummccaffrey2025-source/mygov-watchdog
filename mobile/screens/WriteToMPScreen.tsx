@@ -142,7 +142,7 @@ export function WriteToMPScreen({ route, navigation }: any) {
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
         {/* Nav */}
         <View style={[styles.navBar, { borderBottomColor: colors.border }]}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </Pressable>
           <Text style={[styles.navTitle, { color: colors.text }]} numberOfLines={1}>
@@ -160,7 +160,7 @@ export function WriteToMPScreen({ route, navigation }: any) {
           <View style={[styles.mpCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={[styles.mpAvatar, { backgroundColor: partyColour + '22', borderColor: partyColour }]}>
               {member.photo_url ? (
-                <Image source={{ uri: member.photo_url }} style={styles.mpPhoto} />
+                <Image source={{ uri: member.photo_url }} style={styles.mpPhoto} accessibilityLabel={`Photo of ${displayName}`} />
               ) : (
                 <Text style={[styles.mpInitials, { color: partyColour }]}>
                   {member.first_name[0]}{member.last_name[0]}
@@ -185,6 +185,8 @@ export function WriteToMPScreen({ route, navigation }: any) {
           <Pressable
             style={[styles.subjectRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => setShowSubjectPicker(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Select subject"
           >
             <Text style={[styles.subjectText, { color: colors.text }]} numberOfLines={1}>
               {subject}
@@ -201,6 +203,7 @@ export function WriteToMPScreen({ route, navigation }: any) {
               value={customSubject}
               onChangeText={setCustomSubject}
               maxLength={100}
+              accessibilityLabel="Enter custom subject"
             />
           )}
 
@@ -217,6 +220,7 @@ export function WriteToMPScreen({ route, navigation }: any) {
               maxLength={2000}
               textAlignVertical="top"
               scrollEnabled={false}
+              accessibilityLabel="Message body"
             />
             <Text style={[styles.charCount, { color: colors.textMuted }]}>{body.length}/2000</Text>
           </View>
@@ -233,6 +237,8 @@ export function WriteToMPScreen({ route, navigation }: any) {
           <Pressable
             style={[styles.sendBtn, !member.email && styles.sendBtnNoEmail]}
             onPress={handleSend}
+            accessibilityRole="button"
+            accessibilityLabel={member.email ? `Send email to ${displayName}` : 'No email address available'}
           >
             <Ionicons name="mail-outline" size={18} color="#ffffff" />
             <Text style={styles.sendBtnText}>
@@ -264,6 +270,8 @@ export function WriteToMPScreen({ route, navigation }: any) {
                       },
                     ]}
                     onPress={() => handleSentiment(s.key)}
+                    accessibilityRole="button"
+                    accessibilityLabel={s.label}
                   >
                     <Ionicons
                       name={s.icon as any}
@@ -288,7 +296,7 @@ export function WriteToMPScreen({ route, navigation }: any) {
             <View style={[styles.navBar, { borderBottomColor: colors.border }]}>
               <View style={{ width: 24 }} />
               <Text style={[styles.navTitle, { color: colors.text }]}>Select Subject</Text>
-              <Pressable onPress={() => setShowSubjectPicker(false)} hitSlop={8}>
+              <Pressable onPress={() => setShowSubjectPicker(false)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close subject picker">
                 <Ionicons name="close" size={24} color={colors.text} />
               </Pressable>
             </View>
@@ -297,6 +305,8 @@ export function WriteToMPScreen({ route, navigation }: any) {
                 <Pressable
                   style={[styles.subjectOption, { borderBottomColor: colors.border }]}
                   onPress={() => handleSubjectSelect(billSubject)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select subject: ${billSubject}`}
                 >
                   <Text style={[styles.subjectOptionText, { color: '#00843D' }]} numberOfLines={2}>
                     {billSubject}
@@ -309,6 +319,8 @@ export function WriteToMPScreen({ route, navigation }: any) {
                   key={s}
                   style={[styles.subjectOption, { borderBottomColor: colors.border }]}
                   onPress={() => handleSubjectSelect(s)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select subject: ${s}`}
                 >
                   <Text style={[styles.subjectOptionText, { color: colors.text }]}>{s}</Text>
                   {subject === s && <Ionicons name="checkmark" size={18} color="#00843D" />}

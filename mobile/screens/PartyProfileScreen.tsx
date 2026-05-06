@@ -135,6 +135,8 @@ export function PartyProfileScreen({ route, navigation }: any) {
           onPress={() => navigation.goBack()}
           style={{ padding: SPACING.xl, paddingBottom: 0 }}
           hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>

@@ -43,7 +43,7 @@ export function SubscriptionScreen({ navigation }: any) {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn} accessibilityLabel="Go back" accessibilityRole="button">
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
       </View>
@@ -94,6 +94,8 @@ export function SubscriptionScreen({ navigation }: any) {
             style={[styles.cta, subscribing && styles.ctaDisabled]}
             onPress={handleSubscribe}
             disabled={subscribing}
+            accessibilityLabel="Start free trial"
+            accessibilityRole="button"
           >
             {subscribing
               ? <ActivityIndicator color="#fff" />
@@ -102,7 +104,7 @@ export function SubscriptionScreen({ navigation }: any) {
           </Pressable>
         )}
 
-        <Pressable onPress={handleRestore} disabled={restoring} style={styles.restoreBtn}>
+        <Pressable onPress={handleRestore} disabled={restoring} style={styles.restoreBtn} accessibilityLabel="Restore purchase" accessibilityRole="button">
           {restoring
             ? <ActivityIndicator color="#9aabb8" size="small" />
             : <Text style={styles.restoreText}>Restore Purchase</Text>

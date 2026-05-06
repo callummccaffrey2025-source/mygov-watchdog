@@ -112,7 +112,7 @@ export function BillListScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       {/* Header */}
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.xl, paddingTop: SPACING.lg, paddingBottom: SPACING.md, gap: SPACING.md }}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <Text style={{ flex: 1, fontSize: 20, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>Bills</Text>
@@ -133,9 +133,10 @@ export function BillListScreen({ navigation }: any) {
           placeholder="Search bills..."
           placeholderTextColor={colors.textMuted}
           returnKeyType="search"
+          accessibilityLabel="Search bills"
         />
         {search.length > 0 && (
-          <Pressable onPress={() => setSearch('')} hitSlop={8}>
+          <Pressable onPress={() => setSearch('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
             <Ionicons name="close-circle" size={16} color={colors.textMuted} />
           </Pressable>
         )}
@@ -154,6 +155,8 @@ export function BillListScreen({ navigation }: any) {
                 borderRadius: 20,
                 backgroundColor: active ? '#00843D' : colors.cardAlt,
               }}
+              accessibilityRole="button"
+              accessibilityLabel={`Filter by ${chip.label}`}
             >
               <Text style={{
                 fontSize: 13, fontWeight: FONT_WEIGHT.semibold,

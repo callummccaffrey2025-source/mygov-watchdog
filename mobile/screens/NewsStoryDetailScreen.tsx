@@ -169,6 +169,7 @@ function ArticleCard({ article, storyId, userId }: { article: StoryArticle; stor
                 source={{ uri: faviconUrl }}
                 style={{ width: 16, height: 16, borderRadius: 3 }}
                 onError={() => setFaviconFailed(true)}
+                accessibilityLabel={`${sourceName} icon`}
               />
             ) : (
               <View style={{
@@ -204,7 +205,7 @@ function ArticleCard({ article, storyId, userId }: { article: StoryArticle; stor
       {article.description ? (
         <Text style={[styles.articleDesc, { color: colors.textBody }]} numberOfLines={3}>{decodeHtml(article.description)}</Text>
       ) : null}
-      <Pressable style={styles.readLink} onPress={handleOpen}>
+      <Pressable style={styles.readLink} onPress={handleOpen} accessibilityRole="button" accessibilityLabel={`Read full article from ${sourceName}`}>
         <Text style={styles.readLinkText}>Read full article</Text>
         <Ionicons name="arrow-forward" size={13} color="#00843D" />
       </Pressable>
@@ -306,6 +307,8 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
               style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
               onPress={() => navigation.goBack()}
               hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
             >
               <Ionicons name="arrow-back" size={22} color={colors.text} />
             </Pressable>
@@ -321,6 +324,8 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
             <Pressable
               style={{ backgroundColor: '#00843D', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 12, marginTop: 8 }}
               onPress={() => navigation.goBack()}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
             >
               <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600' }}>Go back</Text>
             </Pressable>
@@ -354,14 +359,14 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Nav bar */}
       <View style={styles.navBar}>
-        <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={() => navigation.goBack()} hitSlop={8}>
+        <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={() => navigation.goBack()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={() => requireAuth('save this story', toggleBookmark)} hitSlop={8}>
+          <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={() => requireAuth('save this story', toggleBookmark)} hitSlop={8} accessibilityRole="button" accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark this story'}>
             <Ionicons name={bookmarked ? 'bookmark' : 'bookmark-outline'} size={20} color={bookmarked ? '#00843D' : colors.text} />
           </Pressable>
-          <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={() => setCapturing(true)} hitSlop={8}>
+          <Pressable style={[styles.navBtn, { backgroundColor: colors.cardAlt }]} onPress={() => setCapturing(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share this story">
             <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={22} color={colors.text} />
           </Pressable>
         </View>
@@ -398,7 +403,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
               <Text style={{ fontSize: 11, color: colors.textMuted }}>
                 {articles.length > 0 ? articles.length : total} outlet{(articles.length || total) !== 1 ? 's' : ''}
               </Text>
-              <Pressable onPress={() => setSharingCoverage(true)} hitSlop={8}>
+              <Pressable onPress={() => setSharingCoverage(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share coverage breakdown">
                 <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={16} color={colors.textMuted} />
               </Pressable>
             </View>
@@ -466,7 +471,7 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
                 ? 'No left-leaning outlets have covered this story.'
                 : 'No right-leaning outlets have covered this story.'}
             </Text>
-            <Pressable onPress={() => setSharingCoverage(true)} hitSlop={8}>
+            <Pressable onPress={() => setSharingCoverage(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share blindspot alert">
               <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={16} color="#D97706" />
             </Pressable>
           </View>
@@ -479,6 +484,8 @@ export function NewsStoryDetailScreen({ route, navigation }: any) {
             return (
               <Pressable
                 onPress={() => navigation.navigate('HeadlineComparison', { storyId: story.id, headline: story.headline, category: story.category })}
+                accessibilityRole="button"
+                accessibilityLabel={`Compare how ${articles.length} outlets covered this story`}
                 style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: 10, padding: 12, marginHorizontal: 16, marginTop: 8 }}
               >
                 <Ionicons name="git-compare-outline" size={18} color="#00843D" />

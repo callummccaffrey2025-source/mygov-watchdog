@@ -164,6 +164,8 @@ export function DailyBriefScreen({ route, navigation }: any) {
             onPress={() => navigation.goBack()}
             hitSlop={12}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </Pressable>
@@ -214,6 +216,8 @@ export function DailyBriefScreen({ route, navigation }: any) {
             onPress={() => navigation.goBack()}
             hitSlop={12}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </Pressable>
@@ -222,6 +226,8 @@ export function DailyBriefScreen({ route, navigation }: any) {
             onPress={handleShare}
             hitSlop={12}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            accessibilityLabel="Share daily brief"
+            accessibilityRole="button"
           >
             <Ionicons name="share-outline" size={22} color="#fff" />
           </Pressable>
@@ -266,6 +272,8 @@ export function DailyBriefScreen({ route, navigation }: any) {
               },
               SHADOWS.sm,
             ]}
+            accessibilityLabel={`Read story: ${item.text}`}
+            accessibilityRole="button"
           >
             <View style={styles.storyRow}>
               {item.category ? (
@@ -319,6 +327,7 @@ export function DailyBriefScreen({ route, navigation }: any) {
                     source={{ uri: myMP.photo_url }}
                     style={styles.mpPhoto}
                     contentFit="cover"
+                    accessibilityLabel={`Photo of ${myMP.first_name} ${myMP.last_name}`}
                   />
                 ) : (
                   <View
@@ -362,6 +371,8 @@ export function DailyBriefScreen({ route, navigation }: any) {
                       opacity: pressed ? 0.92 : 1,
                     },
                   ]}
+                  accessibilityLabel={`View vote: ${v.division?.name ? cleanDivisionName(decodeHtml(v.division.name)) : 'Vote'}, voted ${v.vote_cast?.toUpperCase() || 'unknown'}`}
+                  accessibilityRole="button"
                 >
                   <Text
                     style={[styles.voteTitle, { color: colors.text }]}
@@ -404,6 +415,8 @@ export function DailyBriefScreen({ route, navigation }: any) {
                   styles.writeLink,
                   { opacity: pressed ? 0.92 : 1 },
                 ]}
+                accessibilityLabel={`Write to ${myMP.first_name}`}
+                accessibilityRole="button"
               >
                 <Text style={[styles.writeLinkText, { color: colors.green }]}>
                   Write to {myMP.first_name} {'\u2192'}
@@ -433,6 +446,8 @@ export function DailyBriefScreen({ route, navigation }: any) {
                     },
                     SHADOWS.sm,
                   ]}
+                  accessibilityLabel={`View bill: ${decodeHtml(bill.short_title || bill.title)}, status ${label}`}
+                  accessibilityRole="button"
                 >
                   <View style={styles.billHeader}>
                     <View
@@ -490,6 +505,8 @@ export function DailyBriefScreen({ route, navigation }: any) {
                 },
                 SHADOWS.sm,
               ]}
+              accessibilityLabel="View community discussions in your electorate"
+              accessibilityRole="button"
             >
               <View style={styles.communityInner}>
                 <Ionicons
@@ -557,6 +574,8 @@ export function DailyBriefScreen({ route, navigation }: any) {
                 opacity: pressed ? 0.92 : 1,
               },
             ]}
+            accessibilityLabel="Share your brief"
+            accessibilityRole="button"
           >
             <Ionicons
               name="share-outline"

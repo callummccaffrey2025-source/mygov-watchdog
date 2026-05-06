@@ -39,6 +39,8 @@ export function EnhancedStoryCard({ story, onPress }: Props) {
         shadowRadius: 4, elevation: 2, opacity: pressed ? 0.92 : 1,
       })}
       onPress={onPress}
+      accessibilityLabel={`Read story: ${stripMarkdown(story.headline)}`}
+      accessibilityRole="button"
     >
       {/* Top: category + time */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>

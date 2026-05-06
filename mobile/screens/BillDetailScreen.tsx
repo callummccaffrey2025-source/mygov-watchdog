@@ -174,6 +174,8 @@ export function BillDetailScreen({ route, navigation }: any) {
         <Pressable
           style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
           onPress={() => navigation.goBack()} hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
@@ -181,12 +183,16 @@ export function BillDetailScreen({ route, navigation }: any) {
           <Pressable
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
             onPress={() => { hapticLight(); requireAuth('save this bill', toggleBookmark); }} hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark this bill'}
           >
             <Ionicons name={bookmarked ? 'bookmark' : 'bookmark-outline'} size={22} color={bookmarked ? '#00843D' : colors.text} />
           </Pressable>
           <Pressable
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
             onPress={() => setShowBillCard(true)} hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Share this bill"
           >
             <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={22} color={colors.text} />
           </Pressable>
@@ -328,7 +334,7 @@ export function BillDetailScreen({ route, navigation }: any) {
                             {decodeHtml(bill.expanded_summary || bill.summary_full || '')}
                           </Text>
                         )}
-                        <Pressable onPress={() => setSummaryExpanded(!summaryExpanded)} style={{ marginTop: SPACING.sm }}>
+                        <Pressable onPress={() => setSummaryExpanded(!summaryExpanded)} accessibilityRole="button" accessibilityLabel={summaryExpanded ? 'Show less' : 'Read more'} style={{ marginTop: SPACING.sm }}>
                           <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>
                             {summaryExpanded ? 'Show less' : 'Read more'}
                           </Text>
@@ -352,6 +358,8 @@ export function BillDetailScreen({ route, navigation }: any) {
                 {bill.aph_url && (
                   <Pressable
                     onPress={() => Linking.openURL(bill.aph_url!)}
+                    accessibilityRole="button"
+                    accessibilityLabel="View full bill text on APH website"
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: SPACING.md }}
                   >
                     <Ionicons name="open-outline" size={13} color="#00843D" />
@@ -396,6 +404,8 @@ export function BillDetailScreen({ route, navigation }: any) {
                 member: myMP,
                 fromBill: { title: bill.title, vote: null, date: null },
               })}
+              accessibilityRole="button"
+              accessibilityLabel={`Contact ${myMP.first_name} ${myMP.last_name} about this bill`}
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
                 backgroundColor: '#00843D', borderRadius: BORDER_RADIUS.md,
@@ -421,6 +431,8 @@ export function BillDetailScreen({ route, navigation }: any) {
                 const shareText = `${bill.short_title || bill.title}\n\n${bill.summary_plain || ''}\n\nRead more on Verity`;
                 Share.share({ message: shareText });
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Share this bill"
               style={{
                 flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
                 backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.md,
@@ -550,6 +562,8 @@ export function BillDetailScreen({ route, navigation }: any) {
                     <Pressable
                       onPress={() => navigation.navigate('MemberProfile', { member: myMP })}
                       hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={`View ${myMP.first_name} ${myMP.last_name}'s profile`}
                     >
                       <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>View</Text>
                     </Pressable>
@@ -643,6 +657,8 @@ export function BillDetailScreen({ route, navigation }: any) {
         <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
           <Pressable
             onPress={() => { hapticLight(); requireAuth('follow this bill', toggleBookmark); }}
+            accessibilityRole="button"
+            accessibilityLabel={bookmarked ? 'Unfollow this bill' : 'Follow this bill for updates'}
             style={{
               flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
               backgroundColor: bookmarked ? '#E8F5EE' : colors.surface,

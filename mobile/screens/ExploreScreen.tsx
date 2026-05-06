@@ -31,7 +31,7 @@ const PartyCard = ({ party, onPress }: { party: Party; onPress: () => void }) =>
     ? label.toUpperCase()
     : label.split(' ').map((w: string) => w[0] ?? '').filter(Boolean).join('').toUpperCase().slice(0, 3) || label[0].toUpperCase();
   return (
-    <Pressable style={[styles.partyCard, { backgroundColor: colour + '18' }]} onPress={onPress}>
+    <Pressable style={[styles.partyCard, { backgroundColor: colour + '18' }]} onPress={onPress} accessibilityRole="button" accessibilityLabel={`View ${party.name} party profile`}>
       <View style={[styles.partyBand, { backgroundColor: colour }]}>
         <Text style={styles.partyInitials}>{initials}</Text>
       </View>
@@ -120,7 +120,7 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
             <Ionicons name="shield-checkmark" size={20} color="#00843D" />
             <Text style={[verifyStyles.title, { color: colors.text }]}>Verify a Claim</Text>
           </View>
-          <Pressable onPress={() => { onClose(); setSelectedMP(null); setMpSearch(''); setBillSearch(''); }}>
+          <Pressable onPress={() => { onClose(); setSelectedMP(null); setMpSearch(''); setBillSearch(''); }} accessibilityRole="button" accessibilityLabel="Close verify a claim">
             <Ionicons name="close" size={24} color={colors.text} />
           </Pressable>
         </View>
@@ -135,10 +135,11 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
               placeholder='e.g. "Did Albanese vote for housing?"'
               placeholderTextColor={colors.textMuted}
               autoFocus
+              accessibilityLabel="Search for an MP or Senator"
             />
             <ScrollView keyboardShouldPersistTaps="handled">
               {members.map(m => (
-                <Pressable key={m.id} style={[verifyStyles.memberRow, { borderBottomColor: colors.border }]} onPress={() => setSelectedMP(m)}>
+                <Pressable key={m.id} style={[verifyStyles.memberRow, { borderBottomColor: colors.border }]} onPress={() => setSelectedMP(m)} accessibilityRole="button" accessibilityLabel={`Select ${m.first_name} ${m.last_name}`}>
                   <View style={[verifyStyles.dot, { backgroundColor: m.party?.colour || '#9aabb8' }]} />
                   <View>
                     <Text style={[verifyStyles.memberName, { color: colors.text }]}>{m.first_name} {m.last_name}</Text>
@@ -151,7 +152,7 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
           </View>
         ) : (
           <View style={verifyStyles.content}>
-            <Pressable style={verifyStyles.backRow} onPress={() => setSelectedMP(null)}>
+            <Pressable style={verifyStyles.backRow} onPress={() => setSelectedMP(null)} accessibilityRole="button" accessibilityLabel="Change MP">
               <Ionicons name="arrow-back" size={16} color="#00843D" />
               <Text style={verifyStyles.backText}>Change MP</Text>
             </Pressable>
@@ -162,6 +163,7 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
               onChangeText={setBillSearch}
               placeholder="Search by bill topic..."
               placeholderTextColor={colors.textMuted}
+              accessibilityLabel="Search by bill topic"
             />
             <ScrollView keyboardShouldPersistTaps="handled">
               {votesLoading ? (
@@ -461,6 +463,8 @@ export function ExploreScreen({ navigation }: any) {
         <Pressable
           style={{ backgroundColor: '#00843D', borderRadius: 14, padding: 16, marginBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
           onPress={() => setVerifyVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Verify a Claim"
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#ffffff25', justifyContent: 'center', alignItems: 'center' }}>
@@ -584,6 +588,8 @@ export function ExploreScreen({ navigation }: any) {
                       { backgroundColor: colors.surface, opacity: pressed ? 0.92 : 1 },
                     ]}
                     onPress={() => navigation.navigate('NewsStoryDetail', { story })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Read news story: ${story.headline}`}
                   >
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.newsResultHeadline, { color: colors.text }]} numberOfLines={2}>{story.headline}</Text>
@@ -595,7 +601,7 @@ export function ExploreScreen({ navigation }: any) {
                   </Pressable>
                 ))}
                 {newsStories.length > 3 && (
-                  <Pressable onPress={() => navigation.navigate('News')}>
+                  <Pressable onPress={() => navigation.navigate('News')} accessibilityRole="button" accessibilityLabel="See all news">
                     <Text style={styles.seeAll}>See all news →</Text>
                   </Pressable>
                 )}
@@ -634,6 +640,8 @@ export function ExploreScreen({ navigation }: any) {
                     key={cat.key}
                     style={[styles.catCard, { backgroundColor: colors.surface, borderLeftWidth: 4, borderLeftColor: TOPIC_BORDER_COLORS[cat.key] || '#6C757D' }]}
                     onPress={() => navigation.navigate('TopicBills', { category: cat.key, label: cat.label })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Browse ${cat.label} bills`}
                   >
                     <Text style={styles.catIcon}>{cat.icon}</Text>
                     <Text style={[styles.catLabel, { color: colors.text }]}>{cat.label}</Text>
@@ -655,7 +663,7 @@ export function ExploreScreen({ navigation }: any) {
                 <Text style={[styles.proGateBody, { color: colors.textBody }]}>
                   Download voting records and bill data as CSV.
                 </Text>
-                <Pressable style={styles.proGateBtn} onPress={() => navigation.navigate('Subscription')}>
+                <Pressable style={styles.proGateBtn} onPress={() => navigation.navigate('Subscription')} accessibilityRole="button" accessibilityLabel="Unlock with Verity Pro">
                   <Text style={styles.proGateBtnText}>Unlock with Verity Pro</Text>
                 </Pressable>
               </View>
@@ -675,6 +683,8 @@ export function ExploreScreen({ navigation }: any) {
                     <Pressable
                       style={[styles.councilCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
                       onPress={() => navigation.navigate('Council', { council: c })}
+                      accessibilityRole="button"
+                      accessibilityLabel={`View ${c.name} council`}
                     >
                       <View style={[styles.councilStateBadge, { backgroundColor: colors.cardAlt }]}>
                         <Text style={[styles.councilStateText, { color: colors.textBody }]}>{c.state}</Text>

@@ -114,11 +114,11 @@ function HomeTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Explore" component={ExploreScreen} />
-      <Tab.Screen name="News" component={NewsScreenV2} />
-      <Tab.Screen name="Polls" component={PollsScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarAccessibilityLabel: 'Home' }} />
+      <Tab.Screen name="Explore" component={ExploreScreen} options={{ tabBarAccessibilityLabel: 'Explore' }} />
+      <Tab.Screen name="News" component={NewsScreenV2} options={{ tabBarAccessibilityLabel: 'News' }} />
+      <Tab.Screen name="Polls" component={PollsScreen} options={{ tabBarAccessibilityLabel: 'Polls' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarAccessibilityLabel: 'Profile' }} />
     </Tab.Navigator>
   );
 }

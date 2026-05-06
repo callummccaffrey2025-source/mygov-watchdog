@@ -8,7 +8,7 @@ const LAST_UPDATED = '28 March 2026';
 export function TermsScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <Pressable style={styles.back} onPress={() => navigation.goBack()}>
+      <Pressable style={styles.back} onPress={() => navigation.goBack()} accessibilityLabel="Go back" accessibilityRole="button">
         <Ionicons name="arrow-back" size={22} color="#1a2332" />
       </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

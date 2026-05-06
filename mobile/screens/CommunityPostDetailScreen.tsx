@@ -35,11 +35,11 @@ function VoteRow({ targetType, targetId, upvotes, downvotes, deviceId, userId }:
   const score = upvotes - downvotes;
   return (
     <View style={voteRowStyles.row}>
-      <Pressable onPress={() => toggle('up')} hitSlop={6}>
+      <Pressable onPress={() => toggle('up')} hitSlop={6} accessibilityLabel="Upvote" accessibilityRole="button">
         <Ionicons name={vote === 'up' ? 'arrow-up' : 'arrow-up-outline'} size={18} color={vote === 'up' ? '#00843D' : '#9aabb8'} />
       </Pressable>
       <Text style={voteRowStyles.score}>{score}</Text>
-      <Pressable onPress={() => toggle('down')} hitSlop={6}>
+      <Pressable onPress={() => toggle('down')} hitSlop={6} accessibilityLabel="Downvote" accessibilityRole="button">
         <Ionicons name={vote === 'down' ? 'arrow-down' : 'arrow-down-outline'} size={18} color={vote === 'down' ? '#DC3545' : '#9aabb8'} />
       </Pressable>
     </View>
@@ -129,11 +129,11 @@ export function CommunityPostDetailScreen({ route, navigation }: any) {
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
         {/* Nav */}
         <View style={[styles.navBar, { borderBottomColor: colors.border }]}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8} accessibilityLabel="Go back" accessibilityRole="button">
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </Pressable>
           <Text style={[styles.navTitle, { color: colors.text }]}>Discussion</Text>
-          <Pressable onPress={handleReport} hitSlop={8}>
+          <Pressable onPress={handleReport} hitSlop={8} accessibilityLabel="Report this post" accessibilityRole="button">
             <Ionicons name="flag-outline" size={20} color={colors.textMuted} />
           </Pressable>
         </View>
@@ -208,11 +208,14 @@ export function CommunityPostDetailScreen({ route, navigation }: any) {
             onChangeText={setCommentText}
             multiline
             maxLength={500}
+            accessibilityLabel="Comment text field"
           />
           <Pressable
             style={[styles.sendBtn, (!commentText.trim() || submitting) && styles.sendBtnDisabled]}
             onPress={() => requireAuth('comment on this post', handleSubmitComment)}
             disabled={!commentText.trim() || submitting}
+            accessibilityLabel="Send comment"
+            accessibilityRole="button"
           >
             {submitting
               ? <ActivityIndicator color="#ffffff" size="small" />

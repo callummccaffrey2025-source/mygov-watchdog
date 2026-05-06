@@ -102,6 +102,8 @@ export function AuthPromptSheet({ visible, onClose, onSuccess, actionLabel }: Au
       <Pressable
         style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' }}
         onPress={onClose}
+        accessibilityLabel="Close sign-in sheet"
+        accessibilityRole="button"
       >
         {/* Sheet */}
         <Animated.View
@@ -143,6 +145,8 @@ export function AuthPromptSheet({ visible, onClose, onSuccess, actionLabel }: Au
                   <Pressable
                     style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#000000', borderRadius: 12, height: 52, marginBottom: 12 }}
                     onPress={handleAppleSignIn}
+                    accessibilityLabel="Continue with Apple"
+                    accessibilityRole="button"
                   >
                     <Ionicons name="logo-apple" size={20} color="#ffffff" />
                     <Text style={{ fontSize: 17, fontWeight: '600', color: '#ffffff' }}>Continue with Apple</Text>
@@ -153,6 +157,8 @@ export function AuthPromptSheet({ visible, onClose, onSuccess, actionLabel }: Au
                 <Pressable
                   style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#ffffff', borderRadius: 12, height: 52, borderWidth: 1, borderColor: '#D1D5DB', marginBottom: 20 }}
                   onPress={handleGoogleSignIn}
+                  accessibilityLabel="Continue with Google"
+                  accessibilityRole="button"
                 >
                   <Ionicons name="logo-google" size={18} color="#4285F4" />
                   <Text style={{ fontSize: 17, fontWeight: '600', color: '#1A1A1A' }}>Continue with Google</Text>

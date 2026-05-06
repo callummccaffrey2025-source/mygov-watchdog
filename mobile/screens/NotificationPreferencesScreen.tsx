@@ -172,7 +172,7 @@ export function NotificationPreferencesScreen({ navigation }: any) {
   if (!user) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-        <Pressable style={styles.back} onPress={() => navigation.goBack()}>
+        <Pressable style={styles.back} onPress={() => navigation.goBack()} accessibilityLabel="Go back" accessibilityRole="button">
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <View style={styles.signedOut}>
@@ -186,7 +186,7 @@ export function NotificationPreferencesScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <Pressable style={styles.back} onPress={() => navigation.goBack()}>
+      <Pressable style={styles.back} onPress={() => navigation.goBack()} accessibilityLabel="Go back" accessibilityRole="button">
         <Ionicons name="arrow-back" size={22} color={colors.text} />
       </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -206,7 +206,7 @@ export function NotificationPreferencesScreen({ navigation }: any) {
                     Allow Verity to send you updates about parliament, your MP, and local announcements.
                   </Text>
                 </View>
-                <Pressable style={styles.permissionBtn} onPress={requestPermission}>
+                <Pressable style={styles.permissionBtn} onPress={requestPermission} accessibilityLabel="Enable notifications" accessibilityRole="button">
                   <Text style={styles.permissionBtnText}>Enable</Text>
                 </Pressable>
               </View>

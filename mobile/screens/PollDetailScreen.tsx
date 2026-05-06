@@ -41,7 +41,7 @@ export function PollDetailScreen({ route, navigation }: any) {
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
         <Ionicons name="alert-circle-outline" size={48} color={colors.textMuted} />
         <Text style={{ fontSize: FONT_SIZE.body, color: colors.textMuted, marginTop: SPACING.md }}>Poll not found</Text>
-        <Pressable onPress={() => navigation.goBack()} style={{ marginTop: SPACING.lg }}>
+        <Pressable onPress={() => navigation.goBack()} style={{ marginTop: SPACING.lg }} accessibilityRole="button" accessibilityLabel="Go back">
           <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: GREEN }}>Go back</Text>
         </Pressable>
       </SafeAreaView>
@@ -64,12 +64,16 @@ export function PollDetailScreen({ route, navigation }: any) {
         <Pressable
           style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
           onPress={() => navigation.goBack()} hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <Pressable
           style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
           onPress={handleShare} hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Share poll"
         >
           <Ionicons name="share-outline" size={22} color={colors.text} />
         </Pressable>
@@ -179,6 +183,8 @@ export function PollDetailScreen({ route, navigation }: any) {
             backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.md, padding: SPACING.lg,
             marginBottom: SPACING.xl,
           }}
+          accessibilityRole="button"
+          accessibilityLabel="View original source"
         >
           <Ionicons name="open-outline" size={16} color={GREEN} />
           <Text style={{ flex: 1, fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: GREEN }}>

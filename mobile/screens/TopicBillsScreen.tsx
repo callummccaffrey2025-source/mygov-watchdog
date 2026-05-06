@@ -64,7 +64,7 @@ export function TopicBillsScreen({ route, navigation }: any) {
         paddingHorizontal: SPACING.xl, paddingTop: SPACING.lg, paddingBottom: SPACING.lg,
         gap: SPACING.md,
       }}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <Ionicons name={iconName as any} size={22} color={colors.text} />

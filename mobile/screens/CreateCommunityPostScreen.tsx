@@ -68,7 +68,7 @@ export function CreateCommunityPostScreen({ route, navigation }: any) {
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
         {/* Nav */}
         <View style={[styles.navBar, { borderBottomColor: colors.border }]}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={8} accessibilityLabel="Cancel" accessibilityRole="button">
             <Text style={[styles.navCancel, { color: colors.textBody }]}>Cancel</Text>
           </Pressable>
           <Text style={[styles.navTitle, { color: colors.text }]}>New Post</Text>
@@ -76,6 +76,8 @@ export function CreateCommunityPostScreen({ route, navigation }: any) {
             style={[styles.postBtn, !canPost && styles.postBtnDisabled]}
             onPress={handlePost}
             disabled={!canPost || submitting}
+            accessibilityLabel="Submit post"
+            accessibilityRole="button"
           >
             {submitting
               ? <ActivityIndicator color="#ffffff" size="small" />
@@ -96,6 +98,8 @@ export function CreateCommunityPostScreen({ route, navigation }: any) {
                   key={t}
                   style={[styles.typePill, { backgroundColor: active ? c : c + '18', borderColor: active ? c : 'transparent' }]}
                   onPress={() => setPostType(t)}
+                  accessibilityLabel={`Post type: ${t}`}
+                  accessibilityRole="button"
                 >
                   <Text style={[styles.typePillText, { color: active ? '#fff' : c }]}>{t}</Text>
                 </Pressable>
@@ -113,6 +117,7 @@ export function CreateCommunityPostScreen({ route, navigation }: any) {
               value={title}
               onChangeText={setTitle}
               maxLength={120}
+              accessibilityLabel="Post title"
             />
             <Text style={[styles.charCount, { color: colors.textMuted }]}>{title.length}/120</Text>
           </View>
@@ -129,6 +134,7 @@ export function CreateCommunityPostScreen({ route, navigation }: any) {
               multiline
               maxLength={2000}
               textAlignVertical="top"
+              accessibilityLabel="Post details"
             />
             <Text style={[styles.charCount, { color: colors.textMuted }]}>{body.length}/2000</Text>
           </View>
@@ -143,6 +149,8 @@ export function CreateCommunityPostScreen({ route, navigation }: any) {
                   key={t}
                   style={[styles.topicChip, { backgroundColor: active ? '#00843D' : colors.surface, borderColor: active ? '#00843D' : colors.border }]}
                   onPress={() => setTopic(active ? null : t)}
+                  accessibilityLabel={`Topic: ${t.replace('_', ' ')}`}
+                  accessibilityRole="button"
                 >
                   <Text style={[styles.topicChipText, { color: active ? '#fff' : colors.textBody }]}>
                     {t.replace('_', ' ')}

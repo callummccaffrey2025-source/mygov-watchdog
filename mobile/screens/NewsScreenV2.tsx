@@ -275,6 +275,8 @@ export function NewsScreenV2({ navigation }: any) {
           ...SHADOWS.md,
         }}
         onPress={() => navigation.navigate('NewsStoryDetail', { story: pinnedElectorateStory })}
+        accessibilityRole="button"
+        accessibilityLabel={`Electorate story: ${pinnedElectorateStory.headline}`}
       >
         <View style={{
           backgroundColor: colors.greenBg,
@@ -358,6 +360,8 @@ export function NewsScreenV2({ navigation }: any) {
             marginTop: SPACING.sm,
           }}
           onPress={emptyState.action}
+          accessibilityRole="button"
+          accessibilityLabel={activeTab === 'issues' ? 'Manage issues' : 'Go to profile'}
         >
           <Text style={{
             color: '#FFFFFF',
@@ -392,6 +396,8 @@ export function NewsScreenV2({ navigation }: any) {
           justifyContent: 'flex-end',
         }}
         onPress={() => setShowLeaningSheet(false)}
+        accessibilityRole="button"
+        accessibilityLabel="Close filter sheet"
       >
         <Pressable
           style={{
@@ -403,6 +409,8 @@ export function NewsScreenV2({ navigation }: any) {
             paddingHorizontal: SPACING.xl,
           }}
           onPress={() => {}}
+          accessibilityRole="button"
+          accessibilityLabel="Filter options"
         >
           <View style={{
             width: 36,
@@ -438,6 +446,8 @@ export function NewsScreenV2({ navigation }: any) {
                   setLeaning(opt.key);
                   setShowLeaningSheet(false);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Filter by ${opt.label}`}
               >
                 <View style={{
                   width: 20,
@@ -498,6 +508,8 @@ export function NewsScreenV2({ navigation }: any) {
             }}
             onPress={() => navigation.goBack()}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <Ionicons name="arrow-back" size={22} color={colors.text} />
           </Pressable>
@@ -521,6 +533,8 @@ export function NewsScreenV2({ navigation }: any) {
           }}
           onPress={() => setShowLeaningSheet(true)}
           hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Filter by perspective"
         >
           <Ionicons
             name="funnel-outline"
@@ -559,6 +573,8 @@ export function NewsScreenV2({ navigation }: any) {
                 borderColor: active ? colors.green : colors.border,
               }}
               onPress={() => setActiveTab(tab.key)}
+              accessibilityRole="button"
+              accessibilityLabel={`${tab.label} tab`}
             >
               <Ionicons
                 name={tab.icon as any}
@@ -593,6 +609,8 @@ export function NewsScreenV2({ navigation }: any) {
             alignSelf: 'flex-start',
           }}
           onPress={() => setShowLeaningSheet(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Change perspective filter"
         >
           <Ionicons name="funnel" size={12} color={colors.green} />
           <Text style={{
@@ -605,6 +623,8 @@ export function NewsScreenV2({ navigation }: any) {
           <Pressable
             onPress={() => setLeaning('all')}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Clear perspective filter"
           >
             <Ionicons name="close-circle" size={14} color={colors.green} />
           </Pressable>

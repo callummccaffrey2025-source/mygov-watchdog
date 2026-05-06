@@ -208,6 +208,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg }}>
             <Pressable
               onPress={() => navigation.goBack()}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
               style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center' }}
             >
               <Ionicons name="arrow-back" size={20} color={colors.text} />
@@ -216,6 +218,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
               <Pressable
                 onPress={handleShare}
                 hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Share MP profile"
                 style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center' }}
               >
                 <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={18} color={colors.text} />
@@ -223,6 +227,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
               <Pressable
                 onPress={() => setShareReport(true)}
                 hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Share report card"
                 style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center' }}
               >
                 <Ionicons name="bookmark-outline" size={18} color={colors.text} />
@@ -234,7 +240,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
           <View style={{ alignItems: 'center', marginTop: SPACING.lg }}>
             <View style={{ borderRadius: 48, borderWidth: 3, borderColor: partyColour, overflow: 'hidden' }}>
               {member.photo_url ? (
-                <Image source={{ uri: member.photo_url }} style={{ width: 96, height: 96 }} />
+                <Image source={{ uri: member.photo_url }} style={{ width: 96, height: 96 }} accessibilityLabel={`Photo of ${displayName}`} />
               ) : (
                 <View style={{ width: 96, height: 96, justifyContent: 'center', alignItems: 'center', backgroundColor: partyColour + '33' }}>
                   <Text style={{ fontSize: 32, fontWeight: '700', color: partyColour }}>
@@ -273,6 +279,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
         <View style={{ flexDirection: 'row', paddingHorizontal: SPACING.lg + 4, paddingVertical: SPACING.lg, gap: SPACING.md, backgroundColor: colors.background }}>
           <Pressable
             onPress={() => requireAuth('follow this MP', toggleFollow)}
+            accessibilityRole="button"
+            accessibilityLabel={followingMP ? `Unfollow ${displayName}` : `Follow ${displayName}`}
             style={{
               flex: 1,
               flexDirection: 'row',
@@ -291,6 +299,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
           </Pressable>
           <Pressable
             onPress={() => requireAuth('write to your MP', () => navigation.navigate('WriteToMP', { member }))}
+            accessibilityRole="button"
+            accessibilityLabel={`Write to ${member.first_name}`}
             style={{
               flex: 1,
               flexDirection: 'row',
@@ -317,7 +327,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
             {/* Header */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.xs }}>
               <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>Participation Index</Text>
-              <Pressable onPress={handleShareParticipation} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Pressable onPress={handleShareParticipation} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share participation index" style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Ionicons name="share-outline" size={16} color="#00843D" />
                 <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>Share</Text>
               </Pressable>
@@ -395,6 +405,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
             {/* ───── 6. METHODOLOGY FOOTER BAR ───── */}
             <Pressable
               onPress={() => setShowMethodology(true)}
+              accessibilityRole="button"
+              accessibilityLabel="View methodology"
               style={{ backgroundColor: '#F5F3EE', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             >
               <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Methodology v1.0 · Wilson 95% CI</Text>
@@ -426,6 +438,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
               <Pressable
                 key={tab.id}
                 onPress={() => setActiveTab(tab.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`${tab.label} tab`}
                 style={{
                   paddingVertical: SPACING.md + 2,
                   paddingHorizontal: SPACING.lg,
@@ -451,7 +465,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
               <View style={{ marginBottom: SPACING.xl }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md }}>
                   <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text }}>Recent votes</Text>
-                  <Pressable onPress={() => setActiveTab('votes')} hitSlop={8}>
+                  <Pressable onPress={() => setActiveTab('votes')} hitSlop={8} accessibilityRole="button" accessibilityLabel={`View all ${totalVotes} votes`}>
                     <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: '#00843D' }}>All {totalVotes} →</Text>
                   </Pressable>
                 </View>
@@ -517,6 +531,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
               <View style={{ flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.xl }}>
                 <Pressable
                   onPress={() => setShowMethodology(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Read methodology"
                   style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#E7EEFF', borderRadius: 10, paddingVertical: SPACING.md }}
                 >
                   <Ionicons name="book-outline" size={15} color="#4F46E5" />
@@ -532,7 +548,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}>
                   <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Updated {timeAgo(new Date().toISOString())}</Text>
                   <Text style={{ fontSize: 12, color: '#9CA3AF' }}>·</Text>
-                  <Pressable onPress={() => Linking.openURL('mailto:corrections@verity.run')} hitSlop={8}>
+                  <Pressable onPress={() => Linking.openURL('mailto:corrections@verity.run')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Report an issue via email">
                     <Text style={{ fontSize: 12, fontWeight: '600', color: '#00843D' }}>Report an issue</Text>
                   </Pressable>
                 </View>
@@ -586,14 +602,14 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             )}
                           </View>
                         </View>
-                        <Pressable onPress={() => setShareVoteData(v)} hitSlop={8} style={{ padding: SPACING.xs, marginLeft: SPACING.xs }}>
+                        <Pressable onPress={() => setShareVoteData(v)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share this vote" style={{ padding: SPACING.xs, marginLeft: SPACING.xs }}>
                           <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={15} color="#9aabb8" />
                         </Pressable>
                       </View>
                     );
                   })}
                   {votes.length > visibleCount && (
-                    <Pressable onPress={() => setVisibleCount(c => c + 20)} style={{ alignItems: 'center', paddingVertical: SPACING.md, marginTop: SPACING.xs }}>
+                    <Pressable onPress={() => setVisibleCount(c => c + 20)} accessibilityRole="button" accessibilityLabel={`Show ${Math.min(20, votes.length - visibleCount)} more votes`} style={{ alignItems: 'center', paddingVertical: SPACING.md, marginTop: SPACING.xs }}>
                       <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: colors.green }}>
                         Show {Math.min(20, votes.length - visibleCount)} more votes
                       </Text>
@@ -622,6 +638,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     <Pressable
                       key={entry.id}
                       onPress={() => entry.source_url && Linking.openURL(entry.source_url)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`View speech${entry.debate_topic ? `: ${entry.debate_topic}` : ''}`}
                       style={{ borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.md + 2, marginBottom: SPACING.sm + 2, backgroundColor: colors.card, ...SHADOWS.sm }}
                     >
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.xs }}>
@@ -716,12 +734,16 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 <View style={{ flexDirection: 'row', borderRadius: BORDER_RADIUS.md, padding: 3, marginBottom: SPACING.lg, backgroundColor: colors.cardAlt }}>
                   <Pressable
                     onPress={() => setFundingView('party')}
+                    accessibilityRole="button"
+                    accessibilityLabel="Show party funding"
                     style={{ flex: 1, paddingVertical: SPACING.sm, alignItems: 'center', borderRadius: BORDER_RADIUS.sm + 2, ...(fundingView === 'party' ? { backgroundColor: colors.card, ...SHADOWS.sm } : {}) }}
                   >
                     <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: fundingView === 'party' ? colors.text : colors.textMuted }}>Party Funding</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => setFundingView('personal')}
+                    accessibilityRole="button"
+                    accessibilityLabel="Show personal donations"
                     style={{ flex: 1, paddingVertical: SPACING.sm, alignItems: 'center', borderRadius: BORDER_RADIUS.sm + 2, ...(fundingView === 'personal' ? { backgroundColor: colors.card, ...SHADOWS.sm } : {}) }}
                   >
                     <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: fundingView === 'personal' ? colors.text : colors.textMuted }}>Personal Donations</Text>
@@ -920,6 +942,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
                       })}
 
                       <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Share donations vs voting analysis"
                         style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, paddingVertical: 10 }}
                         onPress={() => {
                           const topDonor = topDonorsWithIndustry[0];
@@ -994,7 +1018,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                       </View>
                     ))}
                     {allInterests[0]?.source_url && (
-                      <Pressable onPress={() => Linking.openURL(allInterests[0].source_url!)}>
+                      <Pressable onPress={() => Linking.openURL(allInterests[0].source_url!)} accessibilityRole="button" accessibilityLabel="View Senate Register of Interests source">
                         <Text style={{ fontSize: FONT_SIZE.caption, marginTop: SPACING.lg, textAlign: 'center', color: colors.green }}>
                           Source: Senate Register of Interests
                         </Text>
@@ -1176,14 +1200,18 @@ export function MemberProfileScreen({ route, navigation }: any) {
         <Pressable
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
           onPress={() => setShowMethodology(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Close methodology"
         >
           <Pressable
             style={{ backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, maxHeight: '85%' }}
             onPress={e => e.stopPropagation()}
+            accessibilityRole="button"
+            accessibilityLabel="Methodology content"
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>Methodology</Text>
-              <Pressable onPress={() => setShowMethodology(false)} hitSlop={12}>
+              <Pressable onPress={() => setShowMethodology(false)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close methodology">
                 <Ionicons name="close" size={22} color={colors.textMuted} />
               </Pressable>
             </View>
@@ -1228,7 +1256,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 April 2026 — v1: Replaced composite "Accountability Score" with four separate dimensions following methodology review. Added low-sample flag. Added "what we can't see" disclosure.
               </Text>
 
-              <Pressable onPress={() => Linking.openURL('https://verity.run/methodology')}>
+              <Pressable onPress={() => Linking.openURL('https://verity.run/methodology')} accessibilityRole="button" accessibilityLabel="Read the full methodology page">
                 <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D', marginTop: 8 }}>
                   Read the full methodology page →
                 </Text>

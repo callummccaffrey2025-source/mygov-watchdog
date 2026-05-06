@@ -236,6 +236,8 @@ export function ProfileScreen({ navigation }: any) {
                 <Pressable
                   style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#000000', borderRadius: 12, height: 48 }}
                   onPress={handleAppleSignIn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Continue with Apple"
                 >
                   <Ionicons name="logo-apple" size={20} color="#ffffff" />
                   <Text style={{ fontSize: 16, fontWeight: '700', color: '#ffffff' }}>Continue with Apple</Text>
@@ -245,6 +247,8 @@ export function ProfileScreen({ navigation }: any) {
               <Pressable
                 style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#ffffff', borderRadius: 12, height: 48, borderWidth: 1, borderColor: colors.border }}
                 onPress={handleGoogleSignIn}
+                accessibilityRole="button"
+                accessibilityLabel="Continue with Google"
               >
                 <Ionicons name="logo-google" size={18} color="#4285F4" />
                 <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>Continue with Google</Text>
@@ -264,11 +268,14 @@ export function ProfileScreen({ navigation }: any) {
                     autoCorrect={false}
                     editable={!sending}
                     autoFocus
+                    accessibilityLabel="Email address"
                   />
                   <Pressable
                     style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#00843D', borderRadius: 12, height: 48, opacity: sending ? 0.6 : 1 }}
                     onPress={handleSendMagicLink}
                     disabled={sending}
+                    accessibilityRole="button"
+                    accessibilityLabel="Send magic link"
                   >
                     {sending
                       ? <ActivityIndicator color="#ffffff" />
@@ -285,6 +292,8 @@ export function ProfileScreen({ navigation }: any) {
                 <Pressable
                   style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#00843D', borderRadius: 12, height: 48 }}
                   onPress={() => setEmailExpanded(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Continue with Email"
                 >
                   <Ionicons name="mail-outline" size={18} color="#ffffff" />
                   <Text style={{ fontSize: 16, fontWeight: '700', color: '#ffffff' }}>Continue with Email</Text>
@@ -293,14 +302,14 @@ export function ProfileScreen({ navigation }: any) {
             </View>
           )}
 
-          <Pressable onPress={() => setSent(false)} style={styles.ghostLink}>
+          <Pressable onPress={() => setSent(false)} style={styles.ghostLink} accessibilityRole="button" accessibilityLabel="Browse without signing in">
             <Text style={[styles.guestNote, { color: colors.textMuted }]}>Browse without signing in</Text>
           </Pressable>
 
           <View style={styles.privacyRow}>
             <Ionicons name="lock-closed-outline" size={12} color={colors.textMuted} />
             <Text style={[styles.privacyText, { color: colors.textMuted }]}>We never share your data. </Text>
-            <Pressable onPress={() => navigation.navigate('PrivacyPolicy')}>
+            <Pressable onPress={() => navigation.navigate('PrivacyPolicy')} accessibilityRole="button" accessibilityLabel="View Privacy Policy">
               <Text style={styles.privacyLink}>Privacy Policy</Text>
             </Pressable>
           </View>
@@ -379,22 +388,23 @@ export function ProfileScreen({ navigation }: any) {
                 placeholder="Enter postcode"
                 placeholderTextColor="#9aabb8"
                 inputAccessoryViewID="profile-postcode-done"
+                accessibilityLabel="Enter your postcode"
               />
               {Platform.OS === 'ios' && (
                 <InputAccessoryView nativeID="profile-postcode-done">
                   <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: '#F1F1F1', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: '#C8C8C8' }}>
-                    <Pressable onPress={() => { Keyboard.dismiss(); handleSavePostcode(); }} hitSlop={8}>
+                    <Pressable onPress={() => { Keyboard.dismiss(); handleSavePostcode(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="Done entering postcode">
                       <Text style={{ fontSize: 17, fontWeight: '600', color: '#007AFF' }}>Done</Text>
                     </Pressable>
                   </View>
                 </InputAccessoryView>
               )}
-              <Pressable style={styles.saveBtn} onPress={handleSavePostcode}>
+              <Pressable style={styles.saveBtn} onPress={handleSavePostcode} accessibilityRole="button" accessibilityLabel="Save postcode">
                 <Text style={styles.saveBtnText}>Save</Text>
               </Pressable>
             </View>
             {myMP && (
-              <Pressable style={[styles.mpRow, { borderTopColor: colors.border }]} onPress={() => navigation.navigate('MemberProfile', { member: myMP })}>
+              <Pressable style={[styles.mpRow, { borderTopColor: colors.border }]} onPress={() => navigation.navigate('MemberProfile', { member: myMP })} accessibilityRole="button" accessibilityLabel={`View ${myMP.first_name} ${myMP.last_name}'s profile`}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Your MP</Text>
                 <Text style={[styles.mpName, { color: colors.text }]}>{myMP.first_name} {myMP.last_name}</Text>
                 <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
@@ -433,43 +443,43 @@ export function ProfileScreen({ navigation }: any) {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Settings</Text>
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Saved')}>
+            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Saved')} accessibilityRole="button" accessibilityLabel="Saved Items">
               <Ionicons name="bookmark-outline" size={20} color={colors.textBody} />
               <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Saved Items</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </Pressable>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Subscription')}>
+            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Subscription')} accessibilityRole="button" accessibilityLabel="Upgrade to Pro">
               <Text style={styles.crownIcon}>👑</Text>
               <Text style={[styles.settingLabel, { flex: 1, color: '#00843D', fontWeight: '700' }]}>Upgrade to Pro</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </Pressable>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('NotificationPreferences')}>
+            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('NotificationPreferences')} accessibilityRole="button" accessibilityLabel="Notification Preferences">
               <Ionicons name="notifications-outline" size={20} color={colors.textBody} />
               <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Notification Preferences</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </Pressable>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('ManageTopics')}>
+            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('ManageTopics')} accessibilityRole="button" accessibilityLabel="Manage Topics">
               <Ionicons name="pricetags-outline" size={20} color={colors.textBody} />
               <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Manage Topics</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </Pressable>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('PrivacyPolicy')}>
+            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('PrivacyPolicy')} accessibilityRole="button" accessibilityLabel="Privacy Policy">
               <Ionicons name="shield-outline" size={20} color={colors.textBody} />
               <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Privacy Policy</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </Pressable>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Terms')}>
+            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Terms')} accessibilityRole="button" accessibilityLabel="Terms of Service">
               <Ionicons name="document-text-outline" size={20} color={colors.textBody} />
               <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Terms of Service</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </Pressable>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('About')}>
+            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('About')} accessibilityRole="button" accessibilityLabel="About Verity">
               <Ionicons name="information-circle-outline" size={20} color={colors.textBody} />
               <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>About Verity</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
@@ -484,6 +494,8 @@ export function ProfileScreen({ navigation }: any) {
             <Pressable
               style={styles.linkRow}
               onPress={() => Linking.openURL('mailto:support@verity.au?subject=Issue%20Report')}
+              accessibilityRole="button"
+              accessibilityLabel="Report an Issue"
             >
               <Text style={[styles.linkText, { color: colors.text }]}>Report an Issue</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
@@ -495,19 +507,21 @@ export function ProfileScreen({ navigation }: any) {
         <Pressable
           style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, borderRadius: BORDER_RADIUS.md + 2, borderWidth: 1.5, borderColor: '#00843D', padding: SPACING.md + 2, marginBottom: SPACING.md }}
           onPress={() => navigation.navigate('AdminPolls')}
+          accessibilityRole="button"
+          accessibilityLabel="Poll Admin"
         >
           <Ionicons name="shield-outline" size={16} color="#00843D" />
           <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>Poll Admin</Text>
         </Pressable>
 
         {/* DEV: Reset Onboarding (remove before App Store submission) */}
-        <Pressable style={styles.resetOnboardingBtn} onPress={handleResetOnboarding}>
+        <Pressable style={styles.resetOnboardingBtn} onPress={handleResetOnboarding} accessibilityRole="button" accessibilityLabel="Reset Onboarding">
           <Ionicons name="refresh-outline" size={16} color="#B45309" />
           <Text style={styles.resetOnboardingText}>Reset Onboarding (Testing)</Text>
         </Pressable>
 
         {/* Sign out */}
-        <Pressable style={[styles.signOutBtn, { backgroundColor: colors.redBg }]} onPress={signOut}>
+        <Pressable style={[styles.signOutBtn, { backgroundColor: colors.redBg }]} onPress={signOut} accessibilityRole="button" accessibilityLabel="Sign Out">
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
 
@@ -516,6 +530,8 @@ export function ProfileScreen({ navigation }: any) {
           <Pressable
             style={styles.deleteAccountBtn}
             onPress={handleDeleteAccount}
+            accessibilityRole="button"
+            accessibilityLabel="Delete Account"
           >
             <Ionicons name="trash-outline" size={14} color={colors.textMuted} />
             <Text style={[styles.deleteAccountText, { color: colors.textMuted }]}>

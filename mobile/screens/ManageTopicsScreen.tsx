@@ -92,11 +92,11 @@ export function ManageTopicsScreen({ navigation }: any) {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={[styles.navBar, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12} accessibilityLabel="Go back" accessibilityRole="button">
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <Text style={[styles.navTitle, { color: colors.text }]}>Your Topics</Text>
-        <Pressable onPress={handleSave} disabled={saving} hitSlop={12}>
+        <Pressable onPress={handleSave} disabled={saving} hitSlop={12} accessibilityLabel="Save topics" accessibilityRole="button">
           {saving
             ? <ActivityIndicator size="small" color="#00843D" />
             : <Text style={styles.saveText}>Save</Text>
@@ -119,6 +119,8 @@ export function ManageTopicsScreen({ navigation }: any) {
                   key={t.id}
                   style={[styles.topicChip, { backgroundColor: colors.background, borderColor: colors.border }, selected && styles.topicChipSelected]}
                   onPress={() => toggleTopic(t.id)}
+                  accessibilityLabel={`${selected ? 'Deselect' : 'Select'} ${t.label}`}
+                  accessibilityRole="button"
                 >
                   <Text style={styles.topicIcon}>{t.icon}</Text>
                   <Text style={[styles.topicLabel, { color: colors.textBody }, selected && styles.topicLabelSelected]}>

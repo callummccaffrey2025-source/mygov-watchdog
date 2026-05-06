@@ -77,6 +77,8 @@ export function ActivityScreen({ route, navigation }: any) {
               backgroundColor: isUnread ? colors.surface : colors.card,
             },
           ]}
+          accessibilityLabel={`${isUnread ? 'Unread: ' : ''}${item.title}${item.body ? `, ${item.body}` : ''}`}
+          accessibilityRole="button"
         >
           {isUnread && (
             <View
@@ -161,12 +163,12 @@ export function ActivityScreen({ route, navigation }: any) {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12} accessibilityLabel="Go back" accessibilityRole="button">
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Activity</Text>
         {unreadCount > 0 ? (
-          <TouchableOpacity onPress={markAllRead} hitSlop={8}>
+          <TouchableOpacity onPress={markAllRead} hitSlop={8} accessibilityLabel="Mark all read" accessibilityRole="button">
             <Text style={[styles.markAllText, { color: colors.green }]}>Mark all read</Text>
           </TouchableOpacity>
         ) : (

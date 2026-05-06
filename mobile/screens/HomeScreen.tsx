@@ -94,7 +94,7 @@ function SectionHeader({
         </Text>
       </View>
       {rightLabel && onRightPress && (
-        <Pressable onPress={onRightPress} hitSlop={8}>
+        <Pressable onPress={onRightPress} hitSlop={8} accessibilityRole="button" accessibilityLabel={rightLabel}>
           <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>{rightLabel}</Text>
         </Pressable>
       )}
@@ -347,6 +347,8 @@ export function HomeScreen({ navigation }: any) {
             <Pressable
               onPress={() => navigation.navigate('Activity')}
               hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="View activity notifications"
               style={{
                 width: 38, height: 38, borderRadius: 19,
                 backgroundColor: 'rgba(255,255,255,0.15)',
@@ -358,6 +360,8 @@ export function HomeScreen({ navigation }: any) {
             <Pressable
               onPress={() => navigation.navigate('Explore')}
               hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Explore"
               style={{
                 width: 38, height: 38, borderRadius: 19,
                 backgroundColor: 'rgba(255,255,255,0.15)',
@@ -444,6 +448,8 @@ export function HomeScreen({ navigation }: any) {
                   <Pressable
                     style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: SPACING.sm }}
                     onPress={() => { track('daily_brief_read', { bullet: i }, 'Home'); navigation.navigate('DailyBrief'); }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Read daily brief item ${i + 1}`}
                   >
                     <View style={{
                       width: 24, height: 24, borderRadius: 12,
@@ -478,7 +484,7 @@ export function HomeScreen({ navigation }: any) {
                   <Ionicons name="time-outline" size={13} color={colors.textMuted} />
                   <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>2 min read</Text>
                 </View>
-                <Pressable onPress={() => { track('daily_brief_read', {}, 'Home'); navigation.navigate('DailyBrief'); }}>
+                <Pressable onPress={() => { track('daily_brief_read', {}, 'Home'); navigation.navigate('DailyBrief'); }} accessibilityRole="button" accessibilityLabel="Read full brief">
                   <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: colors.green }}>
                     Read full brief {'\u2192'}
                   </Text>
@@ -539,11 +545,12 @@ export function HomeScreen({ navigation }: any) {
                   returnKeyType="done"
                   onSubmitEditing={handleSetPostcode}
                   inputAccessoryViewID="home-postcode-done"
+                  accessibilityLabel="Enter your postcode"
                 />
                 {Platform.OS === 'ios' && (
                   <InputAccessoryView nativeID="home-postcode-done">
                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: '#F1F1F1', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: '#C8C8C8' }}>
-                      <Pressable onPress={() => { Keyboard.dismiss(); handleSetPostcode(); }} hitSlop={8}>
+                      <Pressable onPress={() => { Keyboard.dismiss(); handleSetPostcode(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="Done entering postcode">
                         <Text style={{ fontSize: 17, fontWeight: '600', color: '#007AFF' }}>Done</Text>
                       </Pressable>
                     </View>
@@ -557,6 +564,8 @@ export function HomeScreen({ navigation }: any) {
                     justifyContent: 'center', alignItems: 'center',
                   }}
                   onPress={handleSetPostcode}
+                  accessibilityRole="button"
+                  accessibilityLabel="Find MP"
                 >
                   <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>Find MP</Text>
                 </Pressable>
@@ -604,6 +613,8 @@ export function HomeScreen({ navigation }: any) {
               {lastVote && (
                 <Pressable
                   onPress={() => navigation.navigate('MemberProfile', { member: myMP })}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View ${myMP.first_name} ${myMP.last_name}'s profile`}
                   style={{
                     flexDirection: 'row', alignItems: 'center',
                     marginTop: SPACING.md,
@@ -650,6 +661,8 @@ export function HomeScreen({ navigation }: any) {
                     backgroundColor: colors.green,
                   }}
                   onPress={() => requireAuth('write to your MP', () => navigation.navigate('WriteToMP', { member: myMP }))}
+                  accessibilityRole="button"
+                  accessibilityLabel="Write to MP"
                 >
                   <Ionicons name="mail-outline" size={14} color="#ffffff" />
                   <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>Write to MP</Text>
@@ -663,6 +676,8 @@ export function HomeScreen({ navigation }: any) {
                     borderWidth: 1, borderColor: colors.border,
                   }}
                   onPress={() => navigation.navigate('MemberProfile', { member: myMP })}
+                  accessibilityRole="button"
+                  accessibilityLabel="View profile"
                 >
                   <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
                     View profile {'\u2192'}
@@ -702,6 +717,8 @@ export function HomeScreen({ navigation }: any) {
               {/* Bill card — tappable to open detail */}
               <Pressable
                 onPress={() => navigation.navigate('BillDetail', { billId: currentBill.id })}
+                accessibilityRole="button"
+                accessibilityLabel={`View bill: ${currentBill.short_title ?? currentBill.title}`}
                 style={({ pressed }) => ({
                   backgroundColor: colors.card,
                   borderRadius: BORDER_RADIUS.xl,
@@ -785,6 +802,8 @@ export function HomeScreen({ navigation }: any) {
                       submitOpinion('disagree');
                       track('bill_opinion', { bill_id: currentBill.id, opinion: 'disagree' }, 'Home');
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Disagree with this bill"
                     style={{
                       flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
                       backgroundColor: 'rgba(220,38,38,0.08)', borderRadius: BORDER_RADIUS.full,
@@ -797,6 +816,8 @@ export function HomeScreen({ navigation }: any) {
 
                   <Pressable
                     onPress={() => { submitOpinion('skip'); }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Skip this bill"
                     style={{
                       paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center',
                     }}
@@ -810,6 +831,8 @@ export function HomeScreen({ navigation }: any) {
                       submitOpinion('agree');
                       track('bill_opinion', { bill_id: currentBill.id, opinion: 'agree' }, 'Home');
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Agree with this bill"
                     style={{
                       flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
                       backgroundColor: 'rgba(0,132,61,0.08)', borderRadius: BORDER_RADIUS.full,
@@ -847,6 +870,9 @@ export function HomeScreen({ navigation }: any) {
                   <Pressable
                     key={tab.id}
                     onPress={() => { setFeedMode(tab.id); track('feed_mode_change', { mode: tab.id }, 'Home'); }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Show ${tab.label} news`}
+                    accessibilityState={{ selected: active }}
                     style={{
                       paddingHorizontal: 12, paddingVertical: 7,
                       borderRadius: BORDER_RADIUS.full,
@@ -863,7 +889,7 @@ export function HomeScreen({ navigation }: any) {
                 );
               })}
             </View>
-            <Pressable onPress={() => navigation.navigate('News')} hitSlop={8}>
+            <Pressable onPress={() => navigation.navigate('News')} hitSlop={8} accessibilityRole="button" accessibilityLabel="View all news">
               <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>All {'\u2192'}</Text>
             </Pressable>
           </View>
@@ -879,6 +905,8 @@ export function HomeScreen({ navigation }: any) {
                 ...SHADOWS.sm,
               }}
               onPress={() => navigation.navigate('NewsStoryDetail', { story: heroStory })}
+              accessibilityRole="button"
+              accessibilityLabel={`Read news story: ${heroStory.headline}`}
             >
               {/* MOST COVERED badge + meta */}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: 10 }}>
@@ -1099,6 +1127,8 @@ export function HomeScreen({ navigation }: any) {
                 key={item.label}
                 style={{ alignItems: 'center' }}
                 onPress={() => navigation.navigate(item.screen)}
+                accessibilityRole="button"
+                accessibilityLabel={`Navigate to ${item.label}`}
               >
                 <View style={{
                   width: 56, height: 56, borderRadius: 28,
@@ -1157,6 +1187,8 @@ export function HomeScreen({ navigation }: any) {
                     alignSelf: 'flex-start', marginTop: SPACING.md,
                   }}
                   onPress={enableNotifications}
+                  accessibilityRole="button"
+                  accessibilityLabel="Enable notifications"
                 >
                   <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>Enable</Text>
                 </Pressable>
@@ -1167,6 +1199,8 @@ export function HomeScreen({ navigation }: any) {
                 onPress={dismissNotifPrompt}
                 hitSlop={10}
                 style={{ position: 'absolute', top: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss notification prompt"
               >
                 <Ionicons name="close" size={18} color="#6B7280" />
               </Pressable>
