@@ -71,9 +71,10 @@
 - If you're about to write a TODO, check `docs/BACKLOG.md` first — it's the single source of truth for deferred work
 
 ## Automation Pipelines (LIVE)
+- `ingest-bills-daily` — pg_cron jobid 13, `0 19 * * *` (5am AEST), calls `/functions/v1/ingest-bills` with service_role key. Scrapes APH directly (streaming NDJSON response to avoid idle timeout). Heartbeat to `pipeline_heartbeats`.
 - `ingest-news-daily` — pg_cron jobid 2, `0 20 * * *` (6am AEST), calls `/functions/v1/ingest-news` with service_role key
 - `generate-daily-brief-daily` — pg_cron jobid 3, `0 21 * * *` (7am AEST), calls `/functions/v1/generate-daily-brief` with service_role key
-- Sequence: news ingested first, brief generated from fresh stories one hour later
+- Sequence: bills scraped first (5am), news ingested (6am), brief generated from fresh data (7am)
 - Last run (2026-03-31): 275 articles → 72 new stories from 12 sources; brief created with 5 stories
 
 ## Design System (fully enforced)
@@ -122,7 +123,6 @@
 - **Bill arguments**: 16 bills now have AI-generated For/Against arguments via `scripts/generate_bill_arguments.py`. The "Verity Pro lock" placeholder removed — empty state now reads "Arguments for this bill haven't been compiled yet."
 
 ## Cron jobs (local)
-- `0 5 * * *` — `python scripts/ingest_federal_bills.py` (daily APH scrape, 5am AEST, before enrichment crons)
 - `0 6 * * *` — `~/verity/scripts/verity_autopilot.sh` (news ingest + brief generation + Mac notification)
 - `0 2,8,14,20 * * *` — `python scripts/ingest_news.py --fresh` (every 6 hours, keeps freshness window < 6h)
 
