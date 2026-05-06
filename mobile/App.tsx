@@ -50,6 +50,9 @@ import { LocalAnnouncementsScreen } from './screens/LocalAnnouncementsScreen';
 import { ContradictionDetailScreen } from './screens/ContradictionDetailScreen';
 // Phone verification deferred — see docs/BACKLOG.md
 import { AdminPollsScreen } from './screens/AdminPollsScreen';
+import { LearnScreen } from './screens/LearnScreen';
+import { LearnModuleScreen } from './screens/LearnModuleScreen';
+import { LessonScreen } from './screens/LessonScreen';
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
 
@@ -101,6 +104,7 @@ function HomeTabs() {
             Explore:   ['search',      'search-outline'],
             News:      ['newspaper',   'newspaper-outline'],
             Polls:     ['bar-chart', 'bar-chart-outline'],
+            Learn:     ['school',      'school-outline'],
             Profile:   ['person',      'person-outline'],
           };
           const [active, inactive] = icons[route.name] ?? ['ellipse', 'ellipse-outline'];
@@ -118,6 +122,7 @@ function HomeTabs() {
       <Tab.Screen name="Explore" component={ExploreScreen} options={{ tabBarAccessibilityLabel: 'Explore' }} />
       <Tab.Screen name="News" component={NewsScreenV2} options={{ tabBarAccessibilityLabel: 'News' }} />
       <Tab.Screen name="Polls" component={PollsScreen} options={{ tabBarAccessibilityLabel: 'Polls' }} />
+      <Tab.Screen name="Learn" component={LearnScreen} options={{ tabBarAccessibilityLabel: 'Learn' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarAccessibilityLabel: 'Profile' }} />
     </Tab.Navigator>
   );
@@ -376,6 +381,8 @@ function App() {
               <Stack.Screen name="LocalAnnouncements" component={LocalAnnouncementsScreen} />
               <Stack.Screen name="ContradictionDetail" component={ContradictionDetailScreen} options={{ headerShown: false }} />
               <Stack.Screen name="AdminPolls" component={AdminPollsScreen} />
+              <Stack.Screen name="LearnModule" component={LearnModuleScreen} />
+              <Stack.Screen name="Lesson" component={LessonScreen} />
             </Stack.Navigator>
             <AppNotificationGate />
           </NavigationContainer>
