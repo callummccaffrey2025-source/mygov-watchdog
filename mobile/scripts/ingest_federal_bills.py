@@ -43,7 +43,8 @@ BILLS_BEFORE_PARLIAMENT_PAGE = (
 )
 BILLS_ASSENTED_PAGE = (
     "{base}/Parliamentary_Business/Bills_Legislation/Bills_Search_Results"
-    "?page={page}&st=2&sr=0&q=&bst=3&parlno=48&pnu=48&ps=50"
+    "?page={page}&drt=2&drv=7&drvH=7&pnu=48&pnuH=48"
+    "&ps=50&ito=1&q=&ra=1&bs=0&pbh=0&bhor=0&pmb=0&g=0&st=2"
 )
 BILL_DETAIL_URL = (
     "{base}/Parliamentary_Business/Bills_Legislation/"

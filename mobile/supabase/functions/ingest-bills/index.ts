@@ -33,6 +33,10 @@ const LISTING_URL =
   `${APH_BASE}/Parliamentary_Business/Bills_Legislation/Bills_before_Parliament` +
   `?page={PAGE}&drt=2&drv=7&drvH=7&pnu=48&pnuH=48` +
   `&f=01/01/2022&to=31/12/2026&ps=50&ito=1&q=&bs=1&pbh=1&bhor=1&pmb=1&g=1&st=2`;
+const ASSENTED_URL =
+  `${APH_BASE}/Parliamentary_Business/Bills_Legislation/Bills_Search_Results` +
+  `?page={PAGE}&drt=2&drv=7&drvH=7&pnu=48&pnuH=48` +
+  `&ps=50&ito=1&q=&ra=1&bs=0&pbh=0&bhor=0&pmb=0&g=0&st=2`;
 const DETAIL_URL =
   `${APH_BASE}/Parliamentary_Business/Bills_Legislation/Bills_Search_Results/Result?bId={ID}`;
 const UA = 'Verity-CivicIntelligence/1.0 (https://verity.run; data@verity.run)';
@@ -125,13 +129,13 @@ interface BillRef {
   title: string;
 }
 
-async function fetchBillListing(): Promise<BillRef[]> {
+async function fetchBillListing(urlTemplate: string = LISTING_URL, label: string = 'Bills before Parliament'): Promise<BillRef[]> {
   const all: BillRef[] = [];
   const seen = new Set<string>();
   let page = 1;
 
   while (true) {
-    const url = LISTING_URL.replace('{PAGE}', String(page));
+    const url = urlTemplate.replace('{PAGE}', String(page));
     const resp = await fetch(url, { headers: { 'User-Agent': UA } });
     if (!resp.ok) break;
     const html = await resp.text();
@@ -139,7 +143,7 @@ async function fetchBillListing(): Promise<BillRef[]> {
     // Extract total on first page
     if (page === 1) {
       const totalMatch = html.match(/TOTAL RESULTS:\s*(\d+)/);
-      if (totalMatch) console.log(`Total bills in listing: ${totalMatch[1]}`);
+      if (totalMatch) console.log(`${label}: ${totalMatch[1]} total`);
     }
 
     // Extract bill links from <h4> inside search-filter-results
@@ -160,7 +164,7 @@ async function fetchBillListing(): Promise<BillRef[]> {
 
     if (pageBills.length === 0) break;
     all.push(...pageBills);
-    console.log(`Page ${page}: ${pageBills.length} bills (total: ${all.length})`);
+    console.log(`${label} page ${page}: ${pageBills.length} bills (total: ${all.length})`);
 
     if (pageBills.length < 50) break;
     page++;
@@ -382,6 +386,13 @@ function buildRow(detail: BillDetail) {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  // Parse request body for mode: "all" includes recently assented bills
+  let mode = 'active';
+  try {
+    const body = await req.json();
+    if (body?.mode === 'all') mode = 'all';
+  } catch { /* empty body is fine, default to active */ }
+
   // Use a streaming response so pg_cron / net.http_post doesn't hit
   // the 150s idle timeout while we scrape ~100 bill pages at 1.5s each.
   const encoder = new TextEncoder();
@@ -396,15 +407,30 @@ Deno.serve(async (req: Request) => {
       const logEntries: Array<{ bill_id: string; action: string; reason: string; created_at: string }> = [];
 
       try {
-        // Step 1: Get listing
-        send({ event: 'start', message: 'Fetching Bills before Parliament listing...' });
-        const bills = await fetchBillListing();
+        // Step 1: Get active bills listing
+        send({ event: 'start', message: 'Fetching Bills before Parliament listing...', mode });
+        const bills = await fetchBillListing(LISTING_URL, 'Bills before Parliament');
         if (bills.length === 0) {
           send({ event: 'error', message: 'No bills found in listing' });
           controller.close();
           return;
         }
-        send({ event: 'listing', count: bills.length });
+
+        // Step 1b: Also fetch recently assented if mode=all
+        if (mode === 'all') {
+          send({ event: 'fetching_assented' });
+          const assented = await fetchBillListing(ASSENTED_URL, 'Recently assented');
+          const seen = new Set(bills.map((b) => b.billId));
+          for (const b of assented) {
+            if (!seen.has(b.billId)) {
+              bills.push(b);
+              seen.add(b.billId);
+            }
+          }
+          send({ event: 'listing', active: bills.length - assented.length, assented: assented.length, total: bills.length });
+        } else {
+          send({ event: 'listing', count: bills.length });
+        }
 
         // Step 2: Process each bill
         for (let i = 0; i < bills.length; i++) {
