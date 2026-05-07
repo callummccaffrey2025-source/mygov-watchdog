@@ -2,11 +2,11 @@ import React, { useCallback } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -179,15 +179,13 @@ export function ActivityScreen({ route, navigation }: any) {
       {loading && notifications.length === 0 ? (
         renderSkeleton()
       ) : (
-        <FlatList
+        <FlashList
           data={notifications}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={renderSeparator}
           ListEmptyComponent={renderEmpty}
           contentContainerStyle={notifications.length === 0 ? { flex: 1 } : undefined}
-          windowSize={5}
-          maxToRenderPerBatch={10}
           refreshControl={
             <RefreshControl
               refreshing={loading && notifications.length > 0}

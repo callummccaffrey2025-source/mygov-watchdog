@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -94,7 +95,7 @@ export function LearnModuleScreen({ navigation, route }: any) {
           <ActivityIndicator size="large" color="#00843D" />
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={lessons}
           keyExtractor={item => item.id}
           renderItem={renderLesson}

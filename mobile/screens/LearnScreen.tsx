@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -44,7 +45,7 @@ export function LearnScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <FlatList
+      <FlashList
         data={coreModules}
         keyExtractor={item => item.id}
         numColumns={2}
@@ -74,7 +75,6 @@ export function LearnScreen({ navigation }: any) {
             </View>
           ) : null
         }
-        windowSize={5}
       />
     </SafeAreaView>
   );

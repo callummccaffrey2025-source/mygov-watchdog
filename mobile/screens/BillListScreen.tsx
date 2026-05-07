@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, Pressable, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, TextInput, ActivityIndicator } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
@@ -176,14 +177,11 @@ export function BillListScreen({ navigation }: any) {
           ))}
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={sortedBills}
           keyExtractor={b => b.id}
           contentContainerStyle={{ paddingHorizontal: SPACING.xl, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
-          windowSize={5}
-          maxToRenderPerBatch={10}
-          removeClippedSubviews
           renderItem={renderBillCard}
           ListEmptyComponent={
             <View style={{ alignItems: 'center', paddingVertical: 60, gap: SPACING.md }}>

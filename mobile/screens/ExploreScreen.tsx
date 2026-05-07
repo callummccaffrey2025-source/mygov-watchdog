@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, FlatList, Pressable, Modal, TextInput, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal, TextInput, RefreshControl } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { SearchBar } from '../components/SearchBar';
@@ -673,7 +674,7 @@ export function ExploreScreen({ navigation }: any) {
             {councils.length > 0 && (
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>Local Councils</Text>
-                <FlatList
+                <FlashList
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   data={councils}

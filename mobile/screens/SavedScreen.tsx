@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
   Pressable,
   RefreshControl,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -275,7 +275,7 @@ export function SavedScreen({ navigation }: any) {
           ))}
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={items}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
@@ -284,8 +284,6 @@ export function SavedScreen({ navigation }: any) {
             styles.listContent,
             items.length === 0 && styles.listEmpty,
           ]}
-          windowSize={5}
-          maxToRenderPerBatch={10}
           refreshControl={
             <RefreshControl refreshing={false} onRefresh={refresh} tintColor={colors.green} />
           }

@@ -13,7 +13,7 @@ Things that MUST be done before App Store submission.
 
 | Item | Why it's a blocker | Roadmap prompt |
 |------|-------------------|----------------|
-| **IAP integration (RevenueCat)** | Subscription is a database flag (`is_pro` on `user_preferences`). No StoreKit, no receipt validation. Apple will reject. | Not yet assigned — needs dedicated session |
+| ~~**IAP integration**~~ | ~~Resolved in Prompt 10. StoreKit integration via react-native-iap v15, server-side receipt validation Edge Function, useSubscription hook rewritten. Requires: (1) Create `verity_pro_monthly` subscription product in App Store Connect, (2) Set `APPLE_SHARED_SECRET` in Supabase Vault, (3) Deploy `validate-receipt` Edge Function, (4) Switch from Expo Go to EAS dev builds.~~ | Done |
 | ~~**Privacy Policy update**~~ | ~~Resolved in Prompt 9. Added: operator identity (sole trader, ABN pending), cross-border data disclosure (Supabase/Anthropic/Expo/Apple in US), AI data handling, children's privacy, OAIC complaint right. Emails standardised to verity.au.~~ | Done |
 | ~~**Terms of Service update**~~ | ~~Resolved in Prompt 9. Added: AI-generated content disclaimer, UGC indemnification clause, changes notification clause. Emails standardised to verity.au.~~ | Done |
 | **Accessibility labels** | ~4 of 600+ interactive elements have accessibilityLabel. VoiceOver is non-functional. Apple may flag. Disability Discrimination Act 1992 obligation. | Prompt 37 |

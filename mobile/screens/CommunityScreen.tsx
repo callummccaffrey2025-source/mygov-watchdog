@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator, RefreshControl,
+  View, Text, StyleSheet, Pressable, ActivityIndicator, RefreshControl,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -131,13 +132,11 @@ export function CommunityScreen({ navigation }: any) {
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color="#00843D" />
       ) : (
-        <FlatList
+        <FlashList
           data={posts}
           keyExtractor={item => item.id}
           renderItem={renderPost}
           contentContainerStyle={styles.list}
-          windowSize={5}
-          maxToRenderPerBatch={10}
           refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} />}
           ListEmptyComponent={
             <EmptyState

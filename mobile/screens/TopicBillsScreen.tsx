@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
-import { View, Text, FlatList, Pressable } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -86,12 +87,10 @@ export function TopicBillsScreen({ route, navigation }: any) {
           </Text>
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={sortedBills}
           keyExtractor={b => b.id}
           contentContainerStyle={{ paddingHorizontal: SPACING.xl, paddingBottom: 40 }}
-          windowSize={5}
-          maxToRenderPerBatch={10}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={

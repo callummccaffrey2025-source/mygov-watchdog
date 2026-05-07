@@ -2,12 +2,12 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   View,
   Text,
-  FlatList,
   Pressable,
   RefreshControl,
   ScrollView,
   Modal,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -637,14 +637,12 @@ export function NewsScreenV2({ navigation }: any) {
           {[1, 2, 3, 4, 5].map(i => <NewsCardSkeleton key={i} />)}
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={currentFeed}
           keyExtractor={item => String(item.id)}
           renderItem={renderStoryItem}
           ListHeaderComponent={renderHeader}
           ListEmptyComponent={renderEmpty}
-          windowSize={5}
-          maxToRenderPerBatch={10}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: SPACING.xxl }}
           refreshControl={

@@ -21,7 +21,7 @@ const FEATURES: { label: string; free: boolean; pro: boolean }[] = [
 
 export function SubscriptionScreen({ navigation }: any) {
   const { user } = useUser();
-  const { isPro, loading, subscribe, restore } = useSubscription(user?.id);
+  const { isPro, loading, subscribe, restore, product } = useSubscription(user?.id);
   const { colors } = useTheme();
   const [subscribing, setSubscribing] = React.useState(false);
   const [restoring, setRestoring] = React.useState(false);
@@ -52,7 +52,7 @@ export function SubscriptionScreen({ navigation }: any) {
         {/* Hero */}
         <Text style={styles.crown}>👑</Text>
         <Text style={[styles.title, { color: colors.text }]}>Verity Pro</Text>
-        <Text style={styles.price}>$4.99 / month</Text>
+        <Text style={styles.price}>{(product as any)?.localizedPrice ?? '$4.99'} / month</Text>
         <Text style={styles.trial}>7-day free trial</Text>
 
         {/* Feature table */}
