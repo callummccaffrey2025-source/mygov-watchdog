@@ -28,7 +28,7 @@ import { useDailyBrief } from '../hooks/useDailyBrief';
 import { usePersonalisedFeed, filterPoliticalStories } from '../hooks/usePersonalisedFeed';
 import { timeAgo } from '../lib/timeAgo';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../lib/storage';
 import { hapticLight } from '../lib/haptics';
 import { HomeScreenSkeleton } from '../components/HomeScreenSkeleton';
 import { AuthPromptSheet } from '../components/AuthPromptSheet';
@@ -38,6 +38,7 @@ import { useBillSwipe } from '../hooks/useBillSwipe';
 import * as Haptics from 'expo-haptics';
 import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
+import { useLearnModules } from '../hooks/useLearnModules';
 import { usePersonalRelevance, useUserProfile } from '../hooks/usePersonalRelevance';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -1050,6 +1051,11 @@ export function HomeScreen({ navigation }: any) {
 
         <SectionDivider />
 
+        {/* ═══ 7. CONTINUE LEARNING ═══ */}
+        <ContinueLearningCard navigation={navigation} colors={colors} />
+
+        <SectionDivider />
+
         {/* ═══ 8. MP RECENT VOTES ═══ */}
         {myMP && mpRecentVotes.length > 0 && (
           <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
@@ -1229,5 +1235,62 @@ export function HomeScreen({ navigation }: any) {
       </View>
       <AuthPromptSheet {...authSheetProps} />
     </SafeAreaView>
+  );
+}
+
+function ContinueLearningCard({ navigation, colors }: { navigation: any; colors: any }) {
+  const { modules, loading } = useLearnModules();
+
+  if (loading) return null;
+
+  const totalLessons = modules.reduce((sum, m) => sum + m.lesson_count, 0);
+  const completedLessons = modules.reduce((sum, m) => sum + m.completed_count, 0);
+
+  // Find next incomplete module
+  const nextModule = modules.find(m => m.completed_count < m.lesson_count && !m.is_current_events);
+  if (!nextModule) return null;
+
+  const progress = totalLessons > 0 ? completedLessons / totalLessons : 0;
+
+  return (
+    <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+      <Pressable
+        onPress={() => navigation.navigate('Learn')}
+        style={{
+          backgroundColor: colors.card,
+          borderRadius: BORDER_RADIUS.xl,
+          padding: SPACING.lg,
+          ...SHADOWS.sm,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md }}>
+          <View style={{
+            width: 32, height: 32, borderRadius: BORDER_RADIUS.md,
+            backgroundColor: '#E8F5EE', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Ionicons name="school" size={18} color="#00843D" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold as any, color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Continue Learning
+            </Text>
+            <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold as any, color: colors.text }}>
+              {nextModule.title}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </View>
+
+        {/* Progress bar */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
+          <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: 'hidden' }}>
+            <View style={{ height: '100%', width: `${progress * 100}%`, backgroundColor: '#00843D', borderRadius: 3 }} />
+          </View>
+          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, fontWeight: FONT_WEIGHT.medium as any }}>
+            {completedLessons}/{totalLessons}
+          </Text>
+        </View>
+      </Pressable>
+    </View>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS } from '../constants/design';
 
@@ -20,7 +21,13 @@ export function QuizBlock({ question, options, correct, explanation, onAnswer }:
   const handleSelect = (index: number) => {
     if (answered) return;
     setSelected(index);
-    onAnswer?.(index === correct);
+    const isCorrect = index === correct;
+    if (isCorrect) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+    onAnswer?.(isCorrect);
   };
 
   return (

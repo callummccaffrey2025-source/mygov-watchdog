@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
 import { useLesson } from '../hooks/useLesson';
 import { ContentBlock } from '../components/ContentBlock';
@@ -13,6 +14,9 @@ export function LessonScreen({ navigation, route }: any) {
   const { lesson, completed, loading, markComplete } = useLesson(lessonId);
   const [quizResults, setQuizResults] = useState<boolean[]>([]);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const celebrationScale = useRef(new Animated.Value(0)).current;
+  const celebrationOpacity = useRef(new Animated.Value(0)).current;
 
   const totalQuizzes = lesson?.content_blocks.filter(b => b.type === 'quiz').length ?? 0;
 
@@ -27,7 +31,21 @@ export function LessonScreen({ navigation, route }: any) {
       : 100;
     await markComplete(score);
     setIsCompleting(false);
-    navigation.goBack();
+
+    // Celebration animation
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setShowCelebration(true);
+    Animated.parallel([
+      Animated.spring(celebrationScale, { toValue: 1, friction: 4, tension: 80, useNativeDriver: true }),
+      Animated.timing(celebrationOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+
+    // Auto-dismiss after 1.5s
+    setTimeout(() => {
+      Animated.timing(celebrationOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(() => {
+        navigation.goBack();
+      });
+    }, 1500);
   };
 
   const handleRealDataPress = (entity: string, id: string) => {
@@ -92,13 +110,30 @@ export function LessonScreen({ navigation, route }: any) {
           </Pressable>
         )}
 
-        {completed && (
+        {completed && !showCelebration && (
           <View style={styles.completedMessage}>
             <Ionicons name="checkmark-circle" size={24} color="#00843D" />
             <Text style={[styles.completedText, { color: '#00843D' }]}>Lesson completed</Text>
           </View>
         )}
       </ScrollView>
+
+      {/* Celebration overlay */}
+      {showCelebration && (
+        <Animated.View style={[styles.celebrationOverlay, { opacity: celebrationOpacity }]}>
+          <Animated.View style={[styles.celebrationContent, { transform: [{ scale: celebrationScale }] }]}>
+            <View style={styles.celebrationCircle}>
+              <Ionicons name="checkmark" size={48} color="#fff" />
+            </View>
+            <Text style={styles.celebrationTitle}>Lesson Complete!</Text>
+            {totalQuizzes > 0 && (
+              <Text style={styles.celebrationScore}>
+                {quizResults.filter(Boolean).length}/{totalQuizzes} correct
+              </Text>
+            )}
+          </Animated.View>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -159,5 +194,33 @@ const styles = StyleSheet.create({
   completedText: {
     fontSize: FONT_SIZE.subtitle,
     fontWeight: FONT_WEIGHT.semibold as any,
+  },
+  celebrationOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  celebrationContent: {
+    alignItems: 'center',
+  },
+  celebrationCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#00843D',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  celebrationTitle: {
+    fontSize: FONT_SIZE.heading,
+    fontWeight: FONT_WEIGHT.bold as any,
+    color: '#fff',
+    marginBottom: SPACING.xs,
+  },
+  celebrationScore: {
+    fontSize: FONT_SIZE.subtitle,
+    color: 'rgba(255,255,255,0.8)',
   },
 });

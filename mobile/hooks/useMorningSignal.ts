@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../lib/storage';
 import { supabase } from '../lib/supabase';
 import { useDailyBrief, DailyBriefData } from './useDailyBrief';
 

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /Users/callummccaffrey/verity/mobile/.claude/context_save*.md)",
+      "Read(//Users/callummccaffrey/verity/**)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

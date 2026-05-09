@@ -8,5 +8,7 @@ beautifulsoup4>=4.12.0
 lxml>=5.0.0
 anthropic>=0.40.0
 feedparser>=6.0.0
+# LLM-powered scraping (used by scrape_media_scrapegraph.py)
+scrapegraphai>=1.0.0
 # Optional: embedding-based clustering (used by cluster_with_embeddings.py)
 # Uses OpenAI embeddings + Pinecone via HTTP directly (no SDKs needed)

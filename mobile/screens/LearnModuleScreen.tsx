@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useUser } from '../context/UserContext';
 import { supabase } from '../lib/supabase';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../lib/storage';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS } from '../constants/design';
 
 interface LessonItem {
@@ -14,6 +14,7 @@ interface LessonItem {
   title: string;
   sort_order: number;
   completed: boolean;
+  locked: boolean;
 }
 
 export function LearnModuleScreen({ navigation, route }: any) {
@@ -49,12 +50,15 @@ export function LearnModuleScreen({ navigation, route }: any) {
       }
 
       if (!cancelled) {
-        setLessons(lessonsData.map(l => ({
+        const mapped = lessonsData.map((l, i) => ({
           id: l.id,
           title: l.title,
           sort_order: l.sort_order,
           completed: completedIds.has(l.id),
-        })));
+          // First lesson always unlocked; others require previous lesson completed
+          locked: i > 0 && !completedIds.has(lessonsData[i - 1].id),
+        }));
+        setLessons(mapped);
         setLoading(false);
       }
     };
@@ -65,18 +69,26 @@ export function LearnModuleScreen({ navigation, route }: any) {
 
   const renderLesson = ({ item, index }: { item: LessonItem; index: number }) => (
     <Pressable
-      onPress={() => navigation.navigate('Lesson', { lessonId: item.id, title: item.title })}
-      style={[styles.lessonRow, { borderColor: colors.border }]}
+      onPress={() => {
+        if (!item.locked) {
+          navigation.navigate('Lesson', { lessonId: item.id, title: item.title });
+        }
+      }}
+      style={[styles.lessonRow, { borderColor: colors.border }, item.locked && { opacity: 0.45 }]}
     >
-      <View style={[styles.lessonNumber, { backgroundColor: item.completed ? '#00843D' : colors.surface }]}>
+      <View style={[styles.lessonNumber, {
+        backgroundColor: item.completed ? '#00843D' : item.locked ? colors.border : colors.surface,
+      }]}>
         {item.completed ? (
           <Ionicons name="checkmark" size={16} color="#fff" />
+        ) : item.locked ? (
+          <Ionicons name="lock-closed" size={14} color={colors.textMuted} />
         ) : (
           <Text style={[styles.lessonNumberText, { color: colors.textMuted }]}>{index + 1}</Text>
         )}
       </View>
-      <Text style={[styles.lessonTitle, { color: colors.text }]}>{item.title}</Text>
-      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      <Text style={[styles.lessonTitle, { color: item.locked ? colors.textMuted : colors.text }]}>{item.title}</Text>
+      {!item.locked && <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />}
     </Pressable>
   );
 

@@ -10,7 +10,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../lib/storage';
 import { useNewsStories, NewsStory } from '../hooks/useNewsStories';
 import { filterPoliticalStories } from '../hooks/usePersonalisedFeed';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
