@@ -23,6 +23,7 @@ import { SkeletonLoader } from '../components/SkeletonLoader';
 import { topicBg, topicText } from '../constants/topicColors';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { decodeHtml } from '../utils/decodeHtml';
+import { parseBold } from '../lib/parseBold';
 
 // ─── Civic Facts ─────────────────────────────────────────────────────────────
 
@@ -294,7 +295,7 @@ export function DailyBriefScreen({ route, navigation }: any) {
                 </View>
               ) : null}
               <Text style={[styles.storyText, { color: colors.text }]}>
-                {decodeHtml(item.text)}
+                {parseBold(decodeHtml(item.text))}
               </Text>
             </View>
             {item.sourceCount > 0 ? (
@@ -548,7 +549,7 @@ export function DailyBriefScreen({ route, navigation }: any) {
             style={{ marginBottom: SPACING.xs }}
           />
           <Text style={[styles.factText, { color: colors.text }]}>
-            {oneThingToKnow}
+            {parseBold(oneThingToKnow ?? '')}
           </Text>
         </View>
 

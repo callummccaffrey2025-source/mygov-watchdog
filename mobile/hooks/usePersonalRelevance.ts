@@ -1,6 +1,7 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from './useElectorateByPostcode';
+import { supabase } from '../lib/supabase';
 
 /**
  * Content relevance scoring engine.
@@ -216,10 +217,33 @@ export function usePersonalRelevance(profile: UserProfile) {
 export function useUserProfile(): UserProfile {
   const { user, postcode } = useUser();
   const { member, electorate } = useElectorateByPostcode(postcode);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [trackedIssues, setTrackedIssues] = useState<string[]>([]);
+  const [housingStatus, setHousingStatus] = useState<string | null>(null);
+  const [readTopics, setReadTopics] = useState<Record<string, number>>({});
 
-  // see BACKLOG.md "personalisation data loading"
-  // For now, use selectedTopics from AsyncStorage (set during onboarding)
-  // This will be enhanced when the onboarding migration is deployed
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('user_preferences')
+          .select('selected_topics, tracked_issues, housing_status, read_topics')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (!cancelled && data) {
+          setSelectedTopics(data.selected_topics ?? []);
+          setTrackedIssues(data.tracked_issues ?? []);
+          setHousingStatus(data.housing_status ?? null);
+          setReadTopics(data.read_topics ?? {});
+        }
+      } catch {
+        // Non-fatal — personalisation degrades gracefully
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   return useMemo(() => ({
     postcode,
@@ -227,11 +251,11 @@ export function useUserProfile(): UserProfile {
     state: electorate?.state ?? null,
     memberId: member?.id ?? null,
     memberName: member ? `${member.first_name} ${member.last_name}` : null,
-    selectedTopics: [], // loaded async — populated by caller
-    trackedIssues: [],  // loaded async — populated by caller
-    housingStatus: null,
-    readTopics: {},
-  }), [postcode, electorate, member]);
+    selectedTopics,
+    trackedIssues,
+    housingStatus,
+    readTopics,
+  }), [postcode, electorate, member, selectedTopics, trackedIssues, housingStatus, readTopics]);
 }
 
 /**

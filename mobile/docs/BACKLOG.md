@@ -104,8 +104,8 @@ Features cut from v1, planned for post-launch.
 | `email_domain_blocklist` (16 rows) | LOW | Used by verify-phone-send-otp. Keep while phone verification is mothballed. | Leave until phone verification re-enabled. |
 | Env var naming inconsistency | LOW | `TVFY_API_KEY` vs `THEYVOTEFORYOU_API_KEY` and `SUPABASE_KEY` vs `SUPABASE_SERVICE_ROLE_KEY` used interchangeably across 40+ scripts. Both work via fallback chains but inconsistent. | Standardize to `THEYVOTEFORYOU_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` everywhere. Mechanical find-replace. |
 | NewsScreen vs NewsScreenV2 | MEDIUM | Both exist. NewsScreen used as stack screen, NewsScreenV2 used as tab. Confusing. | Consolidate: rename NewsScreenV2 to NewsScreen, update all references. |
-| Personalisation data loading | MEDIUM | `usePersonalRelevance` returns empty `selectedTopics` and `trackedIssues`. Data exists in `user_preferences` but isn't loaded into the hook. | Load from `user_preferences` via Supabase query in the hook. |
-| Bold text parsing in daily brief | LOW | Daily brief bullets contain `**bold**` markdown that renders as literal asterisks. | Add a simple `parseBold()` function that splits on `**` and wraps in `<Text fontWeight='700'>`. |
+| ~~Personalisation data loading~~ | ~~MEDIUM~~ | ~~Resolved in Prompt 13. `useUserProfile()` now loads `selected_topics`, `tracked_issues`, `housing_status`, `read_topics` from `user_preferences`.~~ | Done |
+| ~~Bold text parsing in daily brief~~ | ~~LOW~~ | ~~Resolved in Prompt 13. `parseBold()` in `lib/parseBold.tsx` handles `**bold**` markdown. Applied to DailyBriefScreen.~~ | Done |
 | Electorate-specific news card | LOW | HomeScreen has a placeholder comment for a local news card filtered by electorate tags. `news_stories` doesn't have `electorate_tags` column yet. | Add column to news_stories, populate via ingestion, render card. |
 | House of Reps registered interests | LOW | `ingest_registered_interests.py` only covers Senate (API). House interests are PDF-only. Docstring says "Phase 2: House PDF parsing — TODO". | Build a PDF parser for House register. Low priority. |
 
