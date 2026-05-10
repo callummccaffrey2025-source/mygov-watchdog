@@ -62,13 +62,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  // BUG: References non-existent "users" table. Should be "user_preferences".
-  // Will fail at runtime. Needs fix before redeployment.
   if (type && PRO_EVENT_TYPES.includes(type)) {
     const { error } = await supabase
-      .from("users")
-      .update({ is_pro: true })
-      .eq("id", appUserId);
+      .from("user_preferences")
+      .update({ is_pro: true, updated_at: new Date().toISOString() })
+      .eq("user_id", appUserId);
 
     if (error) {
       console.error("RevenueCat webhook: update is_pro=true failed", error);
@@ -79,9 +77,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   } else if (type && REVOKE_PRO_EVENT_TYPES.includes(type)) {
     const { error } = await supabase
-      .from("users")
-      .update({ is_pro: false })
-      .eq("id", appUserId);
+      .from("user_preferences")
+      .update({ is_pro: false, updated_at: new Date().toISOString() })
+      .eq("user_id", appUserId);
 
     if (error) {
       console.error("RevenueCat webhook: update is_pro=false failed", error);

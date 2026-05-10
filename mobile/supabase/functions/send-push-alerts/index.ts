@@ -5,12 +5,9 @@
  * with politician name and bill title, finds followers of that politician,
  * and sends APNs push notifications to their registered devices.
  *
- * KNOWN ISSUES:
- * - References dropped "politicians" table (should use "members")
- * - References non-existent "user_push_tokens" table (should use "push_tokens")
- * - Uses raw APNs instead of Expo Push API (send-notification uses Expo Push)
- * - Requires APNS_KEY_ID, APNS_TEAM_ID, APNS_AUTH_KEY secrets (not in Vault)
- * - Largely superseded by send-notification which handles the same use case
+ * NOTE: Uses raw APNs (not Expo Push API). Requires APNS_KEY_ID, APNS_TEAM_ID,
+ * APNS_AUTH_KEY secrets in Vault. For Expo Push-based notifications, use
+ * send-notification instead.
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -108,7 +105,7 @@ async function getPoliticianName(
   politicianId: number
 ): Promise<string> {
   const { data, error } = await supabase
-    .from("politicians")
+    .from("members")
     .select("id, first_name, last_name")
     .eq("id", politicianId)
     .maybeSingle();
@@ -155,7 +152,7 @@ async function getFollowerUserIds(
   const { data, error } = await supabase
     .from("user_follows")
     .select("user_id")
-    .eq("entity_type", "politician")
+    .eq("entity_type", "member")
     .eq("entity_id", String(politicianId));
 
   if (error) {
@@ -172,8 +169,8 @@ async function getApnsTokens(
 ): Promise<string[]> {
   if (userIds.length === 0) return [];
   const { data, error } = await supabase
-    .from("user_push_tokens")
-    .select("apns_token")
+    .from("push_tokens")
+    .select("token")
     .in("user_id", userIds);
 
   if (error) {
@@ -181,7 +178,7 @@ async function getApnsTokens(
     throw new Error(`user_push_tokens fetch failed: ${error.message}`);
   }
   const tokens = (data ?? [])
-    .map((r: { apns_token: string }) => (r.apns_token ?? "").trim())
+    .map((r: { token: string }) => (r.token ?? "").trim())
     .filter(Boolean);
   return [...new Set(tokens)];
 }
