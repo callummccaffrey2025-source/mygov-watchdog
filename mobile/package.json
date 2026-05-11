@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "audit": "npm audit && npx expo-doctor && bash scripts/check_env.sh",
     "verify": "tsc --noEmit && npx expo-doctor",
-    "preflight": "bash scripts/preflight.sh"
+    "preflight": "bash scripts/preflight.sh",
+    "test": "jest"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
@@ -48,8 +49,24 @@
     "react-native-view-shot": "4.0.3"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.2.2",
+    "jest": "^29.7.0",
+    "jest-expo": "^55.0.17",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "jest": {
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@supabase/.*|react-native-url-polyfill|react-native-iap|react-native-mmkv|@shopify/flash-list)"
+    ],
+    "setupFilesAfterSetup": [
+      "@testing-library/react-native/extend-expect"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.{ts,tsx}"
+    ]
+  }
 }
