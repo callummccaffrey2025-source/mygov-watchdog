@@ -40,6 +40,7 @@ import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
 import { useLearnModules } from '../hooks/useLearnModules';
 import { usePersonalRelevance, useUserProfile } from '../hooks/usePersonalRelevance';
+import { usePollAggregate } from '../hooks/usePublishedPolls';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -137,6 +138,7 @@ export function HomeScreen({ navigation }: any) {
 
 
   const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
+  const { aggregate } = usePollAggregate(30);
 
   // ── Personalised news feed ──
   const filteredStories = filterPoliticalStories(newsStories);
@@ -854,6 +856,51 @@ export function HomeScreen({ navigation }: any) {
             </View>
             <SectionDivider />
           </>
+        )}
+
+        {/* ═══ 4c. LATEST POLLING ═══ */}
+        {aggregate && aggregate.tpp_alp != null && aggregate.tpp_lnp != null && (
+          <Pressable
+            onPress={() => navigation.navigate('Polls')}
+            style={({ pressed }) => ({
+              marginHorizontal: 20,
+              marginTop: SPACING.lg,
+              padding: SPACING.lg,
+              backgroundColor: colors.card,
+              borderRadius: BORDER_RADIUS.lg,
+              opacity: pressed ? 0.92 : 1,
+              ...SHADOWS.sm,
+            })}
+            accessibilityLabel="View latest polling"
+            accessibilityRole="button"
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm }}>
+              <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold, color: colors.textMuted, letterSpacing: 0.5 }}>
+                LATEST FEDERAL POLLING
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 16 }}>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ fontSize: 28, fontWeight: FONT_WEIGHT.bold, color: '#E53935' }}>{Number(aggregate.tpp_alp).toFixed(1)}%</Text>
+                <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>ALP</Text>
+              </View>
+              <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>vs</Text>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ fontSize: 28, fontWeight: FONT_WEIGHT.bold, color: '#1565C0' }}>{Number(aggregate.tpp_lnp).toFixed(1)}%</Text>
+                <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>L/NP</Text>
+              </View>
+              <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
+                  {aggregate.poll_count} polls, 30-day avg
+                </Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: SPACING.sm }}>
+              <View style={{ flex: Number(aggregate.tpp_alp), backgroundColor: '#E53935' }} />
+              <View style={{ flex: Number(aggregate.tpp_lnp), backgroundColor: '#1565C0' }} />
+            </View>
+          </Pressable>
         )}
 
         {/* ═══ 5. NEWS — PERSONAL FEED ═══ */}
