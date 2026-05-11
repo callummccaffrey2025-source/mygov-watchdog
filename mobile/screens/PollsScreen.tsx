@@ -12,6 +12,7 @@ import { hapticLight } from '../lib/haptics';
 import { track } from '../lib/analytics';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { usePublishedPolls, usePollAggregate, usePollsters, PublishedPoll } from '../hooks/usePublishedPolls';
+import { PollTrendChart } from '../components/PollTrendChart';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { timeAgo } from '../lib/timeAgo';
 
@@ -550,6 +551,29 @@ export function PollsScreen({ navigation }: any) {
               )}
             </View>
           ) : null}
+
+          {/* Trend chart */}
+          {publishedPolls.length >= 2 && (
+            <View style={{
+              backgroundColor: colors.card,
+              borderRadius: BORDER_RADIUS.lg,
+              padding: SPACING.md,
+              marginBottom: SPACING.lg,
+              ...SHADOWS.sm,
+            }}>
+              <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.bold as any, color: colors.text, marginBottom: SPACING.xs }}>
+                Two-Party Preferred Trend
+              </Text>
+              <PollTrendChart
+                data={publishedPolls.map(p => ({
+                  date: p.publish_date,
+                  tpp_alp: p.tpp_alp,
+                  tpp_lnp: p.tpp_lnp,
+                  pollster: p.pollster,
+                }))}
+              />
+            </View>
+          )}
 
           {/* Pollster filter chips */}
           {pollsters.length > 0 && (
