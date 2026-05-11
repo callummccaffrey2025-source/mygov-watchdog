@@ -81,6 +81,7 @@ function HomeTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
+        lazy: true,
         animation: 'fade' as const,
         tabBarActiveTintColor: '#00843D',
         tabBarInactiveTintColor: colors.textMuted,

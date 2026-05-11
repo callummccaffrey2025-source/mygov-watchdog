@@ -17,7 +17,7 @@ interface Props {
   onPress: () => void;
 }
 
-export function EnhancedStoryCard({ story, onPress }: Props) {
+export const EnhancedStoryCard = React.memo(function EnhancedStoryCard({ story, onPress }: Props) {
   const { colors } = useTheme();
   const total = story.left_count + story.center_count + story.right_count;
 
@@ -67,6 +67,9 @@ export function EnhancedStoryCard({ story, onPress }: Props) {
         {story.image_url && (
           <ExpoImage
             source={{ uri: story.image_url }}
+            contentFit="cover"
+            transition={200}
+            placeholder={{ blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
             style={{ width: 72, height: 72, borderRadius: 10, backgroundColor: '#F3F4F6' }}
           />
         )}
@@ -125,4 +128,4 @@ export function EnhancedStoryCard({ story, onPress }: Props) {
       )}
     </Pressable>
   );
-}
+});
