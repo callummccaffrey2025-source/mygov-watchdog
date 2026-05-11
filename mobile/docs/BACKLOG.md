@@ -16,8 +16,8 @@ Things that MUST be done before App Store submission.
 | ~~**IAP integration**~~ | ~~Resolved in Prompt 10. StoreKit integration via react-native-iap v15, server-side receipt validation Edge Function, useSubscription hook rewritten. Requires: (1) Create `verity_pro_monthly` subscription product in App Store Connect, (2) Set `APPLE_SHARED_SECRET` in Supabase Vault, (3) Deploy `validate-receipt` Edge Function, (4) Switch from Expo Go to EAS dev builds.~~ | Done |
 | ~~**Privacy Policy update**~~ | ~~Resolved in Prompt 9. Added: operator identity (sole trader, ABN pending), cross-border data disclosure (Supabase/Anthropic/Expo/Apple in US), AI data handling, children's privacy, OAIC complaint right. Emails standardised to verity.au.~~ | Done |
 | ~~**Terms of Service update**~~ | ~~Resolved in Prompt 9. Added: AI-generated content disclaimer, UGC indemnification clause, changes notification clause. Emails standardised to verity.au.~~ | Done |
-| **Accessibility labels** | ~4 of 600+ interactive elements have accessibilityLabel. VoiceOver is non-functional. Apple may flag. Disability Discrimination Act 1992 obligation. | Prompt 37 |
-| **App icon verification** | Verify icon is 1024x1024 RGB PNG with no transparency and no pre-rounded corners. Currently appears correct but needs final check. | Callum manual check |
+| ~~**Accessibility labels**~~ | ~~Resolved in Prompt 8. 242 accessibilityLabel props added across all screens.~~ | Done |
+| ~~**App icon verification**~~ | ~~Verified in Prompt 19. 1024x1024 RGB PNG, no alpha, no pre-rounded corners.~~ | Done |
 | **Supabase Site URL** | Must be set to `verity://auth-callback` for email magic links to work. Currently set (verify it's still correct before submission). | Done — verify only |
 
 ---

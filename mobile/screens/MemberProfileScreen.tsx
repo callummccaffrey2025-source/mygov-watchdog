@@ -25,6 +25,7 @@ import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
 import { useAccountabilityScore, useParticipationIndex } from '../hooks/useAccountabilityScore';
 import { useRegisteredInterests } from '../hooks/useRegisteredInterests';
+import { getIndustryLabel, getIndustryColor } from '../constants/industryColors';
 import { useContradictions } from '../hooks/useContradictions';
 import { ContradictionCard } from '../components/ContradictionCard';
 import { RebellionCard } from '../components/RebellionCard';
@@ -830,57 +831,40 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
                 {/* ── Donation vs Voting Analysis ── */}
                 {(() => {
-                  const INDUSTRY_KEYWORDS: Record<string, string[]> = {
-                    'Mining & Resources': ['mining', 'bhp', 'rio tinto', 'fortescue', 'woodside', 'santos', 'mineral', 'resources', 'coal', 'iron ore'],
-                    'Property & Construction': ['property', 'construction', 'real estate', 'developer', 'lendlease', 'stockland', 'mirvac', 'housing', 'building'],
-                    'Banking & Finance': ['bank', 'financial', 'westpac', 'commonwealth bank', 'anz', 'nab', 'macquarie', 'insurance', 'asx'],
-                    'Unions': ['union', 'awu', 'cfmeu', 'sda', 'hsu', 'nurses', 'teachers', 'workers', 'actu', 'amwu'],
-                    'Pharmaceuticals & Health': ['pharma', 'medical', 'health', 'pfizer', 'csl', 'hospital', 'therapeutic'],
-                    'Technology': ['technology', 'tech', 'software', 'digital', 'data', 'cyber', 'telstra', 'optus'],
-                    'Energy': ['energy', 'gas', 'oil', 'solar', 'wind', 'agl', 'origin energy', 'electricity'],
-                    'Agriculture': ['agriculture', 'farm', 'cattle', 'grain', 'dairy', 'pastoral', 'national farmers'],
-                    'Gambling': ['gambling', 'wagering', 'crown', 'star', 'tabcorp', 'sportsbet', 'gaming'],
-                    'Media': ['media', 'news corp', 'nine', 'seven', 'foxtel', 'broadcast'],
-                  };
-
                   const VOTE_KEYWORDS: Record<string, string[]> = {
-                    'Mining & Resources': ['mining', 'mineral', 'resources', 'coal', 'gas', 'petroleum', 'offshore'],
-                    'Property & Construction': ['housing', 'property', 'construction', 'planning', 'building', 'rent', 'home'],
-                    'Banking & Finance': ['banking', 'financial', 'credit', 'superannuation', 'insurance', 'prudential'],
-                    'Unions': ['workplace', 'industrial', 'fair work', 'employment', 'worker', 'bargaining'],
-                    'Pharmaceuticals & Health': ['health', 'medical', 'pharmaceutical', 'therapeutic', 'medicare', 'hospital'],
-                    'Technology': ['technology', 'digital', 'cyber', 'data', 'telecom', 'broadband', 'online'],
-                    'Energy': ['energy', 'electricity', 'renewable', 'emissions', 'carbon', 'climate'],
-                    'Agriculture': ['agriculture', 'farm', 'rural', 'water', 'drought', 'biosecurity'],
-                    'Gambling': ['gambling', 'wagering', 'gaming', 'betting'],
-                    'Media': ['media', 'broadcast', 'press', 'journalism'],
+                    mining: ['mining', 'mineral', 'resources', 'coal', 'gas', 'petroleum', 'offshore'],
+                    property: ['housing', 'property', 'construction', 'planning', 'building', 'rent', 'home'],
+                    finance: ['banking', 'financial', 'credit', 'superannuation', 'insurance', 'prudential'],
+                    unions: ['workplace', 'industrial', 'fair work', 'employment', 'worker', 'bargaining'],
+                    pharmacy: ['health', 'medical', 'pharmaceutical', 'therapeutic', 'medicare', 'hospital'],
+                    health: ['health', 'medical', 'hospital', 'medicare'],
+                    tech: ['technology', 'digital', 'cyber', 'data', 'telecom', 'broadband', 'online'],
+                    telecom: ['technology', 'digital', 'telecom', 'broadband', 'online'],
+                    energy: ['energy', 'electricity', 'renewable', 'emissions', 'carbon', 'climate'],
+                    fossil_fuels: ['energy', 'gas', 'petroleum', 'offshore', 'emissions'],
+                    agriculture: ['agriculture', 'farm', 'rural', 'water', 'drought', 'biosecurity'],
+                    gambling: ['gambling', 'wagering', 'gaming', 'betting'],
+                    media: ['media', 'broadcast', 'press', 'journalism'],
+                    defence: ['defence', 'military', 'security', 'veteran'],
+                    transport: ['transport', 'aviation', 'shipping', 'freight', 'infrastructure'],
+                    education: ['education', 'university', 'school', 'training'],
+                    retail: ['consumer', 'retail', 'competition'],
                   };
 
                   const donorSource = indDonations.length > 0 ? indDonations : donations;
-                  const donorAgg = new Map<string, { amount: number; type: string | null }>();
+                  const donorAgg = new Map<string, { amount: number; industry: string | null }>();
                   for (const d of donorSource) {
                     const existing = donorAgg.get(d.donor_name);
                     donorAgg.set(d.donor_name, {
                       amount: (existing?.amount ?? 0) + Number(d.amount),
-                      type: d.donor_type ?? existing?.type ?? null,
+                      industry: d.industry ?? existing?.industry ?? null,
                     });
                   }
                   const topDonorsWithIndustry = Array.from(donorAgg.entries())
                     .sort((a, b) => b[1].amount - a[1].amount)
                     .slice(0, 5)
-                    .map(([name, { amount, type }]) => {
-                      const nameLower = name.toLowerCase();
-                      let industry: string | null = null;
-                      for (const [ind, keywords] of Object.entries(INDUSTRY_KEYWORDS)) {
-                        if (keywords.some(kw => nameLower.includes(kw))) {
-                          industry = ind;
-                          break;
-                        }
-                      }
-                      if (!industry && type === 'union') industry = 'Unions';
-                      return { name, amount, industry };
-                    })
-                    .filter(d => d.industry);
+                    .map(([name, { amount, industry }]) => ({ name, amount, industry }))
+                    .filter(d => d.industry && d.industry !== 'individual' && d.industry !== 'unidentified');
 
                   if (topDonorsWithIndustry.length === 0) return null;
 
@@ -919,8 +903,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
                                 <Text style={{ fontSize: 15, fontWeight: '600', color: colors.text }} numberOfLines={1}>{donor.name}</Text>
                                 {donor.industry && (
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
-                                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#4338CA' }} />
-                                    <Text style={{ fontSize: 12, color: '#6B7280' }}>{donor.industry}</Text>
+                                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: getIndustryColor(donor.industry) }} />
+                                    <Text style={{ fontSize: 12, color: '#6B7280' }}>{getIndustryLabel(donor.industry)}</Text>
                                   </View>
                                 )}
                               </View>
@@ -931,7 +915,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                                 <Text style={{ fontSize: 13, color: '#4338CA', lineHeight: 18 }}>
                                   Voted <Text style={{ fontWeight: '700', color: '#059669' }}>YES</Text> on {iv.aye} and{' '}
                                   <Text style={{ fontWeight: '700', color: '#DC2626' }}>NO</Text> on {iv.no}{' '}
-                                  {donor.industry?.toLowerCase()}-related bill{iv.aye + iv.no !== 1 ? 's' : ''}
+                                  {getIndustryLabel(donor.industry).toLowerCase()}-related bill{iv.aye + iv.no !== 1 ? 's' : ''}
                                 </Text>
                               </View>
                             ) : (
@@ -951,7 +935,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             .filter(d => d.industry === topDonor.industry)
                             .reduce((s, d) => s + d.amount, 0);
                           Share.share({
-                            message: `${displayName} received $${totalFromIndustry.toLocaleString('en-AU')} from ${topDonor.industry}. See how they voted on related legislation.\n\nTrack every MP's donors and votes on Verity — verity.run`,
+                            message: `${displayName} received $${totalFromIndustry.toLocaleString('en-AU')} from ${getIndustryLabel(topDonor.industry)}. See how they voted on related legislation.\n\nTrack every MP's donors and votes on Verity — verity.run`,
                           });
                         }}
                       >

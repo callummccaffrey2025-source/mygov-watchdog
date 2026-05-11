@@ -5,6 +5,7 @@ export interface Donation {
   id: string;
   donor_name: string;
   donor_type: 'individual' | 'organisation' | 'union' | 'corporation';
+  industry: string | null;
   amount: number;
   financial_year: string;
   party_id: string | null;
@@ -31,7 +32,7 @@ export function usePartyDonations(partyId: string | undefined) {
       try {
         const { data } = await supabase
           .from('donations')
-          .select('id,donor_name,donor_type,amount,financial_year,party_id')
+          .select('id,donor_name,donor_type,industry,amount,financial_year,party_id')
           .eq('party_id', partyId)
           .order('amount', { ascending: false })
           .limit(20);
