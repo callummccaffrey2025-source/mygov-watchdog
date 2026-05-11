@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { getCached, setCached } from '../lib/cache';
+import { withRetry } from '../lib/retry';
 
 export interface NewsStory {
   id: number;
@@ -22,8 +24,17 @@ export function useNewsStories(leaning?: string, category?: string, search?: str
   const [stories, setStories] = useState<NewsStory[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const cacheKey = `news_stories_${leaning ?? 'all'}_${category ?? 'all'}_${search ?? ''}_${limit ?? 50}`;
+
   const fetch = useCallback(async () => {
     setLoading(true);
+
+    // Show cached data immediately
+    if (!search) {
+      const cached = await getCached<NewsStory[]>(cacheKey);
+      if (cached) setStories(cached);
+    }
+
     let query = supabase
       .from('v_civic_news_stories')
       .select('*')
@@ -49,10 +60,16 @@ export function useNewsStories(leaning?: string, category?: string, search?: str
     }
 
     try {
-      const { data } = await query;
-      setStories((data as NewsStory[]) || []);
+      const { data } = await withRetry(async () => {
+        const res = await query;
+        if (res.error) throw new Error(res.error.message);
+        return res;
+      }, { maxAttempts: 2 });
+      const result = (data as NewsStory[]) || [];
+      setStories(result);
+      if (!search && result.length > 0) setCached(cacheKey, result);
     } catch {
-      // Network/Supabase failure — show empty state instead of infinite loading
+      // Network/Supabase failure — cached data already shown if available
     }
     setLoading(false);
   }, [leaning, category, search, limit]);
