@@ -52,13 +52,22 @@
 - seed_party_policies_manual.py
 - seed_councils.py
 - refresh_all.sh
+- **ScrapeGraphAI scripts** (LLM-powered, uses `pip install scrapegraphai`):
+  - scrape_media_scrapegraph.py — ministerial media releases (replaces selector-based scraper)
+  - scrape_aph_members.py — backfills missing aph_id by searching APH per member
+  - scrape_party_policies.py — scrapes real party platform pages (Labor/Liberal/Greens/Nationals/One Nation)
+  - scrape_mbfc_bulk.py — bulk Media Bias Fact Check rating import
+  - scrape_news_bias.py — per-source MBFC lookup
+  - scrape_electorate_news.py — Google News RSS per electorate for local feed
+  - scrape_state_parliaments.py — VIC/QLD/WA/SA/TAS members + bills (needs non-SPA sources)
+  - scrape_house_interests.py — House registered interests from APH PDFs
 
 ## Known Issues
 - APH OpenData API returns 404 — replaced with direct HTML scraping of APH bill pages (ingest_federal_bills.py)
 - Gear icon on every screen is Expo Go dev overlay — disappears in production builds
 - NewsAPI free tier doesn't index Australian paywalled outlets — Google News RSS fills that gap
 - Registered interests (APH) are PDF-only and APH URLs restructured — not yet ingested
-- 77 members have no aph_id (new 2025 entrants not matched by name fuzzy match)
+- 39 members have no aph_id (down from 77; `scrape_aph_members.py` backfilled 15+ via ScrapeGraphAI)
 
 ## Development Rules
 - NEVER fabricate MP quotes, votes, or data — real data only
@@ -97,7 +106,7 @@
 - **Universal search**: ExploreScreen now searches MPs + bills + parties + news stories simultaneously with grouped results
 - **Bookmark system**: `useSave()` hook + bookmark icons on NewsStoryDetailScreen header. Table: `user_saves`
 - **Notification deep links**: Bill, member, news story, AND DailyBrief all supported from push notifications
-- News source bias database: 41 sources with bias_score/factuality/owner covering 77% of articles. Coverage bars and factuality badges powered by real metadata
+- News source bias database: 63 sources with bias_score/factuality/owner. Coverage bars and factuality badges powered by real metadata. Bulk MBFC scraper: `scripts/scrape_mbfc_bulk.py`
 - Sub-agents: `.claude/agents/design-enforcer.md`, `data-auditor.md`, `perf-optimizer.md`
 
 ## AI Features (LIVE)
@@ -138,10 +147,9 @@
 - 4,851 government contracts ($8.6B) from AusTender OCDS API, 87% mapped to electorates
 
 ## Current Priorities (in order)
-1. App Store submission — icon needs re-export as RGB (no transparency/pre-rounded corners); ascAppId + appleTeamId missing in eas.json
+1. App Store submission — icon is valid (1024x1024 RGB, no alpha), eas.json has ascAppId + appleTeamId. Ready to submit via `eas submit`.
 2. Top up Anthropic API credits → re-run `scripts/_backfill_metrics.py` to populate AI summaries for 33 eligible stories
-3. Create Supabase tables: `user_saves`, `user_reads`, `user_notifications` (hooks are ready, tables needed)
-4. Push notifications: test DailyBrief deep link end-to-end
+3. Push notifications: test DailyBrief deep link end-to-end
 
 ## gstack
 - Use the `/browse` skill from gstack for all web browsing. Never use mcp__claude-in-chrome__* tools.

@@ -120,6 +120,48 @@ def article_exists(sb, url: str) -> bool:
         return False
 
 
+def resolve_source_id(sb, source_name: str, _cache: dict = {}) -> int | None:
+    """Look up or create a news_sources row, return its id. Cached per run."""
+    if not source_name:
+        return None
+    if source_name in _cache:
+        return _cache[source_name]
+
+    # Try exact match
+    try:
+        r = sb.table("news_sources").select("id").eq("name", source_name).limit(1).execute()
+        if r.data:
+            _cache[source_name] = r.data[0]["id"]
+            return _cache[source_name]
+    except Exception:
+        pass
+
+    # Try fuzzy match (name contains)
+    try:
+        r = sb.table("news_sources").select("id,name").ilike("name", f"%{source_name}%").limit(1).execute()
+        if r.data:
+            _cache[source_name] = r.data[0]["id"]
+            return _cache[source_name]
+    except Exception:
+        pass
+
+    # Create new source
+    try:
+        slug = source_name.lower().replace(" ", "-").replace("'", "")
+        r = sb.table("news_sources").insert({
+            "name": source_name,
+            "slug": slug[:50],
+            "ingest_enabled": False,
+        }).execute()
+        if r.data:
+            _cache[source_name] = r.data[0]["id"]
+            return _cache[source_name]
+    except Exception as e:
+        log.warning("Could not create source '%s': %s", source_name, e)
+
+    return None
+
+
 def main():
     dry_run = "--dry-run" in sys.argv
     limit = 10
@@ -173,12 +215,19 @@ def main():
             if not dry_run and article_exists(sb, url):
                 continue
 
+            source_name = (article.get("source") or "").strip()
+            source_id = resolve_source_id(sb, source_name) if source_name else None
+            if not source_id:
+                log.info("Skipping article (no source): %s", title[:50])
+                continue
+
             row = {
+                "source_id": source_id,
                 "title": title[:500],
                 "url": url,
-                "source_name": article.get("source", ""),
-                "published_at": article.get("date"),
-                "description": article.get("summary", "")[:1000],
+                "source_name": source_name,
+                "published_at": article.get("date") or None,
+                "description": (article.get("summary") or "")[:1000],
                 "electorate_id": electorate["id"],
                 "is_local": True,
             }
