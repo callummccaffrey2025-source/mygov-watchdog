@@ -23,6 +23,12 @@ try:
 except ImportError:
     _ANTHROPIC_AVAILABLE = False
 
+try:
+    import trafilatura
+    _TRAFILATURA_AVAILABLE = True
+except ImportError:
+    _TRAFILATURA_AVAILABLE = False
+
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
@@ -1173,6 +1179,58 @@ def recompute_civic_article_counts(sb, story_ids: set) -> None:
             log.warning("Failed to recompute civic_article_count for story %s: %s", sid, e)
 
 
+def backfill_full_text(sb, limit: int = 100) -> None:
+    """
+    Extract full article text via trafilatura for articles missing full_text.
+    Runs as a post-processing step — non-blocking to main ingestion.
+    """
+    if not _TRAFILATURA_AVAILABLE:
+        log.info("trafilatura not installed — skipping full text extraction")
+        return
+
+    rows = (
+        sb.table("news_articles")
+        .select("id, url")
+        .is_("full_text", "null")
+        .order("created_at", desc=True)
+        .limit(limit)
+        .execute()
+    ).data or []
+
+    if not rows:
+        log.info("No articles need full text extraction.")
+        return
+
+    log.info("Extracting full text for %d articles …", len(rows))
+    extracted = 0
+    failed = 0
+
+    for row in rows:
+        try:
+            downloaded = trafilatura.fetch_url(row["url"])
+            if not downloaded:
+                failed += 1
+                continue
+            text = trafilatura.extract(
+                downloaded,
+                include_comments=False,
+                include_tables=False,
+                no_fallback=False,
+            )
+            if text and len(text) > 100:
+                sb.table("news_articles").update(
+                    {"full_text": text[:10000]}
+                ).eq("id", row["id"]).execute()
+                extracted += 1
+            else:
+                failed += 1
+        except Exception as e:
+            log.warning("  Failed to extract %s: %s", row["url"][:60], e)
+            failed += 1
+
+    log.info("Full text extraction: %d extracted, %d failed", extracted, failed)
+
+
 def main():
     fresh = "--fresh" in sys.argv
     sb = get_supabase()
@@ -1377,6 +1435,10 @@ def main():
     # Compute story metrics (blindspot, factuality, AI summary) after ingestion
     if "--no-metrics" not in sys.argv:
         backfill_story_metrics(sb, limit=60)
+
+    # Extract full article text for AI summaries (trafilatura)
+    if "--no-fulltext" not in sys.argv:
+        backfill_full_text(sb, limit=100)
 
 
 if __name__ == "__main__":
