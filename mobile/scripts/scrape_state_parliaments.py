@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
 """
-scrape_state_parliaments.py — LLM-powered state parliament scraper using ScrapeGraphAI.
+scrape_state_parliaments.py — State parliament data ingestion via APIs and data feeds.
 
-Expands beyond NSW to VIC, QLD, WA, SA, TAS parliaments.
-Extracts members and recent bills, writes to state_members and state_bills tables.
+Uses real machine-readable sources (JSON APIs, XLSX downloads) instead of
+scraping JS-rendered SPAs. ScrapeGraphAI failed on all state parliament sites.
+
+Sources:
+  WA — Lotus Notes JSON endpoint (no auth, live)
+  SA — Hansard Public API (no auth, live)
+  TAS — XLSX mail merge download (no auth)
+  QLD — Open Data API (requires registration)
+  VIC — No working data source found
+
+Writes to: state_members, state_bills tables
 
 Run:
-  python scripts/scrape_state_parliaments.py [--dry-run] [--state VIC]
+  python scripts/scrape_state_parliaments.py [--dry-run] [--state WA]
 """
 import os
 import sys
+import re
 import json
 import logging
+import tempfile
 
+import requests
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env'))
 
@@ -21,117 +33,254 @@ from supabase import create_client
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
-try:
-    from scrapegraphai.graphs import SmartScraperGraph
-except ImportError:
-    sys.exit("ERROR: pip install scrapegraphai playwright && playwright install chromium")
+
+# ── WA: Lotus Notes JSON ─────────────────────────────────────────────────────
+
+WA_MEMBERS_URL = "https://www.parliament.wa.gov.au/parliament/memblist.nsf/WAllMembers?ReadViewEntries&outputformat=JSON"
+
+def parse_wa_html_field(html: str) -> dict:
+    """Parse the embedded HTML in WA Lotus Notes JSON entries."""
+    result = {}
+
+    # Full name: e.g. ">Hon  Klara <b>ANDRIC</b></a>  MLC"
+    # or ">Mr Stuart <b>AUBREY</b></a>  MLA"
+    name_match = re.search(
+        r">(?:Hon|Mr|Mrs|Ms|Dr)?\s*(\w[\w\s\-]*?)\s*<b>(\w+)</b></a>\s*(ML[AC])",
+        html, re.I
+    )
+    if name_match:
+        first = name_match.group(1).strip().title()
+        last = name_match.group(2).strip().title()
+        result["name"] = f"{first} {last}"
+        result["first_name"] = first
+        result["last_name"] = last
+        chamber_code = name_match.group(3).upper()
+        result["chamber"] = "Legislative Assembly" if chamber_code == "MLA" else "Legislative Council"
+
+    # Party: "Party: ALP"
+    party_match = re.search(r"Party:\s*(ALP|LIB|NAT|GRN|IND|SFF|ON|LNP|ONWA)", html)
+    if party_match:
+        party_map = {
+            "ALP": "Australian Labor Party", "LIB": "Liberal Party",
+            "NAT": "Nationals WA", "GRN": "The Greens (WA)",
+            "IND": "Independent", "SFF": "Shooters, Fishers and Farmers",
+            "ON": "One Nation", "ONWA": "One Nation", "LNP": "Liberal National Party",
+        }
+        result["party"] = party_map.get(party_match.group(1), party_match.group(1))
+
+    # Electorate: in the third <td>, inside an <a> tag
+    # Pattern: profiles-2025-scarborough-2025" >Scarborough</a>
+    electorate_match = re.search(r'electorate-profiles[^"]*"\s*>([^<]+)</a>', html)
+    if electorate_match:
+        result["electorate"] = electorate_match.group(1).strip()
+
+    # Photo URL
+    photo_match = re.search(r'src\s*=\s*"(/parliament/memblist\.nsf/[^"]+)"', html)
+    if photo_match:
+        result["photo_url"] = f"https://www.parliament.wa.gov.au{photo_match.group(1)}"
+
+    # Email
+    email_match = re.search(r'mailto:([^"]+)', html)
+    if email_match:
+        result["email"] = email_match.group(1).strip()
+
+    # Phone
+    phone_match = re.search(r"Ph:\s*([\d\s\(\)]+)", html)
+    if phone_match:
+        result["phone"] = phone_match.group(1).strip()
+
+    return result
 
 
-GRAPH_CONFIG = {
-    "llm": {
-        "model": "anthropic/claude-haiku-4-5-20251001",
-        "api_key": os.environ.get("ANTHROPIC_API_KEY", ""),
-    },
-    "verbose": False,
-    "headless": True,
-    "browser_config": {
-        "wait_until": "networkidle",
-        "timeout": 60000,
-    },
-}
-
-# State parliament data sources — prefer open data/APIs over SPA scraping
-# Many state parliaments have JS-rendered pages that return empty HTML.
-# Wikipedia lists are a reliable fallback with structured data.
-STATES = {
-    "VIC": {
-        "name": "Victoria",
-        "members_url": "https://en.wikipedia.org/wiki/Members_of_the_59th_Victorian_Parliament",
-        "bills_url": "https://www.legislation.vic.gov.au/bills",
-    },
-    "QLD": {
-        "name": "Queensland",
-        "members_url": "https://en.wikipedia.org/wiki/Members_of_the_58th_Queensland_Parliament",
-        "bills_url": "https://www.legislation.qld.gov.au/browse/inprogress",
-    },
-    "WA": {
-        "name": "Western Australia",
-        "members_url": "https://en.wikipedia.org/wiki/Members_of_the_41st_Parliament_of_Western_Australia",
-        "bills_url": "https://www.parliament.wa.gov.au/parliament/bills.nsf/BillProgressPopup?OpenForm",
-    },
-    "SA": {
-        "name": "South Australia",
-        "members_url": "https://en.wikipedia.org/wiki/Members_of_the_55th_South_Australian_Parliament",
-        "bills_url": "https://www.parliament.sa.gov.au/legislation/bills",
-    },
-    "TAS": {
-        "name": "Tasmania",
-        "members_url": "https://en.wikipedia.org/wiki/Members_of_the_50th_Tasmanian_Parliament",
-        "bills_url": "https://www.parliament.tas.gov.au/ParliamentSearch?type=Bill",
-    },
-}
-
-MEMBERS_PROMPT = """
-Extract all current members of parliament from this page.
-For each member return:
-- name: full name
-- electorate: their electorate/district/region
-- party: their political party
-- chamber: "Lower House" or "Upper House" (or "Legislative Assembly" / "Legislative Council")
-- photo_url: URL to their photo if available, or null
-
-Return as a JSON array. Only include current sitting members.
-"""
-
-BILLS_PROMPT = """
-Extract the 10 most recent bills from this page.
-For each bill return:
-- title: the bill's full title
-- status: current status (e.g. "Introduced", "Second Reading", "Passed", "Royal Assent")
-- date_introduced: date introduced in ISO format (YYYY-MM-DD), or null
-- chamber: which chamber it was introduced in, or null
-- url: link to the bill's detail page if available, or null
-
-Return as a JSON array. Only include actual bills, not navigation links.
-"""
-
-
-def extract_members(url: str) -> list[dict]:
-    """Extract member list from a state parliament page."""
+def fetch_wa_members() -> list[dict]:
+    """Fetch WA parliament members from Lotus Notes JSON endpoint."""
     try:
-        scraper = SmartScraperGraph(
-            prompt=MEMBERS_PROMPT, source=url, config=GRAPH_CONFIG
-        )
-        result = scraper.run()
-        if isinstance(result, dict):
-            for key in ("content", "members", "results", "data"):
-                if key in result and isinstance(result[key], list):
-                    return [m for m in result[key] if isinstance(m, dict) and m.get("name")]
-        if isinstance(result, list):
-            return [m for m in result if isinstance(m, dict) and m.get("name")]
-        return []
+        resp = requests.get(WA_MEMBERS_URL, timeout=30, headers={
+            "User-Agent": "VerityBot/1.0 (+https://verity.run/bot)"
+        })
+        resp.raise_for_status()
+        text = resp.text
+
+        # Lotus Notes JSON can be malformed — try to fix common issues
+        # Remove BOM if present
+        if text.startswith('\ufeff'):
+            text = text[1:]
+
+        data = json.loads(text)
+        entries = data.get("viewentry", [])
+
+        members = []
+        for entry in entries:
+            # Each entry has entrydata with embedded HTML
+            entry_data = entry.get("entrydata", [])
+            if not entry_data:
+                continue
+
+            html = ""
+            for ed in entry_data:
+                if "text" in ed:
+                    val = ed["text"]
+                    if isinstance(val, dict) and "0" in val:
+                        html += val["0"]
+                    elif isinstance(val, str):
+                        html += val
+
+            if not html:
+                continue
+
+            parsed = parse_wa_html_field(html)
+            if parsed.get("name"):
+                # Determine chamber from entry position or default
+                members.append(parsed)
+
+        return members
     except Exception as e:
-        log.error("Members extraction failed for %s: %s", url, e)
+        log.error("WA fetch failed: %s", e)
         return []
 
 
-def extract_bills(url: str) -> list[dict]:
-    """Extract recent bills from a state parliament page."""
+# ── SA: Hansard Public API ────────────────────────────────────────────────────
+
+SA_HANSARD_BASE = "https://hansardsearch.parliament.sa.gov.au"
+
+def fetch_sa_members() -> list[dict]:
+    """Fetch SA parliament members from Hansard API.
+
+    The indices/members endpoint only has data for parliaments with hansard
+    records. We try the most recent parliaments until we find one with data.
+    """
+    members = []
+
+    # Find the latest parliament with hansard data
     try:
-        scraper = SmartScraperGraph(
-            prompt=BILLS_PROMPT, source=url, config=GRAPH_CONFIG
-        )
-        result = scraper.run()
-        if isinstance(result, dict):
-            for key in ("content", "bills", "results", "data"):
-                if key in result and isinstance(result[key], list):
-                    return [b for b in result[key] if isinstance(b, dict) and b.get("title")]
-        if isinstance(result, list):
-            return [b for b in result if isinstance(b, dict) and b.get("title")]
-        return []
+        resp = requests.get(f"{SA_HANSARD_BASE}/api/hansard/parliaments", timeout=15)
+        resp.raise_for_status()
+        all_parls = resp.json()
+        # Sort by number descending to find the latest
+        all_parls.sort(key=lambda p: p.get("number", 0), reverse=True)
     except Exception as e:
-        log.error("Bills extraction failed for %s: %s", url, e)
+        log.error("SA parliaments list failed: %s", e)
         return []
+
+    for parl in all_parls[:5]:  # Try the 5 most recent
+        parl_num = parl["number"]
+        sessions = parl.get("sessions", [])
+        if not sessions:
+            continue
+        latest_sess = max(sessions, key=lambda s: s.get("number", 0))
+        sess_num = latest_sess["number"]
+
+        for house_code, chamber in [("lh", "House of Assembly"), ("uh", "Legislative Council")]:
+            try:
+                url = f"{SA_HANSARD_BASE}/api/hansard/indicies/{house_code}/{parl_num}/{sess_num}/members"
+                resp = requests.get(url, timeout=10)
+                if resp.status_code != 200:
+                    continue
+                data = resp.json()
+                if not isinstance(data, list) or len(data) < 5:
+                    continue
+
+                log.info("SA P%d/S%d/%s: %d members", parl_num, sess_num, house_code, len(data))
+
+                for item in data:
+                    name = item.get("name", "").strip()
+                    if not name:
+                        continue
+                    # Parse "LASTNAME, Firstname" format
+                    parts = name.split(",", 1)
+                    if len(parts) == 2:
+                        last = parts[0].strip().title()
+                        first = parts[1].strip().title()
+                        display_name = f"{first} {last}"
+                    else:
+                        display_name = name.title()
+                        first, last = "", ""
+
+                    members.append({
+                        "name": display_name,
+                        "first_name": first,
+                        "last_name": last,
+                        "chamber": chamber,
+                        "party": item.get("party", ""),
+                        "electorate": item.get("electorate", ""),
+                    })
+            except Exception:
+                continue
+
+        if members:
+            break  # Found a parliament with data
+
+    return members
+
+
+# ── TAS: XLSX download ────────────────────────────────────────────────────────
+
+TAS_LC_XLSX = "https://www.parliament.tas.gov.au/__data/assets/excel_doc/0015/94002/Mail-Merge-as-at-13-October-2025.xlsx"
+
+def fetch_tas_members() -> list[dict]:
+    """Fetch TAS Legislative Council members from XLSX download."""
+    try:
+        import openpyxl
+    except ImportError:
+        log.warning("openpyxl not installed — skipping TAS. Run: pip install openpyxl")
+        return []
+
+    try:
+        resp = requests.get(TAS_LC_XLSX, timeout=30, headers={
+            "User-Agent": "VerityBot/1.0 (+https://verity.run/bot)"
+        })
+        resp.raise_for_status()
+
+        tmp = tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False)
+        tmp.write(resp.content)
+        tmp.close()
+
+        wb = openpyxl.load_workbook(tmp.name, read_only=True)
+        ws = wb.active
+
+        members = []
+        headers = []
+        for i, row in enumerate(ws.iter_rows(values_only=True)):
+            if i == 0:
+                headers = [str(c).lower().strip() if c else "" for c in row]
+                continue
+
+            row_dict = dict(zip(headers, row))
+            first = str(row_dict.get("first", "") or "").strip()
+            last = str(row_dict.get("last", "") or "").strip()
+            if not first and not last:
+                continue
+
+            # Clean up name suffixes and electorate prefixes
+            clean_name = f"{first} {last}".replace(" MLC", "").replace(" MHA", "").strip()
+            electorate = str(row_dict.get("electorate", "") or "").strip()
+            electorate = re.sub(r"^Member for\s+", "", electorate)
+
+            members.append({
+                "name": clean_name,
+                "first_name": first.replace(" MLC", "").replace(" MHA", ""),
+                "last_name": last,
+                "chamber": "Legislative Council",
+                "party": str(row_dict.get("party", "") or "").strip(),
+                "electorate": electorate,
+                "email": str(row_dict.get("email address", "") or "").strip(),
+            })
+
+        wb.close()
+        os.unlink(tmp.name)
+        return members
+    except Exception as e:
+        log.error("TAS fetch failed: %s", e)
+        return []
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+FETCHERS = {
+    "WA": {"name": "Western Australia", "fetch": fetch_wa_members},
+    "SA": {"name": "South Australia", "fetch": fetch_sa_members},
+    "TAS": {"name": "Tasmania", "fetch": fetch_tas_members},
+}
 
 
 def main():
@@ -143,83 +292,67 @@ def main():
 
     sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
 
-    states_to_scrape = {target_state: STATES[target_state]} if target_state and target_state in STATES else STATES
+    states_to_run = {target_state: FETCHERS[target_state]} if target_state and target_state in FETCHERS else FETCHERS
 
-    print(f"\n═══════════════ STATE PARLIAMENT SCRAPER ═══════════════")
-    print(f"States: {', '.join(states_to_scrape.keys())}")
+    print(f"\n═══════════════ STATE PARLIAMENT INGESTION ═══════════════")
+    print(f"States: {', '.join(states_to_run.keys())}")
     print(f"Mode: {'DRY RUN' if dry_run else 'LIVE'}")
 
     total_members = 0
-    total_bills = 0
 
-    for state_code, state_info in states_to_scrape.items():
+    for state_code, state_info in states_to_run.items():
         print(f"\n{'─' * 50}")
         print(f"→ {state_info['name']} ({state_code})")
 
-        # Extract members
-        print(f"  Scraping members from {state_info['members_url']}")
-        members = extract_members(state_info["members_url"])
-        print(f"  Found {len(members)} members")
+        members = state_info["fetch"]()
+        print(f"  Fetched {len(members)} members")
 
         for member in members:
+            name = member.get("name", "").strip()
+            if not name:
+                continue
+
+            # Split name if not already split
+            first = member.get("first_name", "")
+            last = member.get("last_name", "")
+            if not first and not last:
+                parts = name.split(None, 1)
+                first = parts[0] if parts else ""
+                last = parts[1] if len(parts) > 1 else ""
+
             row = {
-                "full_name": member["name"],
+                "name": name,
+                "first_name": first,
+                "last_name": last,
                 "state": state_code,
-                "electorate": member.get("electorate"),
-                "party": member.get("party"),
-                "chamber": member.get("chamber"),
-                "photo_url": member.get("photo_url"),
-                "is_active": True,
+                "party": member.get("party", ""),
+                "electorate": member.get("electorate", ""),
+                "chamber": member.get("chamber", ""),
+                "email": member.get("email", ""),
+                "phone": member.get("phone", ""),
             }
+            # Remove empty strings
+            row = {k: v for k, v in row.items() if v}
+            row["state"] = state_code  # always include
 
             if dry_run:
-                if total_members < 3:  # Only print first few
-                    print(f"    [DRY] {row['full_name']} ({row['party']}) - {row['electorate']}")
+                if total_members < 5:
+                    print(f"    [DRY] {name} ({row.get('party', '?')}) — {row.get('electorate', '?')} [{row.get('chamber', '?')}]")
+                total_members += 1
             else:
                 try:
                     sb.table("state_members").upsert(
-                        row, on_conflict="full_name,state"
+                        row, on_conflict="name,state"
                     ).execute()
+                    total_members += 1
                 except Exception as e:
-                    log.warning("Member upsert failed: %s", e)
-            total_members += 1
+                    log.warning("Upsert failed for %s: %s", name, e)
 
-        if len(members) > 3 and dry_run:
-            print(f"    ... and {len(members) - 3} more")
-
-        # Extract bills
-        print(f"  Scraping bills from {state_info['bills_url']}")
-        bills = extract_bills(state_info["bills_url"])
-        print(f"  Found {len(bills)} bills")
-
-        for bill in bills:
-            row = {
-                "title": bill["title"],
-                "state": state_code,
-                "status": bill.get("status"),
-                "date_introduced": bill.get("date_introduced"),
-                "chamber": bill.get("chamber"),
-                "url": bill.get("url"),
-            }
-
-            if dry_run:
-                if total_bills < 3:
-                    print(f"    [DRY] {row['title'][:70]}")
-            else:
-                try:
-                    sb.table("state_bills").upsert(
-                        row, on_conflict="title,state"
-                    ).execute()
-                except Exception as e:
-                    log.warning("Bill upsert failed: %s", e)
-            total_bills += 1
-
-        if len(bills) > 3 and dry_run:
-            print(f"    ... and {len(bills) - 3} more")
+        if len(members) > 5 and dry_run:
+            print(f"    ... and {len(members) - 5} more")
 
     print(f"\n═══════════════ SUMMARY ═══════════════")
-    print(f"  Members extracted: {total_members}")
-    print(f"  Bills extracted:   {total_bills}")
+    print(f"  Members ingested: {total_members}")
     print(f"════════════════════════════════════════\n")
 
 
