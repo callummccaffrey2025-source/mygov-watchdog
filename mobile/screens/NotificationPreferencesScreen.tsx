@@ -42,10 +42,8 @@ const DEFAULT_PREFS: Prefs = {
 };
 
 const PREF_ITEMS: { key: keyof Prefs; label: string; desc: string; icon: string }[] = [
-  { key: 'daily_brief',        label: 'Daily Brief',             desc: 'Your morning parliamentary summary',       icon: 'newspaper-outline' },
   { key: 'new_bills',          label: 'New Bills in Parliament', desc: 'When significant bills are introduced',    icon: 'document-text-outline' },
   { key: 'mp_votes',           label: 'Your MP Voted',          desc: 'When your local MP votes on a bill',       icon: 'checkmark-done-outline' },
-  { key: 'breaking_news',      label: 'Breaking Political News', desc: 'Major political stories as they happen',   icon: 'flash-outline' },
   { key: 'election_updates',   label: 'Election Updates',        desc: 'Election dates, calls, and results',       icon: 'flag-outline' },
   { key: 'local_announcements',label: 'Local Announcements',     desc: 'Funding and projects in your area',        icon: 'location-outline' },
   { key: 'weekly_summary',     label: 'Weekly Summary',          desc: 'A wrap-up of the week in parliament',      icon: 'calendar-outline' },
