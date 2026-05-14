@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,14 +18,8 @@ import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
 import { useTheme } from '../context/ThemeContext';
 import { SkeletonLoader } from '../components/SkeletonLoader';
-import { useNewsStories, NewsStory } from '../hooks/useNewsStories';
-import { useNewsStoryArticles } from '../hooks/useNewsStoryArticles';
-import { NewsShareCard } from '../components/ShareCards';
-import { captureAndShare } from '../utils/shareContent';
 import { decodeHtml } from '../utils/decodeHtml';
 import { useVotes } from '../hooks/useVotes';
-import { useDailyBrief } from '../hooks/useDailyBrief';
-import { usePersonalisedFeed, filterPoliticalStories } from '../hooks/usePersonalisedFeed';
 import { timeAgo } from '../lib/timeAgo';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import AsyncStorage from '../lib/storage';
@@ -39,7 +33,6 @@ import * as Haptics from 'expo-haptics';
 import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
 import { useLearnModules } from '../hooks/useLearnModules';
-import { usePersonalRelevance, useUserProfile } from '../hooks/usePersonalRelevance';
 import { usePollAggregate } from '../hooks/usePublishedPolls';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -126,72 +119,11 @@ export function HomeScreen({ navigation }: any) {
   const { member: myMP, loading: mpLoading } = electorateResult;
   const electorateName = electorateResult.electorate?.name ?? null;
 
-  const { brief, loading: briefLoading, refresh: refreshBrief } = useDailyBrief(
-    electorateName,
-    myMP ? `${myMP.first_name} ${myMP.last_name}` : null,
-  );
-
   const { votes: mpVotes } = useVotes(myMP?.id ?? null);
   const { isSittingToday, nextSitting } = useSittingCalendar();
 
-  const { stories: newsStories, loading: newsStoriesLoading, refresh: refreshNews } = useNewsStories(undefined, undefined, undefined, 15);
-
-
   const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
   const { aggregate } = usePollAggregate(30);
-
-  // ── Personalised news feed ──
-  const filteredStories = filterPoliticalStories(newsStories);
-  const personalised = usePersonalisedFeed(filteredStories, {
-    electorate: electorateName,
-    mpName: myMP ? `${myMP.first_name} ${myMP.last_name}` : null,
-    followedTopics: [],
-  });
-
-  // ── Personal relevance scoring ──
-  const userProfile = useUserProfile();
-  const { scoreContent } = usePersonalRelevance({
-    ...userProfile,
-    selectedTopics: [], // see BACKLOG.md "personalisation data loading"
-    trackedIssues: [],
-  });
-
-  // Feed mode: For You / Your Electorate / Trending
-  const [feedMode, setFeedMode] = useState<'for_you' | 'electorate' | 'trending'>('for_you');
-
-  // Score and sort stories by personal relevance
-  const scoredStories = useMemo(() => {
-    return personalised.map(story => {
-      const signals = {
-        title: story.headline,
-        description: story.ai_summary ?? undefined,
-        topic: story.category ?? undefined,
-        articleCount: story.article_count,
-      };
-      const relevance = scoreContent(signals);
-      return { story, relevance };
-    }).sort((a, b) => b.relevance.score - a.relevance.score);
-  }, [personalised, scoreContent]);
-
-  // Filter by feed mode
-  const feedStories = useMemo(() => {
-    switch (feedMode) {
-      case 'electorate':
-        // Prioritize geographic relevance
-        return scoredStories.filter(s => s.relevance.dimension === 'geographic' || s.relevance.score >= 50);
-      case 'trending':
-        // Sort by article count (most covered)
-        return [...scoredStories].sort((a, b) => (b.story.article_count ?? 0) - (a.story.article_count ?? 0));
-      case 'for_you':
-      default:
-        return scoredStories;
-    }
-  }, [scoredStories, feedMode]);
-
-  // Hero story + articles
-  const heroStory: NewsStory | null = useMemo(() => feedStories[0]?.story ?? null, [feedStories]);
-  const heroRelevance = feedStories[0]?.relevance ?? null;
-  const { articles: heroArticles } = useNewsStoryArticles(heroStory?.id);
 
   // ── MP recent substantive votes ──
   const mpRecentVotes = useMemo(() => {
@@ -199,16 +131,6 @@ export function HomeScreen({ navigation }: any) {
       .filter(v => v.vote_cast === 'aye' || v.vote_cast === 'no')
       .slice(0, 3);
   }, [mpVotes]);
-
-  // ── News share card ──
-  const newsCardRef = useRef<any>(null);
-  const [shareNewsStory, setShareNewsStory] = useState<NewsStory | null>(null);
-  useEffect(() => {
-    if (shareNewsStory) {
-      captureAndShare(newsCardRef, 'news_story', String(shareNewsStory.id), user?.id)
-        .finally(() => setShareNewsStory(null));
-    }
-  }, [shareNewsStory]);
 
   // ── Notification nudge ──
   const [showNotifPrompt, setShowNotifPrompt] = useState(false);
@@ -239,11 +161,8 @@ export function HomeScreen({ navigation }: any) {
   const onRefresh = useCallback(async () => {
     hapticLight();
     setRefreshing(true);
-    try {
-      await Promise.all([refreshNews(), refreshBrief()]);
-    } catch {}
     setRefreshing(false);
-  }, [refreshNews, refreshBrief]);
+  }, []);
 
   // ── Postcode actions ──
   const handleSetPostcode = () => {
@@ -275,27 +194,8 @@ export function HomeScreen({ navigation }: any) {
       }
     : null;
 
-  // Hero article perspectives
-  const heroLeft = heroArticles.find(a => a.source?.leaning === 'left' || a.source?.leaning === 'center-left');
-  const heroCenter = heroArticles.find(a => a.source?.leaning === 'center');
-  const heroRight = heroArticles.find(a => a.source?.leaning === 'right' || a.source?.leaning === 'center-right');
-
-  // Coverage percentages
-  const heroTotal = (heroStory?.left_count ?? 0) + (heroStory?.center_count ?? 0) + (heroStory?.right_count ?? 0);
-  const leftPct = heroTotal > 0 ? Math.round(((heroStory?.left_count ?? 0) / heroTotal) * 100) : 0;
-  const rightPct = heroTotal > 0 ? Math.round(((heroStory?.right_count ?? 0) / heroTotal) * 100) : 0;
-  const centerPct = heroTotal > 0 ? 100 - leftPct - rightPct : 0;
-
-  // Blindspot check
-  const isBlindspot = heroStory && heroStory.article_count >= 3 && ((heroStory.left_count ?? 0) === 0 || (heroStory.right_count ?? 0) === 0);
-  const blindspotSide = heroStory && (heroStory.left_count ?? 0) === 0 ? 'left' : 'right';
-
-  // Brief bullet count for "X of Y" counter
-  const briefBulletCount = brief?.ai_text?.what_happened?.length ?? 0;
-  const briefShownCount = Math.min(briefBulletCount, 3);
-
   // ── Loading state ──
-  const initialLoading = briefLoading && newsStoriesLoading;
+  const initialLoading = false;
   if (initialLoading && !refreshing) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
@@ -420,82 +320,6 @@ export function HomeScreen({ navigation }: any) {
             )}
           </View>
         </LinearGradient>
-
-        {/* ═══ 2. TODAY'S BRIEF ═══ */}
-        {brief?.ai_text?.what_happened && brief.ai_text.what_happened.length > 0 && (
-          <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
-            <View style={{
-              backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.xl,
-              padding: 18,
-              ...SHADOWS.sm,
-            }}>
-              {/* Header */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <View style={{ width: 4, height: 16, borderRadius: 2, backgroundColor: colors.green, marginRight: 7 }} />
-                  <Text style={{ fontSize: 10.5, fontWeight: FONT_WEIGHT.bold, letterSpacing: 1, color: '#6B7280', textTransform: 'uppercase' }}>
-                    {"TODAY'S BRIEF"}
-                  </Text>
-                </View>
-                {briefBulletCount > 0 && (
-                  <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
-                    {briefShownCount} of {briefBulletCount}
-                  </Text>
-                )}
-              </View>
-
-              {/* see BACKLOG.md "bold text parsing in daily brief bullets" */}
-              {brief.ai_text.what_happened.slice(0, 3).map((bullet, i) => (
-                <React.Fragment key={i}>
-                  <Pressable
-                    style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: SPACING.sm }}
-                    onPress={() => { track('daily_brief_read', { bullet: i }, 'Home'); navigation.navigate('DailyBrief'); }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Read daily brief item ${i + 1}`}
-                  >
-                    <View style={{
-                      width: 24, height: 24, borderRadius: 12,
-                      backgroundColor: i === 0 ? colors.green : '#E5E7EB',
-                      justifyContent: 'center', alignItems: 'center',
-                      marginTop: 1,
-                    }}>
-                      <Text style={{
-                        fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold,
-                        color: i === 0 ? '#ffffff' : '#6B7280',
-                      }}>
-                        {i + 1}
-                      </Text>
-                    </View>
-                    <Text style={{ flex: 1, fontSize: 14, color: colors.text, lineHeight: 20 }}>
-                      {bullet}
-                    </Text>
-                  </Pressable>
-                  {i < Math.min(brief.ai_text!.what_happened.length, 3) - 1 && (
-                    <View style={{ height: 0.5, backgroundColor: 'rgba(26,26,23,0.1)', marginLeft: 34 }} />
-                  )}
-                </React.Fragment>
-              ))}
-
-              {/* Footer */}
-              <View style={{
-                flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-                marginTop: SPACING.lg, paddingTop: 14,
-                borderTopWidth: 0.5, borderTopColor: 'rgba(26,26,23,0.1)',
-              }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
-                  <Ionicons name="time-outline" size={13} color={colors.textMuted} />
-                  <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>2 min read</Text>
-                </View>
-                <Pressable onPress={() => { track('daily_brief_read', {}, 'Home'); navigation.navigate('DailyBrief'); }} accessibilityRole="button" accessibilityLabel="Read full brief">
-                  <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: colors.green }}>
-                    Read full brief {'\u2192'}
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        )}
 
         <SectionDivider />
 
@@ -903,202 +727,7 @@ export function HomeScreen({ navigation }: any) {
           </Pressable>
         )}
 
-        {/* ═══ 5. NEWS — PERSONAL FEED ═══ */}
-        <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
-          {/* Feed mode tabs */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.lg }}>
-            <View style={{ flexDirection: 'row', gap: 4 }}>
-              {([
-                { id: 'for_you' as const, label: 'For You' },
-                { id: 'electorate' as const, label: electorateName ? `${electorateName}` : 'Your Area' },
-                { id: 'trending' as const, label: 'Trending' },
-              ]).map(tab => {
-                const active = feedMode === tab.id;
-                return (
-                  <Pressable
-                    key={tab.id}
-                    onPress={() => { setFeedMode(tab.id); track('feed_mode_change', { mode: tab.id }, 'Home'); }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Show ${tab.label} news`}
-                    accessibilityState={{ selected: active }}
-                    style={{
-                      paddingHorizontal: 12, paddingVertical: 7,
-                      borderRadius: BORDER_RADIUS.full,
-                      backgroundColor: active ? '#1A1A17' : colors.surface,
-                    }}
-                  >
-                    <Text style={{
-                      fontSize: 12, fontWeight: FONT_WEIGHT.bold,
-                      color: active ? '#ffffff' : colors.textMuted,
-                    }}>
-                      {tab.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <Pressable onPress={() => navigation.navigate('News')} hitSlop={8} accessibilityRole="button" accessibilityLabel="View all news">
-              <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>All {'\u2192'}</Text>
-            </Pressable>
-          </View>
-
-          {newsStoriesLoading ? (
-            <SkeletonLoader height={200} borderRadius={BORDER_RADIUS.lg} />
-          ) : heroStory ? (
-            <Pressable
-              style={{
-                backgroundColor: colors.card,
-                borderRadius: BORDER_RADIUS.lg,
-                padding: SPACING.lg,
-                ...SHADOWS.sm,
-              }}
-              onPress={() => navigation.navigate('NewsStoryDetail', { story: heroStory })}
-              accessibilityRole="button"
-              accessibilityLabel={`Read news story: ${heroStory.headline}`}
-            >
-              {/* MOST COVERED badge + meta */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: 10 }}>
-                <View style={{
-                  backgroundColor: '#1A1A17',
-                  borderRadius: BORDER_RADIUS.sm, paddingHorizontal: 8, paddingVertical: 4,
-                }}>
-                  <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.bold, color: '#ffffff', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                    MOST COVERED
-                  </Text>
-                </View>
-                <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
-                  {heroStory.article_count} outlets · {timeAgo(heroStory.first_seen)}
-                </Text>
-              </View>
-
-              {/* Personal relevance line */}
-              {heroRelevance && heroRelevance.score >= 20 && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 }}>
-                  <Ionicons
-                    name={heroRelevance.dimension === 'geographic' ? 'location-outline' :
-                          heroRelevance.dimension === 'interest' ? 'bookmark-outline' :
-                          heroRelevance.dimension === 'demographic' ? 'person-outline' :
-                          'trending-up-outline'}
-                    size={12}
-                    color="#00843D"
-                  />
-                  <Text style={{ fontSize: 12, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>
-                    {heroRelevance.reason}
-                  </Text>
-                </View>
-              )}
-
-              {/* Headline */}
-              <Text style={{ fontSize: 19, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 25, marginBottom: SPACING.sm }} numberOfLines={2}>
-                {heroStory.headline}
-              </Text>
-
-              {/* AI summary */}
-              {heroStory.ai_summary && (
-                <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, lineHeight: 19, marginBottom: SPACING.md }} numberOfLines={2}>
-                  {decodeHtml(heroStory.ai_summary.replace(/^#+\s*/, ''))}
-                </Text>
-              )}
-
-              {/* COVERAGE SPLIT */}
-              <Text style={{ fontSize: 9, fontWeight: FONT_WEIGHT.bold, letterSpacing: 0.6, color: '#9CA3AF', marginBottom: 6 }}>
-                COVERAGE SPLIT
-              </Text>
-              <View style={{ flexDirection: 'row', height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: SPACING.sm }}>
-                <View style={{ flex: heroStory.left_count || 0.01, backgroundColor: '#C2410C' }} />
-                <View style={{ flex: heroStory.center_count || 0.01, backgroundColor: '#6B7280' }} />
-                <View style={{ flex: heroStory.right_count || 0.01, backgroundColor: '#1D4ED8' }} />
-              </View>
-              {heroTotal > 0 && (
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: SPACING.md }}>
-                  <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.semibold, color: '#C2410C' }}>{leftPct}% Left</Text>
-                  <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.semibold, color: '#6B7280' }}>{centerPct}% Centre</Text>
-                  <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.semibold, color: '#1D4ED8' }}>{rightPct}% Right</Text>
-                </View>
-              )}
-
-              {/* Three outlet preview cards */}
-              {heroArticles.length > 0 && (heroLeft || heroCenter || heroRight) && (
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  {[
-                    { article: heroLeft, label: 'LEFT', borderColor: '#C2410C' },
-                    { article: heroCenter, label: 'CENTRE', borderColor: '#6B7280' },
-                    { article: heroRight, label: 'RIGHT', borderColor: '#1D4ED8' },
-                  ].map(({ article, label, borderColor }) => (
-                    <View key={label} style={{
-                      flex: 1, backgroundColor: colors.surface,
-                      borderRadius: SPACING.sm, padding: SPACING.sm,
-                      borderLeftWidth: 3, borderLeftColor: borderColor,
-                    }}>
-                      <Text style={{ fontSize: 9, fontWeight: FONT_WEIGHT.bold, color: borderColor, letterSpacing: 0.4, marginBottom: 3 }}>
-                        {label}
-                      </Text>
-                      {article ? (
-                        <>
-                          <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold, color: colors.text, lineHeight: 14 }} numberOfLines={3}>
-                            {article.title}
-                          </Text>
-                          <Text style={{ fontSize: 9, color: colors.textMuted, marginTop: 3 }} numberOfLines={1}>
-                            {article.source?.name ?? ''}
-                          </Text>
-                        </>
-                      ) : (
-                        <Text style={{ fontSize: 10, color: '#9CA3AF', fontStyle: 'italic' }}>Not covered</Text>
-                      )}
-                    </View>
-                  ))}
-                </View>
-              )}
-            </Pressable>
-          ) : (
-            <View style={{
-              backgroundColor: colors.surface,
-              borderRadius: BORDER_RADIUS.lg, padding: 20,
-              alignItems: 'center',
-            }}>
-              <Ionicons name="newspaper-outline" size={32} color="#9CA3AF" />
-              <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: colors.text, marginTop: SPACING.sm }}>
-                Checking sources
-              </Text>
-              <Text style={{ fontSize: FONT_SIZE.small, color: '#9CA3AF', textAlign: 'center', marginTop: SPACING.xs }}>
-                Stories appear here once multiple outlets have covered them.
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* ═══ 6. BLINDSPOT CARD ═══ */}
-        {isBlindspot && heroStory && (
-          <View style={{ paddingHorizontal: 20, marginTop: SPACING.md }}>
-            <View style={{
-              backgroundColor: '#FEF2F2',
-              borderRadius: BORDER_RADIUS.lg,
-              padding: 14,
-              flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-            }}>
-              <Ionicons name="eye-off-outline" size={18} color="#991B1B" style={{ marginTop: 1 }} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.bold, letterSpacing: 0.5, color: '#991B1B', textTransform: 'uppercase', marginBottom: 4 }}>
-                  BLINDSPOT
-                </Text>
-                <Text style={{ fontSize: FONT_SIZE.small, color: '#991B1B', lineHeight: 18 }}>
-                  {blindspotSide === 'left'
-                    ? 'No left-leaning outlets have covered this story.'
-                    : 'No right-leaning outlets have covered this story.'}
-                </Text>
-                <Text style={{ fontSize: FONT_SIZE.caption, color: 'rgba(153,27,27,0.6)', marginTop: 4 }}>
-                  {heroStory.article_count} source{heroStory.article_count !== 1 ? 's' : ''} total
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* see BACKLOG.md "electorate-specific news card" */}
-
-        <SectionDivider />
-
-        {/* ═══ 7. CONTINUE LEARNING ═══ */}
+        {/* ═══ 5. CONTINUE LEARNING ═══ */}
         <ContinueLearningCard navigation={navigation} colors={colors} />
 
         <SectionDivider />
@@ -1265,21 +894,6 @@ export function HomeScreen({ navigation }: any) {
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* Hidden news share card */}
-      <View style={{ position: 'absolute', left: -9999, top: 0 }} pointerEvents="none">
-        <View ref={newsCardRef}>
-          {shareNewsStory && (
-            <NewsShareCard
-              headline={shareNewsStory.headline}
-              category={shareNewsStory.category}
-              articleCount={shareNewsStory.article_count}
-              leftCount={shareNewsStory.left_count}
-              centerCount={shareNewsStory.center_count}
-              rightCount={shareNewsStory.right_count}
-            />
-          )}
-        </View>
-      </View>
       <AuthPromptSheet {...authSheetProps} />
     </SafeAreaView>
   );

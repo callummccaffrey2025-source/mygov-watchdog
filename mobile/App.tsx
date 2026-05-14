@@ -24,10 +24,6 @@ import { NotificationPermissionModal } from './components/NotificationPermission
 import { NotificationBanner, BannerNotification } from './components/NotificationBanner';
 import { HomeScreen } from './screens/HomeScreen';
 import { ExploreScreen } from './screens/ExploreScreen';
-// import { NewsScreen } from './screens/NewsScreen'; // preserved for A/B rollback
-import { NewsScreenV2 } from './screens/NewsScreenV2';
-import { NewsScreen } from './screens/NewsScreen';
-import { NewsStoryDetailScreen } from './screens/NewsStoryDetailScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { MemberProfileScreen } from './screens/MemberProfileScreen';
 import { BillDetailScreen } from './screens/BillDetailScreen';
@@ -43,7 +39,6 @@ import { SubscriptionScreen } from './screens/SubscriptionScreen';
 import { CouncilProfileScreen } from './screens/CouncilProfileScreen';
 import { WriteToMPScreen } from './screens/WriteToMPScreen';
 import { AboutScreen } from './screens/AboutScreen';
-import { DailyBriefScreen } from './screens/DailyBriefScreen';
 import { ActivityScreen } from './screens/ActivityScreen';
 import { SavedScreen } from './screens/SavedScreen';
 import { LocalAnnouncementsScreen } from './screens/LocalAnnouncementsScreen';
@@ -103,7 +98,6 @@ function HomeTabs() {
           const icons: Record<string, [string, string]> = {
             Home:      ['home',        'home-outline'],
             Explore:   ['search',      'search-outline'],
-            News:      ['newspaper',   'newspaper-outline'],
             Polls:     ['bar-chart', 'bar-chart-outline'],
             Learn:     ['school',      'school-outline'],
             Profile:   ['person',      'person-outline'],
@@ -121,7 +115,6 @@ function HomeTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarAccessibilityLabel: 'Home' }} />
       <Tab.Screen name="Explore" component={ExploreScreen} options={{ tabBarAccessibilityLabel: 'Explore' }} />
-      <Tab.Screen name="News" component={NewsScreenV2} options={{ tabBarAccessibilityLabel: 'News' }} />
       <Tab.Screen name="Polls" component={PollsScreen} options={{ tabBarAccessibilityLabel: 'Polls' }} />
       <Tab.Screen name="Learn" component={LearnScreen} options={{ tabBarAccessibilityLabel: 'Learn' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarAccessibilityLabel: 'Profile' }} />
@@ -293,10 +286,6 @@ function App() {
       navigationRef.navigate('BillDetail', { billId: data.billId });
     } else if (data?.screen === 'member' && data.memberId) {
       navigationRef.navigate('MemberProfile', { memberId: data.memberId });
-    } else if (data?.screen === 'news' && data.storyId) {
-      navigationRef.navigate('NewsStoryDetail', { storyId: data.storyId });
-    } else if (data?.screen === 'DailyBrief') {
-      navigationRef.navigate('DailyBrief');
     } else if (data?.screen === 'ContradictionDetail' && data.contradictionId) {
       navigationRef.navigate('ContradictionDetail', { contradictionId: data.contradictionId });
     }
@@ -369,14 +358,11 @@ function App() {
               <Stack.Screen name="BillList" component={BillListScreen} />
               <Stack.Screen name="Subscription" component={SubscriptionScreen} />
               <Stack.Screen name="Council" component={CouncilProfileScreen} />
-              <Stack.Screen name="News" component={NewsScreen} />
-              <Stack.Screen name="NewsStoryDetail" component={NewsStoryDetailScreen} />
               <Stack.Screen name="Community" component={CommunityScreen} />
               <Stack.Screen name="CommunityPostDetail" component={CommunityPostDetailScreen} />
               <Stack.Screen name="CreateCommunityPost" component={CreateCommunityPostScreen} />
               <Stack.Screen name="WriteToMP" component={WriteToMPScreen} />
               <Stack.Screen name="About" component={AboutScreen} />
-              <Stack.Screen name="DailyBrief" component={DailyBriefScreen} />
               <Stack.Screen name="Activity" component={ActivityScreen} />
               <Stack.Screen name="Saved" component={SavedScreen} />
               <Stack.Screen name="LocalAnnouncements" component={LocalAnnouncementsScreen} />

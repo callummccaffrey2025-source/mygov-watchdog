@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import AsyncStorage from '../lib/storage';
 import { supabase } from '../lib/supabase';
-import { useDailyBrief, DailyBriefData } from './useDailyBrief';
-
 const SIGNAL_CACHE_KEY = 'cached_morning_signal';
 const SIGNAL_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -49,9 +47,6 @@ export interface MorningSignalData {
 export function useMorningSignal(electorate: string | null = null, mpName: string | null = null) {
   const [signal, setSignal] = useState<MorningSignalData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Fallback: use existing daily brief if no morning_signals row exists
-  const { brief: dailyBrief, loading: briefLoading } = useDailyBrief(electorate, mpName);
 
   const cancelledRef = useRef(false);
 
@@ -144,39 +139,5 @@ export function useMorningSignal(electorate: string | null = null, mpName: strin
     return () => { cancelledRef.current = true; };
   }, [refresh]);
 
-  // Graceful migration: if no signal data exists at all, adapt daily brief
-  const effectiveSignal: MorningSignalData | null = signal
-    ? signal
-    : dailyBrief
-      ? adaptBriefToSignal(dailyBrief)
-      : null;
-
-  const effectiveLoading = signal ? loading : loading && briefLoading;
-
-  return { signal: effectiveSignal, loading: effectiveLoading, refresh: () => refresh() };
-}
-
-/**
- * Convert a legacy DailyBriefData into MorningSignalData shape
- * so the UI can render something even before morning_signals table is populated.
- */
-function adaptBriefToSignal(brief: DailyBriefData): MorningSignalData {
-  const topStories: MorningSignalStory[] = (brief.stories ?? []).slice(0, 3).map((s, i) => ({
-    story_id: i,
-    headline: s.headline,
-    why_it_matters: s.summary,
-    source_ids: s.source_url ? [s.source_url] : [],
-  }));
-
-  return {
-    id: brief.id,
-    date: brief.date,
-    electorate: brief.electorate,
-    top_stories: topStories,
-    shifted_positions: null,
-    bill_movements: null,
-    blindspot: null,
-    electorate_impact: brief.ai_text?.what_it_means ?? null,
-    created_at: brief.created_at,
-  };
+  return { signal, loading, refresh: () => refresh() };
 }

@@ -21,7 +21,6 @@ const ICON_MAP: Record<string, { name: keyof typeof Ionicons.glyphMap; color: st
   bill_update:     { name: 'document-text',    color: '#2563EB' },
   mp_post:         { name: 'megaphone',        color: '#F97316' },
   topic_news:      { name: 'newspaper',        color: '#7C3AED' },
-  daily_brief:     { name: 'sunny',            color: '#00843D' },
   community_reply: { name: 'chatbubble',       color: '#0891b2' },
 };
 
@@ -53,10 +52,6 @@ export function ActivityScreen({ route, navigation }: any) {
         navigation.navigate('BillDetail', { billId: data.billId });
       } else if (data.screen === 'member' && data.memberId) {
         navigation.navigate('MemberProfile', { memberId: data.memberId });
-      } else if (data.screen === 'news' && data.storyId) {
-        navigation.navigate('NewsStoryDetail', { storyId: data.storyId });
-      } else if (data.screen === 'DailyBrief') {
-        navigation.navigate('DailyBrief');
       }
     },
     [markRead, navigation]
