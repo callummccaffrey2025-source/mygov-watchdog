@@ -17,17 +17,15 @@ import { EmptyState } from '../components/EmptyState';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { timeAgo } from '../lib/timeAgo';
 
-type FilterTab = 'all' | 'news_story' | 'bill' | 'vote';
+type FilterTab = 'all' | 'bill' | 'vote';
 
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: 'all', label: 'All' },
-  { key: 'news_story', label: 'News' },
   { key: 'bill', label: 'Bills' },
   { key: 'vote', label: 'Votes' },
 ];
 
 const BADGE_CONFIG: Record<string, { label: string; color: string }> = {
-  news_story: { label: 'NEWS', color: '#2563eb' },
   bill:       { label: 'BILL', color: '#16a34a' },
   vote:       { label: 'VOTE', color: '#7c3aed' },
   post:       { label: 'POST', color: '#ea580c' },
@@ -48,18 +46,6 @@ async function fetchTitles(items: SavedItem[]): Promise<Record<string, string>> 
 
   const fetches: Promise<void>[] = [];
 
-  if (groups['news_story']?.length) {
-    fetches.push(
-      Promise.resolve(
-        supabase
-          .from('v_civic_news_stories')
-          .select('id, headline')
-          .in('id', groups['news_story'])
-      ).then(({ data }) => {
-        data?.forEach((r: any) => { titles[`news_story:${r.id}`] = r.headline; });
-      })
-    );
-  }
 
   if (groups['bill']?.length) {
     fetches.push(
@@ -191,9 +177,6 @@ export function SavedScreen({ navigation }: any) {
 
   const handlePress = (item: SavedItem) => {
     switch (item.content_type) {
-      case 'news_story':
-        navigation.navigate('NewsStoryDetail', { storyId: item.content_id });
-        break;
       case 'bill':
         navigation.navigate('BillDetail', { billId: item.content_id });
         break;

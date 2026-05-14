@@ -21,7 +21,6 @@ import { useTheme } from '../context/ThemeContext';
 import { EmptyState } from '../components/EmptyState';
 import { track } from '../lib/analytics';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
-import { useNewsStories, NewsStory } from '../hooks/useNewsStories';
 import { supabase } from '../lib/supabase';
 import { timeAgo } from '../lib/timeAgo';
 
@@ -422,10 +421,6 @@ export function ExploreScreen({ navigation }: any) {
     isNSW ? 'NSW' : '',
     hasQuery ? debouncedQuery : undefined
   );
-  const { stories: newsStories, loading: newsLoading } = useNewsStories(
-    undefined, undefined,
-    hasQuery && !isStateFilter ? debouncedQuery : undefined
-  );
   const { parties: allParties, loading: partiesLoading } = useParties();
   // Only show parties with a colour (the 9 seeded major parties, not role placeholders)
   const PARTY_PRIORITY = ['labor', 'liberal', 'greens', 'nationals'];
@@ -578,37 +573,7 @@ export function ExploreScreen({ navigation }: any) {
                 ))}
               </View>
             )}
-            {newsStories.length > 0 && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>News Stories</Text>
-                {newsStories.slice(0, 3).map(story => (
-                  <Pressable
-                    key={story.id}
-                    style={({ pressed }) => [
-                      styles.newsResultRow,
-                      { backgroundColor: colors.surface, opacity: pressed ? 0.92 : 1 },
-                    ]}
-                    onPress={() => navigation.navigate('NewsStoryDetail', { story })}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Read news story: ${story.headline}`}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.newsResultHeadline, { color: colors.text }]} numberOfLines={2}>{story.headline}</Text>
-                      <Text style={[styles.newsResultMeta, { color: colors.textMuted }]}>
-                        {story.article_count} sources · {story.category || 'News'}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-                  </Pressable>
-                ))}
-                {newsStories.length > 3 && (
-                  <Pressable onPress={() => navigation.navigate('News')} accessibilityRole="button" accessibilityLabel="See all news">
-                    <Text style={styles.seeAll}>See all news →</Text>
-                  </Pressable>
-                )}
-              </View>
-            )}
-            {filteredParties.length === 0 && members.length === 0 && bills.length === 0 && newsStories.length === 0 && !membersLoading && !billsLoading && !newsLoading && (
+            {filteredParties.length === 0 && members.length === 0 && bills.length === 0 && !membersLoading && !billsLoading && (
               <EmptyState
                 icon="🔍"
                 title="No results found"
