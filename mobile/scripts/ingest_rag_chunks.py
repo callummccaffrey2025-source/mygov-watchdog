@@ -61,7 +61,7 @@ def ingest_bills(sb, limit: Optional[int] = None) -> int:
     query = sb.table("bills").select(
         "id, title, summary_plain, expanded_summary, current_status, "
         "sponsor, portfolio, categories, date_introduced"
-    ).not_("summary_plain", "is", "null")
+    ).neq("summary_plain", "null")
 
     if limit:
         query = query.limit(limit)
@@ -102,7 +102,7 @@ def ingest_hansard(sb, limit: Optional[int] = None) -> int:
     log.info("Ingesting hansard entries...")
     query = sb.table("hansard_entries").select(
         "id, member_id, date, debate_topic, excerpt, chamber"
-    ).not_("excerpt", "is", "null")
+    ).neq("excerpt", "null")
 
     if limit:
         query = query.limit(limit)
