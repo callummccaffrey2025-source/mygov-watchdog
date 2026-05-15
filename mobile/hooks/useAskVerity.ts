@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 export interface AskSource {
   type: string;
   id: string;
-  similarity: number;
+  rank: number;
   metadata: Record<string, unknown>;
 }
 

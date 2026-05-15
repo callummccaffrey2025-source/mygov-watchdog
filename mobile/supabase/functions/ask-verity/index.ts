@@ -5,21 +5,20 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
  * ask-verity — RAG-powered political Q&A
  *
  * 1. Receives a user question
- * 2. Embeds it via OpenAI text-embedding-3-small
- * 3. KNN search against rag_chunks using pgvector
- * 4. Sends top chunks as context to Claude for answer generation
- * 5. Returns the answer with source citations
+ * 2. Full-text search against rag_chunks using PostgreSQL tsvector (no external embedding API)
+ * 3. Sends top chunks as context to Claude for answer generation
+ * 4. Returns the answer with source citations
+ *
+ * Only requires ANTHROPIC_API_KEY — no OpenAI key needed.
  */
 
-const OPENAI_EMBEDDING_URL = "https://api.openai.com/v1/embeddings";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const EMBEDDING_MODEL = "text-embedding-3-small";
 const ANSWER_MODEL = "claude-haiku-4-5-20251001";
 const MAX_CHUNKS = 12;
 
 interface RequestBody {
   question: string;
-  source_filter?: string; // optional: 'bill', 'hansard', 'donation', etc.
+  source_filter?: string;
 }
 
 interface RagChunk {
@@ -28,7 +27,7 @@ interface RagChunk {
   source_id: string;
   content: string;
   metadata: Record<string, unknown>;
-  similarity: number;
+  rank: number;
 }
 
 Deno.serve(async (req: Request) => {
@@ -62,15 +61,7 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const openaiKey = Deno.env.get("OPENAI_API_KEY");
   const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
-
-  if (!openaiKey) {
-    return new Response(
-      JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
   if (!anthropicKey) {
     return new Response(
       JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
@@ -79,52 +70,25 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // 1. Embed the question
-    const embResponse = await fetch(OPENAI_EMBEDDING_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openaiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        input: question.slice(0, 4000),
-        model: EMBEDDING_MODEL,
-      }),
-    });
-
-    if (!embResponse.ok) {
-      const err = await embResponse.text();
-      console.error("Embedding failed:", err);
-      return new Response(
-        JSON.stringify({ error: "Failed to process question" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const embData = await embResponse.json();
-    const queryEmbedding = embData.data[0].embedding;
-
-    // 2. KNN search via pgvector
+    // 1. Full-text search via PostgreSQL tsvector — no external API needed
     const { data: chunks, error: searchError } = await supabase.rpc(
-      "match_rag_chunks",
+      "search_rag_chunks",
       {
-        query_embedding: queryEmbedding,
+        query_text: question.trim(),
         match_count: MAX_CHUNKS,
         filter_source_type: source_filter ?? null,
       }
     );
 
     if (searchError) {
-      console.error("Vector search failed:", searchError);
+      console.error("Search failed:", searchError);
       return new Response(
         JSON.stringify({ error: "Search failed" }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const relevantChunks: RagChunk[] = (chunks ?? []).filter(
-      (c: RagChunk) => c.similarity > 0.3
-    );
+    const relevantChunks: RagChunk[] = chunks ?? [];
 
     if (relevantChunks.length === 0) {
       return new Response(
@@ -139,11 +103,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // 3. Build context for Claude
+    // 2. Build context for Claude
     const context = relevantChunks
       .map(
         (c, i) =>
-          `[Source ${i + 1} — ${c.source_type}, similarity: ${c.similarity.toFixed(2)}]\n${c.content}`
+          `[Source ${i + 1} \u2014 ${c.source_type}]\n${c.content}`
       )
       .join("\n\n---\n\n");
 
@@ -159,7 +123,7 @@ Rules:
 - Never express political opinions or bias.
 - Format amounts in AUD with commas.`;
 
-    // 4. Generate answer with Claude
+    // 3. Generate answer with Claude
     const claudeResponse = await fetch(ANTHROPIC_URL, {
       method: "POST",
       headers: {
@@ -193,11 +157,11 @@ Rules:
     const answer =
       claudeData.content?.[0]?.text ?? "Unable to generate an answer.";
 
-    // 5. Build source citations
+    // 4. Build source citations
     const sources = relevantChunks.map((c) => ({
       type: c.source_type,
       id: c.source_id,
-      similarity: Math.round(c.similarity * 100),
+      rank: c.rank,
       metadata: c.metadata,
     }));
 

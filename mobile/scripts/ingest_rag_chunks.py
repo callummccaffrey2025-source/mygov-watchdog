@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-ingest_rag_chunks.py — Ingest all political data into RAG chunks with embeddings.
+ingest_rag_chunks.py — Ingest all political data into RAG chunks for full-text search.
 
 Pulls data from Supabase (bills, hansard, donations, contracts, interests,
-policies, divisions, members), chunks it into paragraphs, embeds via OpenAI
-text-embedding-3-small, and stores in the rag_chunks table for vector search.
+policies, members), chunks it into paragraphs, and stores in the rag_chunks
+table. PostgreSQL tsvector handles search indexing automatically via trigger.
+
+No external embedding API needed — search uses PostgreSQL full-text search.
 
 Usage:
   python scripts/ingest_rag_chunks.py                    # full ingest
   python scripts/ingest_rag_chunks.py --source bills     # single source
   python scripts/ingest_rag_chunks.py --test              # dry run, 5 per source
-  python scripts/ingest_rag_chunks.py --backfill          # only chunks without embeddings
 """
 
 import argparse
@@ -18,10 +19,8 @@ import logging
 import os
 import sys
 import time
-import json
 from typing import Optional
 
-import requests
 from dotenv import load_dotenv
 from supabase import create_client
 
@@ -31,53 +30,7 @@ log = logging.getLogger(__name__)
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-EMBEDDING_MODEL = "text-embedding-3-small"
-EMBEDDING_DIM = 1536
 MAX_CHUNK_CHARS = 2000
-BATCH_SIZE = 50
-
-
-def get_embedding(text: str) -> Optional[list[float]]:
-    """Get embedding from OpenAI."""
-    if not OPENAI_API_KEY:
-        log.warning("No OPENAI_API_KEY — skipping embedding")
-        return None
-    try:
-        resp = requests.post(
-            "https://api.openai.com/v1/embeddings",
-            headers={"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"},
-            json={"input": text[:8000], "model": EMBEDDING_MODEL},
-            timeout=20,
-        )
-        if resp.ok:
-            return resp.json()["data"][0]["embedding"]
-        log.warning(f"Embedding API error: {resp.status_code}")
-        return None
-    except Exception as e:
-        log.warning(f"Embedding failed: {e}")
-        return None
-
-
-def get_embeddings_batch(texts: list[str]) -> list[Optional[list[float]]]:
-    """Get embeddings for a batch of texts."""
-    if not OPENAI_API_KEY:
-        return [None] * len(texts)
-    try:
-        resp = requests.post(
-            "https://api.openai.com/v1/embeddings",
-            headers={"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"},
-            json={"input": [t[:8000] for t in texts], "model": EMBEDDING_MODEL},
-            timeout=60,
-        )
-        if resp.ok:
-            data = resp.json()["data"]
-            return [d["embedding"] for d in sorted(data, key=lambda x: x["index"])]
-        log.warning(f"Batch embedding error: {resp.status_code}")
-        return [None] * len(texts)
-    except Exception as e:
-        log.warning(f"Batch embedding failed: {e}")
-        return [None] * len(texts)
 
 
 def chunk_text(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
@@ -378,35 +331,6 @@ def upsert_chunk(sb, source_type: str, source_id: str, chunk_index: int, content
     }, on_conflict="source_type,source_id,chunk_index").execute()
 
 
-def embed_chunks(sb, batch_size: int = BATCH_SIZE):
-    """Embed all chunks that don't have embeddings yet."""
-    log.info("Embedding chunks without vectors...")
-
-    # Get chunks without embeddings
-    offset = 0
-    total_embedded = 0
-
-    while True:
-        result = sb.table("rag_chunks").select("id, content").is_("embedding", "null").range(offset, offset + batch_size - 1).execute()
-        chunks = result.data or []
-        if not chunks:
-            break
-
-        texts = [c["content"] for c in chunks]
-        embeddings = get_embeddings_batch(texts)
-
-        for chunk, emb in zip(chunks, embeddings):
-            if emb:
-                sb.table("rag_chunks").update({"embedding": emb}).eq("id", chunk["id"]).execute()
-                total_embedded += 1
-
-        log.info(f"  Embedded {total_embedded} chunks so far...")
-        offset += batch_size
-        time.sleep(1)  # Rate limiting
-
-    return total_embedded
-
-
 SOURCES = {
     "bills": ingest_bills,
     "hansard": ingest_hansard,
@@ -422,19 +346,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", choices=list(SOURCES.keys()), help="Ingest single source")
     parser.add_argument("--test", action="store_true", help="Dry run — 5 records per source")
-    parser.add_argument("--backfill", action="store_true", help="Only embed chunks missing vectors")
-    parser.add_argument("--no-embed", action="store_true", help="Chunk only, skip embedding")
     args = parser.parse_args()
 
     sb = create_client(SUPABASE_URL, SUPABASE_KEY)
     limit = 5 if args.test else None
 
-    if args.backfill:
-        total = embed_chunks(sb)
-        log.info(f"Backfill complete. Embedded {total} chunks.")
-        return
-
-    # Ingest chunks
     total_chunks = 0
     sources = {args.source: SOURCES[args.source]} if args.source else SOURCES
 
@@ -444,14 +360,7 @@ def main():
         log.info(f"  {name}: {count} chunks")
 
     log.info(f"\nTotal chunks created: {total_chunks}")
-
-    # Embed
-    if not args.no_embed and not args.test:
-        total_embedded = embed_chunks(sb)
-        log.info(f"Total embedded: {total_embedded}")
-    elif args.test:
-        log.info("Test mode — skipping embeddings")
-
+    log.info("PostgreSQL tsvector indexing handles search automatically via trigger.")
     log.info("Done.")
 
 

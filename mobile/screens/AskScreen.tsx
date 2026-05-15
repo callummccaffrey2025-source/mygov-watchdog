@@ -40,7 +40,7 @@ function SourceBadge({ source }: { source: AskSource }) {
     }}>
       <Ionicons name="document-text-outline" size={11} color={colors.textMuted} />
       <Text style={{ fontSize: 11, color: colors.textMuted }}>
-        {typeLabel[source.type] ?? source.type} · {source.similarity}% match
+        {typeLabel[source.type] ?? source.type}
       </Text>
     </View>
   );
