@@ -252,17 +252,37 @@ export function BillDetailScreen({ route, navigation }: any) {
           </Text>
 
           {/* Meta row */}
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: 6 }}>
             {bill.date_introduced && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                 <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
                 <Text style={{ fontSize: 12, color: colors.textMuted }}>Introduced {timeAgo(bill.date_introduced)}</Text>
               </View>
             )}
-            {bill.sponsor_party && (
+            {((bill as any).sponsor || bill.sponsor_party) && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                 <Ionicons name="person-outline" size={13} color={colors.textMuted} />
-                <Text style={{ fontSize: 12, color: colors.textMuted }}>Sponsored by {bill.sponsor_party}</Text>
+                <Text style={{ fontSize: 12, color: colors.textMuted }}>
+                  Introduced by {(bill as any).sponsor || bill.sponsor_party}
+                </Text>
+              </View>
+            )}
+            {(bill as any).portfolio && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                <Ionicons name="briefcase-outline" size={13} color={colors.textMuted} />
+                <Text style={{ fontSize: 12, color: colors.textMuted }}>Portfolio: {(bill as any).portfolio}</Text>
+              </View>
+            )}
+            {(bill as any).bill_type && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                <Ionicons name="document-outline" size={13} color={colors.textMuted} />
+                <Text style={{ fontSize: 12, color: colors.textMuted }}>{(bill as any).bill_type} Bill</Text>
+              </View>
+            )}
+            {(bill as any).parliament_no && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                <Ionicons name="business-outline" size={13} color={colors.textMuted} />
+                <Text style={{ fontSize: 12, color: colors.textMuted }}>{(bill as any).parliament_no}th Parliament</Text>
               </View>
             )}
           </View>
@@ -342,9 +362,9 @@ export function BillDetailScreen({ route, navigation }: any) {
                       </>
                     )}
                   </>
-                ) : bill.summary_full ? (
+                ) : (bill.summary_full || (bill as any).summary) ? (
                   <Text style={{ fontSize: 15, color: colors.text, lineHeight: 24 }}>
-                    {decodeHtml(bill.summary_full)}
+                    {decodeHtml(bill.summary_full || (bill as any).summary || '')}
                   </Text>
                 ) : (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

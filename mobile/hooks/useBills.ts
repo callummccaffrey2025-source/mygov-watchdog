@@ -7,6 +7,7 @@ export interface Bill {
   short_title: string | null;
   current_status: string | null;
   status: string | null;
+  summary: string | null;
   summary_plain: string | null;
   summary_full: string | null;
   expanded_summary: string | null;
@@ -17,6 +18,17 @@ export interface Bill {
   origin_chamber: string | null;
   level: string | null;
   aph_url: string | null;
+  aph_id: string | null;
+  // APH-scraped fields
+  sponsor: string | null;
+  portfolio: string | null;
+  bill_type: string | null;
+  parliament_no: number | null;
+  intro_house: string | null;
+  intro_senate: string | null;
+  passed_house: string | null;
+  passed_senate: string | null;
+  assent_date: string | null;
   // Enrichment fields (populated by cron, nullable until first run)
   sponsor_id: string | null;
   sponsor_party: string | null;
@@ -50,7 +62,7 @@ export function useBills(filters: Filters = {}) {
         let query = supabase
           .from('bills')
           // eslint-disable-next-line max-len
-          .select('id,title,short_title,current_status,status,summary_plain,summary_full,expanded_summary,categories,date_introduced,last_updated,chamber_introduced,origin_chamber,level,aph_url,sponsor_id,sponsor_party,narrative_status,is_live,days_since_movement,politics_cache');
+          .select('id,title,short_title,current_status,status,summary,summary_plain,summary_full,expanded_summary,categories,date_introduced,last_updated,chamber_introduced,origin_chamber,level,aph_url,aph_id,sponsor,portfolio,bill_type,parliament_no,intro_house,intro_senate,passed_house,passed_senate,assent_date,sponsor_id,sponsor_party,narrative_status,is_live,days_since_movement,politics_cache');
 
         if (filters.status) {
           query = query.eq('current_status', filters.status);

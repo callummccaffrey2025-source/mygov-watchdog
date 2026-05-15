@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, Pressable, TextInput, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, Pressable, TextInput, ActivityIndicator, ScrollView } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,43 +13,40 @@ import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS } from '../constants/des
 
 const PAGE_SIZE = 30;
 
-type StatusFilter = 'live' | 'recent' | 'all' | 'archived';
+type StatusFilter = 'live' | 'recent' | 'passed' | 'all_48' | 'all_47';
 
 const STATUS_CHIPS: { key: StatusFilter; label: string }[] = [
-  { key: 'live',     label: 'Live' },
+  { key: 'live',     label: 'Before Parliament' },
   { key: 'recent',   label: 'Recent' },
-  { key: 'all',      label: 'All' },
-  { key: 'archived', label: 'Archived' },
+  { key: 'passed',   label: 'Passed into Law' },
+  { key: 'all_48',   label: '48th Parliament' },
+  { key: 'all_47',   label: '47th Parliament' },
 ];
 
-const BILL_SELECT = 'id,title,short_title,current_status,status,summary_plain,summary_full,expanded_summary,categories,date_introduced,last_updated,chamber_introduced,origin_chamber,level,aph_url,sponsor_id,sponsor_party,narrative_status,is_live,days_since_movement,politics_cache';
+const BILL_SELECT = 'id,title,short_title,current_status,status,summary,summary_plain,summary_full,expanded_summary,categories,date_introduced,last_updated,chamber_introduced,origin_chamber,level,aph_url,aph_id,sponsor,portfolio,bill_type,parliament_no,intro_house,intro_senate,passed_house,passed_senate,assent_date,sponsor_id,sponsor_party,narrative_status,is_live,days_since_movement,politics_cache';
 
 function buildQuery(search: string, status: StatusFilter, offset: number) {
   let q = supabase.from('bills').select(BILL_SELECT);
 
   if (status === 'live') {
-    // Only bills actively before Parliament
-    q = q.neq('current_status', 'Historical')
-      .not('current_status', 'ilike', '%enacted%')
-      .not('current_status', 'ilike', '%defeated%')
-      .not('current_status', 'ilike', '%withdrawn%')
-      .not('current_status', 'ilike', '%lapsed%');
+    q = q.in('current_status', ['introduced', 'passed_house']);
   } else if (status === 'recent') {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    q = q.neq('current_status', 'Historical')
-      .gte('last_updated', ninetyDaysAgo);
-  } else if (status === 'archived') {
-    q = q.eq('current_status', 'Historical');
-  } else {
-    // All: exclude Historical to avoid 6000+ archive rows
-    q = q.neq('current_status', 'Historical');
+    q = q.gte('last_updated', ninetyDaysAgo)
+      .not('aph_id', 'is', null);
+  } else if (status === 'passed') {
+    q = q.eq('current_status', 'royal_assent');
+  } else if (status === 'all_48') {
+    q = q.eq('parliament_no', 48);
+  } else if (status === 'all_47') {
+    q = q.eq('parliament_no', 47);
   }
 
   if (search.length > 1) {
     q = q.ilike('title', `%${search}%`);
   }
 
-  q = q.order('last_updated', { ascending: false, nullsFirst: false });
+  q = q.order('date_introduced', { ascending: false, nullsFirst: false });
   q = q.range(offset, offset + PAGE_SIZE - 1);
   return q;
 }
@@ -85,18 +82,7 @@ export function BillListScreen({ navigation }: any) {
     if (!loadingMore && hasMore) fetchPage(bills.length, false);
   };
 
-  // Sort: live bills first, then by last_updated
-  const sortedBills = useMemo(() => {
-    if (status !== 'all') return bills;
-    const live: Bill[] = [];
-    const rest: Bill[] = [];
-    bills.forEach(b => {
-      const e = enrichBill(b);
-      if (e.isLive) live.push(b);
-      else rest.push(b);
-    });
-    return [...live, ...rest];
-  }, [bills, status]);
+  const sortedBills = bills;
 
   const renderBillCard = useCallback(({ item }: { item: Bill }) => {
     const e = enrichBill(item);
@@ -104,7 +90,7 @@ export function BillListScreen({ navigation }: any) {
       <BillCard
         bill={item}
         onPress={() => navigation.navigate('BillDetail', { bill: item })}
-        dimmed={!e.isLive && status === 'all'}
+        dimmed={!e.isLive && (status === 'all_47' || status === 'all_48')}
       />
     );
   }, [navigation, status]);
@@ -144,7 +130,7 @@ export function BillListScreen({ navigation }: any) {
       </View>
 
       {/* Filter chips */}
-      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg }}>
         {STATUS_CHIPS.map(chip => {
           const active = status === chip.key;
           return (
@@ -168,7 +154,7 @@ export function BillListScreen({ navigation }: any) {
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
 
       {loading ? (
         <View style={{ paddingHorizontal: SPACING.xl }}>
@@ -191,7 +177,7 @@ export function BillListScreen({ navigation }: any) {
               </Text>
               <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, textAlign: 'center' }}>
                 {status === 'live'
-                  ? 'Try "All" to see recently active bills, or search by title.'
+                  ? 'No bills are currently before Parliament. Try "48th Parliament" to browse all.'
                   : 'Try a different search term or filter.'}
               </Text>
             </View>
