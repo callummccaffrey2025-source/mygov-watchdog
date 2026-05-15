@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { PublishedPoll } from '../hooks/usePublishedPolls';
-import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
+import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS, PARTY_COLORS } from '../constants/design';
 
 const GREEN = '#00843D';
 
@@ -15,10 +15,11 @@ function formatDate(dateStr: string): string {
 }
 
 function PrimaryRow({ label, value, color }: { label: string; value: number | null; color: string }) {
+  const { colors } = useTheme();
   if (value === null) return null;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: SPACING.sm }}>
-      <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.medium, color: '#1a2332' }}>{label}</Text>
+      <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.medium, color: colors.text }}>{label}</Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
         <View style={{ width: 100, height: 8, borderRadius: 4, backgroundColor: '#F3F4F6', overflow: 'hidden' }}>
           <View style={{ width: `${Math.min(value, 100)}%`, height: 8, borderRadius: 4, backgroundColor: color }} />
@@ -103,19 +104,19 @@ export function PollDetailScreen({ route, navigation }: any) {
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.xxl, marginBottom: SPACING.lg }}>
               <View style={{ alignItems: 'center' }}>
-                <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.semibold, color: '#DC3545', marginBottom: 4 }}>ALP</Text>
-                <Text style={{ fontSize: 42, fontWeight: '800', color: '#DC3545' }}>{poll.tpp_alp}</Text>
+                <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.semibold, color: PARTY_COLORS.ALP, marginBottom: 4 }}>ALP</Text>
+                <Text style={{ fontSize: 42, fontWeight: '800', color: PARTY_COLORS.ALP }}>{poll.tpp_alp}</Text>
               </View>
               <Text style={{ fontSize: 20, color: colors.textMuted }}>—</Text>
               <View style={{ alignItems: 'center' }}>
-                <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.semibold, color: '#2563EB', marginBottom: 4 }}>L/NP</Text>
-                <Text style={{ fontSize: 42, fontWeight: '800', color: '#2563EB' }}>{poll.tpp_lnp}</Text>
+                <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.semibold, color: PARTY_COLORS.LNP, marginBottom: 4 }}>L/NP</Text>
+                <Text style={{ fontSize: 42, fontWeight: '800', color: PARTY_COLORS.LNP }}>{poll.tpp_lnp}</Text>
               </View>
             </View>
 
             <View style={{ height: 12, borderRadius: 6, overflow: 'hidden', flexDirection: 'row', backgroundColor: colors.cardAlt }}>
-              <View style={{ flex: Number(poll.tpp_alp), backgroundColor: '#DC3545' }} />
-              <View style={{ flex: Number(poll.tpp_lnp), backgroundColor: '#2563EB' }} />
+              <View style={{ flex: Number(poll.tpp_alp), backgroundColor: PARTY_COLORS.ALP }} />
+              <View style={{ flex: Number(poll.tpp_lnp), backgroundColor: PARTY_COLORS.LNP }} />
             </View>
           </View>
         )}
@@ -130,12 +131,12 @@ export function PollDetailScreen({ route, navigation }: any) {
             Primary Vote
           </Text>
 
-          <PrimaryRow label="Labor (ALP)" value={poll.primary_alp} color="#DC3545" />
-          <PrimaryRow label="Coalition (L/NP)" value={poll.primary_lnp} color="#2563EB" />
-          <PrimaryRow label="Greens" value={poll.primary_grn} color="#10B981" />
-          <PrimaryRow label="One Nation" value={poll.primary_one_nation} color="#F97316" />
-          <PrimaryRow label="Independents" value={poll.primary_ind} color="#8B5CF6" />
-          <PrimaryRow label="Other" value={poll.primary_other} color="#6B7280" />
+          <PrimaryRow label="Labor (ALP)" value={poll.primary_alp} color={PARTY_COLORS.ALP} />
+          <PrimaryRow label="Coalition (L/NP)" value={poll.primary_lnp} color={PARTY_COLORS.LNP} />
+          <PrimaryRow label="Greens" value={poll.primary_grn} color={PARTY_COLORS.GRN} />
+          <PrimaryRow label="One Nation" value={poll.primary_one_nation} color={PARTY_COLORS.ONP} />
+          <PrimaryRow label="Independents" value={poll.primary_ind} color={PARTY_COLORS.IND} />
+          <PrimaryRow label="Other" value={poll.primary_other} color={PARTY_COLORS.OTH} />
         </View>
 
         {/* Methodology */}

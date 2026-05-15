@@ -33,6 +33,15 @@ export const BORDER_RADIUS = {
   full: 9999,
 };
 
+export const PARTY_COLORS = {
+  ALP: '#DC3545',
+  LNP: '#2563EB',
+  GRN: '#10B981',
+  ONP: '#F97316',
+  IND: '#8B5CF6',
+  OTH: '#6B7280',
+};
+
 export const SHADOWS = {
   sm: {
     shadowColor: '#000',
