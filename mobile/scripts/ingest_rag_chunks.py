@@ -31,6 +31,27 @@ log = logging.getLogger(__name__)
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 MAX_CHUNK_CHARS = 2000
+PAGE_SIZE = 1000
+
+
+def paginated_fetch(sb, table: str, select_cols: str, filters: Optional[dict] = None, limit: Optional[int] = None) -> list[dict]:
+    """Fetch all rows from a table, paginating past the 1000-row default limit."""
+    all_data: list[dict] = []
+    offset = 0
+    while True:
+        query = sb.table(table).select(select_cols)
+        if filters:
+            for col, val in filters.items():
+                query = query.eq(col, val)
+        query = query.range(offset, offset + PAGE_SIZE - 1)
+        data = query.execute().data or []
+        all_data.extend(data)
+        if len(data) < PAGE_SIZE:
+            break
+        offset += PAGE_SIZE
+        if limit and len(all_data) >= limit:
+            return all_data[:limit]
+    return all_data[:limit] if limit else all_data
 
 
 def chunk_text(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
@@ -58,15 +79,11 @@ def chunk_text(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
 def ingest_bills(sb, limit: Optional[int] = None) -> int:
     """Chunk and store bills."""
     log.info("Ingesting bills...")
-    query = sb.table("bills").select(
+    data = paginated_fetch(sb, "bills",
         "id, title, summary_plain, expanded_summary, current_status, "
-        "sponsor, portfolio, categories, date_introduced"
-    ).neq("summary_plain", "null")
-
-    if limit:
-        query = query.limit(limit)
-
-    data = query.execute().data or []
+        "sponsor, portfolio, categories, date_introduced",
+        limit=limit)
+    data = [b for b in data if b.get("summary_plain")]
     count = 0
 
     for bill in data:
@@ -100,14 +117,9 @@ def ingest_bills(sb, limit: Optional[int] = None) -> int:
 def ingest_hansard(sb, limit: Optional[int] = None) -> int:
     """Chunk and store hansard speeches."""
     log.info("Ingesting hansard entries...")
-    query = sb.table("hansard_entries").select(
-        "id, member_id, date, debate_topic, excerpt, chamber"
-    ).neq("excerpt", "null")
-
-    if limit:
-        query = query.limit(limit)
-
-    data = query.execute().data or []
+    data = paginated_fetch(sb, "hansard_entries",
+        "id, member_id, date, debate_topic, excerpt, chamber", limit=limit)
+    data = [e for e in data if e.get("excerpt")]
     count = 0
 
     # Get member names for context
@@ -141,13 +153,9 @@ def ingest_hansard(sb, limit: Optional[int] = None) -> int:
 def ingest_donations(sb, limit: Optional[int] = None) -> int:
     """Chunk and store donation records."""
     log.info("Ingesting donations...")
-    query = sb.table("individual_donations").select(
-        "id, member_id, donor_name, donor_type, amount, financial_year, recipient_name"
-    )
-    if limit:
-        query = query.limit(limit)
-
-    data = query.execute().data or []
+    data = paginated_fetch(sb, "individual_donations",
+        "id, member_id, donor_name, donor_type, amount, financial_year, recipient_name",
+        limit=limit)
     members = {m["id"]: f"{m['first_name']} {m['last_name']}"
                for m in (sb.table("members").select("id, first_name, last_name").execute().data or [])}
 
@@ -177,14 +185,10 @@ def ingest_donations(sb, limit: Optional[int] = None) -> int:
 def ingest_contracts(sb, limit: Optional[int] = None) -> int:
     """Chunk and store government contracts."""
     log.info("Ingesting government contracts...")
-    query = sb.table("government_contracts").select(
+    data = paginated_fetch(sb, "government_contracts",
         "id, cn_id, agency, description, value, supplier_name, "
-        "procurement_method, category, start_date, end_date"
-    )
-    if limit:
-        query = query.limit(limit)
-
-    data = query.execute().data or []
+        "procurement_method, category, start_date, end_date",
+        limit=limit)
     count = 0
 
     for contract in data:
@@ -217,13 +221,9 @@ def ingest_contracts(sb, limit: Optional[int] = None) -> int:
 def ingest_interests(sb, limit: Optional[int] = None) -> int:
     """Chunk and store registered interests."""
     log.info("Ingesting registered interests...")
-    query = sb.table("registered_interests").select(
-        "id, member_id, category, description, date_registered"
-    )
-    if limit:
-        query = query.limit(limit)
-
-    data = query.execute().data or []
+    data = paginated_fetch(sb, "registered_interests",
+        "id, member_id, category, description, date_registered",
+        limit=limit)
     members = {m["id"]: f"{m['first_name']} {m['last_name']}"
                for m in (sb.table("members").select("id, first_name, last_name").execute().data or [])}
 
@@ -252,13 +252,9 @@ def ingest_interests(sb, limit: Optional[int] = None) -> int:
 def ingest_policies(sb, limit: Optional[int] = None) -> int:
     """Chunk and store party policies."""
     log.info("Ingesting party policies...")
-    query = sb.table("party_policies").select(
-        "id, party_id, category, summary_plain, source_url"
-    )
-    if limit:
-        query = query.limit(limit)
-
-    data = query.execute().data or []
+    data = paginated_fetch(sb, "party_policies",
+        "id, party_id, category, summary_plain, source_url",
+        limit=limit)
     parties = {p["id"]: p["name"]
                for p in (sb.table("parties").select("id, name").execute().data or [])}
 
@@ -281,22 +277,20 @@ def ingest_policies(sb, limit: Optional[int] = None) -> int:
 def ingest_members(sb, limit: Optional[int] = None) -> int:
     """Chunk and store member profiles."""
     log.info("Ingesting member profiles...")
-    query = sb.table("members").select(
-        "id, first_name, last_name, chamber, ministerial_role, bio, "
-        "party:parties(name), electorate:electorates(name, state)"
-    ).eq("is_active", True)
-
-    if limit:
-        query = query.limit(limit)
-
-    data = query.execute().data or []
+    data = paginated_fetch(sb, "members",
+        "id, first_name, last_name, chamber, ministerial_role, bio, party_id, electorate_id",
+        filters={"is_active": True}, limit=limit)
+    parties = {p["id"]: p["name"] for p in (sb.table("parties").select("id, name").execute().data or [])}
+    electorates = {e["id"]: {"name": e["name"], "state": e["state"]}
+                   for e in (sb.table("electorates").select("id, name, state").execute().data or [])}
     count = 0
 
     for m in data:
         name = f"{m['first_name']} {m['last_name']}"
-        party = m.get("party", {}).get("name", "Independent") if m.get("party") else "Independent"
-        electorate = m.get("electorate", {}).get("name", "") if m.get("electorate") else ""
-        state = m.get("electorate", {}).get("state", "") if m.get("electorate") else ""
+        party = parties.get(m.get("party_id"), "Independent")
+        el = electorates.get(m.get("electorate_id"), {})
+        electorate = el.get("name", "")
+        state = el.get("state", "")
 
         text = f"{name}, Member for {electorate} ({state}), {party}."
         text += f" Chamber: {m.get('chamber', 'Unknown')}."
