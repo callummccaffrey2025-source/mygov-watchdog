@@ -39,6 +39,7 @@ import { SubscriptionScreen } from './screens/SubscriptionScreen';
 import { CouncilProfileScreen } from './screens/CouncilProfileScreen';
 import { WriteToMPScreen } from './screens/WriteToMPScreen';
 import { AboutScreen } from './screens/AboutScreen';
+import { AskScreen } from './screens/AskScreen';
 import { ActivityScreen } from './screens/ActivityScreen';
 import { SavedScreen } from './screens/SavedScreen';
 import { LocalAnnouncementsScreen } from './screens/LocalAnnouncementsScreen';
@@ -378,6 +379,7 @@ function App() {
               <Stack.Screen name="CreateCommunityPost" component={CreateCommunityPostScreen} />
               <Stack.Screen name="WriteToMP" component={WriteToMPScreen} />
               <Stack.Screen name="About" component={AboutScreen} />
+              <Stack.Screen name="Ask" component={AskScreen} />
               <Stack.Screen name="Activity" component={ActivityScreen} />
               <Stack.Screen name="Saved" component={SavedScreen} />
               <Stack.Screen name="LocalAnnouncements" component={LocalAnnouncementsScreen} />
