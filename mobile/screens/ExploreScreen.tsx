@@ -44,11 +44,13 @@ const PartyCard = ({ party, onPress }: { party: Party; onPress: () => void }) =>
 
 function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { colors } = useTheme();
+  const { user } = useUser();
   const [mpSearch, setMpSearch] = useState('');
   const [selectedMP, setSelectedMP] = useState<Member | null>(null);
   const [billSearch, setBillSearch] = useState('');
   const [aiVerdict, setAiVerdict] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const { members } = useMembers(mpSearch.length > 1 ? { search: mpSearch, limit: 8 } : { limit: 0 });
   const { votes, loading: votesLoading } = useMemberVotes(selectedMP?.id || null);
@@ -58,11 +60,13 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
     ? votes.filter(v => v.bill?.title.toLowerCase().includes(billSearch.toLowerCase()))
     : votes.slice(0, 20);
 
-  const keyword = billSearch.toLowerCase();
-  const divMatches = billSearch.length > 1
-    ? divVotes.filter(v =>
-        (v.division?.name || '').toLowerCase().includes(keyword)
-      )
+  // Improved keyword matching: split into words, match if ANY word appears in division name
+  const keywords = billSearch.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  const divMatches = keywords.length > 0
+    ? divVotes.filter(v => {
+        const name = (v.division?.name || '').toLowerCase();
+        return keywords.some(kw => name.includes(kw));
+      })
     : [];
   const ayeCount = divMatches.filter(v => v.vote_cast === 'aye').length;
   const noCount = divMatches.filter(v => v.vote_cast === 'no').length;
@@ -70,15 +74,22 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
   const top3Div = divMatches.slice(0, 3);
   const showVerdict = divMatches.length > 0;
 
-  // ── AI verdict (debounced, falls back silently on Edge Function error) ──
+  // ── AI verdict (debounced, with error feedback) ──
   React.useEffect(() => {
     if (!selectedMP || divMatches.length === 0 || billSearch.length < 2) {
       setAiVerdict(null);
+      setAiLoading(false);
+      setAiError(null);
+      return;
+    }
+    if (!user) {
+      setAiError(null); // Don't show error, just skip AI for anonymous
       setAiLoading(false);
       return;
     }
     let cancelled = false;
     setAiLoading(true);
+    setAiError(null);
     const timer = setTimeout(async () => {
       const mpName = `${selectedMP.first_name} ${selectedMP.last_name}`;
       const votesPayload = divMatches.slice(0, 5).map(v => ({
@@ -91,13 +102,21 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
           body: { mpName, claim: billSearch, votes: votesPayload },
         });
         if (cancelled) return;
-        if (error || !data?.verdict) {
+        if (error) {
+          const errMsg = typeof error === 'object' && error.message ? error.message : String(error);
+          if (errMsg.includes('Rate limit')) {
+            setAiError('Daily limit reached (10 claims/day). Try again tomorrow.');
+          } else {
+            setAiError(null); // Non-critical errors — just hide AI card
+          }
+          setAiVerdict(null);
+        } else if (!data?.verdict) {
           setAiVerdict(null);
         } else {
           setAiVerdict(data.verdict);
         }
       } catch {
-        if (!cancelled) setAiVerdict(null);
+        if (!cancelled) { setAiVerdict(null); setAiError(null); }
       } finally {
         if (!cancelled) setAiLoading(false);
       }
@@ -107,7 +126,7 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [selectedMP?.id, billSearch, divMatches.length]);
+  }, [selectedMP?.id, billSearch, divMatches.length, user?.id]);
 
   const voteColour = (vote: string) =>
     vote === 'aye' ? '#00843D' : vote === 'no' ? '#DC3545' : '#9aabb8';
@@ -170,8 +189,8 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
                 <Text style={[verifyStyles.loading, { color: colors.textMuted }]}>Loading votes...</Text>
               ) : (
                 <>
-                  {/* AI verdict card — silently hides on Edge Function failure */}
-                  {showVerdict && selectedMP && (aiLoading || aiVerdict) && (
+                  {/* AI verdict card */}
+                  {showVerdict && selectedMP && (aiLoading || aiVerdict || aiError) && (
                     <View style={verifyStyles.aiCard}>
                       <View style={verifyStyles.aiCardHeader}>
                         <View style={verifyStyles.aiCardHeaderLeft}>
@@ -182,14 +201,24 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
                           <Text style={verifyStyles.aiCardThinking}>Thinking…</Text>
                         )}
                       </View>
-                      {aiVerdict ? (
-                        <Text style={[verifyStyles.aiCardVerdict, { color: colors.text }]}>
-                          {aiVerdict}
-                        </Text>
+                      {aiError ? (
+                        <Text style={[verifyStyles.aiCardVerdict, { color: '#DC3545' }]}>{aiError}</Text>
+                      ) : aiVerdict ? (
+                        <>
+                          <Text style={[verifyStyles.aiCardVerdict, { color: colors.text }]}>
+                            {aiVerdict}
+                          </Text>
+                          <Text style={verifyStyles.aiCardFooter}>Powered by Claude Haiku 4.5</Text>
+                        </>
                       ) : null}
-                      {aiVerdict ? (
-                        <Text style={verifyStyles.aiCardFooter}>Powered by Claude Haiku 4.5</Text>
-                      ) : null}
+                    </View>
+                  )}
+                  {/* Sign in prompt for AI analysis */}
+                  {showVerdict && !user && (
+                    <View style={[verifyStyles.aiCard, { backgroundColor: colors.surface, borderLeftColor: colors.textMuted }]}>
+                      <Text style={[verifyStyles.aiCardVerdict, { color: colors.textMuted }]}>
+                        Sign in to get AI-powered analysis of this claim.
+                      </Text>
                     </View>
                   )}
                   {showVerdict && selectedMP ? (
@@ -251,7 +280,14 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
                     </View>
                   ) : null}
                   {filteredVotes.length === 0 && !showVerdict ? (
-                    <Text style={[verifyStyles.empty, { color: colors.textMuted }]}>No votes found{billSearch ? ` for "${billSearch}"` : ''}.</Text>
+                    <View style={{ alignItems: 'center', paddingTop: SPACING.xl }}>
+                      <Ionicons name="search-outline" size={32} color={colors.textMuted} />
+                      <Text style={[verifyStyles.empty, { color: colors.textMuted }]}>
+                        {billSearch.length > 1
+                          ? `No voting records match "${billSearch}". Try broader terms like "health", "tax", or "climate".`
+                          : `Enter a topic to check ${selectedMP?.first_name}'s voting record.`}
+                      </Text>
+                    </View>
                   ) : (
                     filteredVotes.map(v => (
                       <View key={v.id} style={[verifyStyles.voteRow, { borderBottomColor: colors.border }]}>
@@ -472,6 +508,29 @@ export function ExploreScreen({ navigation }: any) {
             </View>
           </View>
           <Ionicons name="arrow-forward" size={18} color="#ffffff" />
+        </Pressable>
+
+        {/* Ask Verity AI */}
+        <Pressable
+          style={{
+            backgroundColor: colors.card, borderRadius: 14, padding: 16, marginBottom: 16,
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+            borderWidth: 1.5, borderColor: '#00843D',
+          }}
+          onPress={() => navigation.navigate('Ask')}
+          accessibilityRole="button"
+          accessibilityLabel="Ask Verity AI"
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="sparkles" size={20} color="#00843D" />
+            </View>
+            <View>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>Ask Verity AI</Text>
+              <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>Ask anything about Australian politics</Text>
+            </View>
+          </View>
+          <Ionicons name="arrow-forward" size={18} color="#00843D" />
         </Pressable>
 
         <VerifyModal visible={verifyVisible} onClose={() => setVerifyVisible(false)} />
