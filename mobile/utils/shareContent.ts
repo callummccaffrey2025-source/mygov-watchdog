@@ -1,4 +1,5 @@
 import { RefObject } from 'react';
+import { Share } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { supabase } from '../lib/supabase';
@@ -46,5 +47,38 @@ export async function captureAndShare(
     trackEvent('share_created', { content_type: contentType, content_id: contentId });
   } catch {
     // Non-critical — silently ignore capture/share failures
+  }
+}
+
+const BASE_URL = 'https://verity.au';
+
+/**
+ * Build a deep link URL for a piece of content.
+ */
+export function buildDeepLink(type: 'mp' | 'bill' | 'party' | 'poll', id: string): string {
+  return `${BASE_URL}/${type}/${id}`;
+}
+
+/**
+ * Share text + deep link via the native share sheet.
+ */
+export async function shareText(
+  message: string,
+  contentType: ShareContentType,
+  contentId: string | null,
+  userId: string | null | undefined,
+): Promise<void> {
+  try {
+    await Share.share({ message });
+
+    supabase.from('share_events').insert({
+      content_type: contentType,
+      content_id: contentId,
+      user_id: userId ?? null,
+    }).then(() => {/* no-op */});
+
+    trackEvent('share_created', { content_type: contentType, content_id: contentId });
+  } catch {
+    // Non-critical
   }
 }

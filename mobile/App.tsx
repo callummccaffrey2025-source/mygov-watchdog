@@ -249,14 +249,29 @@ function App() {
 
   useEffect(() => {
     const handleUrl = async ({ url }: { url: string }) => {
-      if (!url.startsWith('verity://')) return;
-      const fragment = url.includes('#') ? url.split('#')[1] : url.split('?')[1] ?? '';
-      const params = Object.fromEntries(new URLSearchParams(fragment));
-      if (params.access_token && params.refresh_token) {
-        await supabase.auth.setSession({
-          access_token: params.access_token,
-          refresh_token: params.refresh_token,
-        });
+      // Auth callback (verity://auth-callback#access_token=...)
+      if (url.startsWith('verity://')) {
+        const fragment = url.includes('#') ? url.split('#')[1] : url.split('?')[1] ?? '';
+        const params = Object.fromEntries(new URLSearchParams(fragment));
+        if (params.access_token && params.refresh_token) {
+          await supabase.auth.setSession({
+            access_token: params.access_token,
+            refresh_token: params.refresh_token,
+          });
+        }
+        return;
+      }
+
+      // Universal links (https://verity.au/mp/uuid, /bill/uuid, /party/uuid)
+      if (url.includes('verity.au/') && navigationRef.isReady()) {
+        const path = url.split('verity.au/')[1];
+        if (!path) return;
+        const [type, id] = path.split('/');
+        if (!type || !id) return;
+        if (type === 'mp') navigationRef.navigate('MemberProfile', { memberId: id });
+        else if (type === 'bill') navigationRef.navigate('BillDetail', { billId: id });
+        else if (type === 'party') navigationRef.navigate('PartyProfile', { partyId: id });
+        else if (type === 'poll') navigationRef.navigate('PollDetail', { pollId: id });
       }
     };
     Linking.getInitialURL().then(url => { if (url) handleUrl({ url }); });

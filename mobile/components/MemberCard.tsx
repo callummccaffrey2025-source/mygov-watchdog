@@ -10,7 +10,7 @@ interface Props {
   compact?: boolean;
 }
 
-export function MemberCard({ member, onPress, compact }: Props) {
+export const MemberCard = React.memo(function MemberCard({ member, onPress, compact }: Props) {
   const party = member.party;
   const partyColour = party?.colour || '#9aabb8';
   const displayName = `${member.first_name} ${member.last_name}`;
@@ -35,7 +35,7 @@ export function MemberCard({ member, onPress, compact }: Props) {
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

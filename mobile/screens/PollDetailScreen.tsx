@@ -134,6 +134,7 @@ export function PollDetailScreen({ route, navigation }: any) {
           <PrimaryRow label="Coalition (L/NP)" value={poll.primary_lnp} color="#2563EB" />
           <PrimaryRow label="Greens" value={poll.primary_grn} color="#10B981" />
           <PrimaryRow label="One Nation" value={poll.primary_one_nation} color="#F97316" />
+          <PrimaryRow label="Independents" value={poll.primary_ind} color="#8B5CF6" />
           <PrimaryRow label="Other" value={poll.primary_other} color="#6B7280" />
         </View>
 

@@ -15,9 +15,11 @@ export interface PublishedPoll {
   primary_lnp: number | null;
   primary_grn: number | null;
   primary_one_nation: number | null;
+  primary_ind: number | null;
   primary_other: number | null;
   tpp_alp: number | null;
   tpp_lnp: number | null;
+  tpp_onp: number | null;
   source_url: string;
   verified_by_human: boolean;
   notes: string | null;
@@ -32,6 +34,7 @@ export interface PollAggregate {
   primary_alp: number | null;
   primary_lnp: number | null;
   primary_grn: number | null;
+  primary_onp: number | null;
   poll_count: number;
 }
 

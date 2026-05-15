@@ -536,15 +536,19 @@ export function PollsScreen({ navigation }: any) {
               {aggregate.primary_alp && aggregate.primary_lnp && aggregate.primary_grn && (
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: SPACING.lg, paddingTop: SPACING.md, borderTopWidth: 0.5, borderTopColor: colors.border }}>
                   <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: 11, color: colors.textMuted }}>ALP</Text>
+                    <Text style={{ fontSize: 11, color: '#DC3545' }}>ALP</Text>
                     <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>{aggregate.primary_alp}%</Text>
                   </View>
                   <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: 11, color: colors.textMuted }}>L/NP</Text>
+                    <Text style={{ fontSize: 11, color: '#2563EB' }}>L/NP</Text>
                     <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>{aggregate.primary_lnp}%</Text>
                   </View>
                   <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: 11, color: colors.textMuted }}>GRN</Text>
+                    <Text style={{ fontSize: 11, color: '#F97316' }}>ONP</Text>
+                    <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>{aggregate.primary_onp ?? '—'}%</Text>
+                  </View>
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ fontSize: 11, color: '#10B981' }}>GRN</Text>
                     <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>{aggregate.primary_grn}%</Text>
                   </View>
                 </View>

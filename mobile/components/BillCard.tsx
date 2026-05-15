@@ -27,7 +27,7 @@ interface Props {
   dimmed?: boolean;
 }
 
-export function BillCard({ bill, onPress, horizontal, relevanceLine, dimmed }: Props) {
+export const BillCard = React.memo(function BillCard({ bill, onPress, horizontal, relevanceLine, dimmed }: Props) {
   const { colors } = useTheme();
   const displayTitle = bill.short_title || bill.title;
   const enrichment = enrichBill(bill);
@@ -155,4 +155,4 @@ export function BillCard({ bill, onPress, horizontal, relevanceLine, dimmed }: P
       </View>
     </Pressable>
   );
-}
+});

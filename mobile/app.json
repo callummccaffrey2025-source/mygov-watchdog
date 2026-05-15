@@ -17,6 +17,7 @@
       "bundleIdentifier": "au.com.verity.app",
       "buildNumber": "10",
       "usesAppleSignIn": true,
+      "associatedDomains": ["applinks:verity.au"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryAddUsageDescription": "Verity saves share cards to your photo library when you tap Save from the share sheet.",

@@ -50,6 +50,8 @@ METHODOLOGY_MAP = {
     "Redbridge": "online panel",
     "Ipsos": "online panel",
     "DemosAU": "online panel",
+    "Spectre Strategy": "online panel",
+    "Freshwater": "online panel",
 }
 
 
@@ -241,16 +243,38 @@ def fetch_and_parse() -> tuple[list[dict[str, Any]], str]:
         primary_lnp = pct_values[1] if len(pct_values) > 1 else None  # combined L/NP (colspan)
         primary_grn = pct_values[4] if len(pct_values) > 4 else None
         primary_onp = pct_values[5] if len(pct_values) > 5 else None
+        primary_ind = pct_values[6] if len(pct_values) > 6 else None
+        primary_oth = pct_values[7] if len(pct_values) > 7 else None
+
+        # Combine IND + OTH into primary_other for the DB field
+        primary_other = None
+        if primary_ind is not None and primary_oth is not None:
+            primary_other = round(primary_ind + primary_oth, 1)
+        elif primary_ind is not None:
+            primary_other = primary_ind
+        elif primary_oth is not None:
+            primary_other = primary_oth
 
         # Find TPP: scan from the end for two values summing to ~100
         tpp_alp = None
         tpp_lnp = None
+        tpp_onp = None
         for i in range(len(pct_values) - 1, 0, -1):
             a, b = pct_values[i - 1], pct_values[i]
             if a is not None and b is not None and abs(a + b - 100) <= 2:
                 tpp_alp = a
                 tpp_lnp = b
                 break
+
+        # Check for 3-way TPP (ALP vs L/NP vs ONP) — three values summing to ~100
+        if len(pct_values) >= 11:
+            a, b, c = pct_values[8] if len(pct_values) > 8 else None, \
+                       pct_values[9] if len(pct_values) > 9 else None, \
+                       pct_values[10] if len(pct_values) > 10 else None
+            if a is not None and b is not None and c is not None and abs(a + b + c - 100) <= 3:
+                tpp_alp = a
+                tpp_lnp = b
+                tpp_onp = c
 
         if not tpp_alp or not tpp_lnp:
             continue
@@ -271,8 +295,11 @@ def fetch_and_parse() -> tuple[list[dict[str, Any]], str]:
             "primary_lnp": primary_lnp,
             "primary_grn": primary_grn,
             "primary_one_nation": primary_onp,
+            "primary_ind": primary_ind,
+            "primary_other": primary_other,
             "tpp_alp": tpp_alp,
             "tpp_lnp": tpp_lnp,
+            "tpp_onp": tpp_onp,
             "source_url": source_url,
             "wikipedia_revision_url": revision_url,
             "verified_by_human": False,
@@ -286,7 +313,8 @@ def write_polls(polls: list[dict], dry_run: bool = True) -> int:
     if dry_run:
         log.info("DRY RUN — not writing to Supabase")
         for p in polls:
-            log.info(f"  {p['pollster']:25s} {p['field_end_date']}  TPP: ALP {p['tpp_alp']}  LNP {p['tpp_lnp']}  primary ALP={p['primary_alp']} LNP={p['primary_lnp']} GRN={p['primary_grn']}  n={p['sample_size']}")
+            onp_tpp = f"  ONP {p['tpp_onp']}" if p.get('tpp_onp') else ""
+            log.info(f"  {p['pollster']:25s} {p['field_end_date']}  TPP: ALP {p['tpp_alp']}  LNP {p['tpp_lnp']}{onp_tpp}  primary ALP={p['primary_alp']} LNP={p['primary_lnp']} GRN={p['primary_grn']} ONP={p['primary_one_nation']} IND={p.get('primary_ind')} OTH={p.get('primary_other')}  n={p['sample_size']}")
         return len(polls)
 
     if not SUPABASE_URL or not SUPABASE_KEY:

@@ -13,7 +13,7 @@ interface LessonCardProps {
   onPress: () => void;
 }
 
-export function LessonCard({ title, icon, color, lessonCount, completedCount, onPress }: LessonCardProps) {
+export const LessonCard = React.memo(function LessonCard({ title, icon, color, lessonCount, completedCount, onPress }: LessonCardProps) {
   const { colors } = useTheme();
   const progress = lessonCount > 0 ? completedCount / lessonCount : 0;
   const cardColor = color || '#00843D';
@@ -39,7 +39,7 @@ export function LessonCard({ title, icon, color, lessonCount, completedCount, on
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
