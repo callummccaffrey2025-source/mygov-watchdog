@@ -81,10 +81,10 @@ function SectionHeader({
   onRightPress?: () => void;
 }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View style={{ width: 4, height: 16, borderRadius: 2, backgroundColor: color, marginRight: 7 }} />
-        <Text style={{ fontSize: 10.5, fontWeight: FONT_WEIGHT.bold, letterSpacing: 1, color: '#6B7280', textTransform: 'uppercase' }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.lg }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
+        <View style={{ width: 3, height: 14, borderRadius: 1.5, backgroundColor: color }} />
+        <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, letterSpacing: 0.8, color: '#6B7280', textTransform: 'uppercase' }}>
           {label}
         </Text>
       </View>
@@ -100,8 +100,9 @@ function SectionHeader({
 // ── Section Divider ─────────────────────────────────────────────────────
 
 function SectionDivider() {
+  const { colors } = useTheme();
   return (
-    <View style={{ height: 1, backgroundColor: 'rgba(26,26,23,0.06)', marginHorizontal: 20, marginTop: SPACING.xl }} />
+    <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: 20, marginTop: SPACING.xl, opacity: 0.5 }} />
   );
 }
 
@@ -217,13 +218,13 @@ export function HomeScreen({ navigation }: any) {
       >
         {/* ═══ 1. GREEN HERO ═══ */}
         <LinearGradient
-          colors={['#00843D', '#006B31']}
+          colors={['#00843D', '#005C2B']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
-            paddingTop: 18,
-            paddingHorizontal: 22,
-            paddingBottom: 28,
+            paddingTop: SPACING.lg,
+            paddingHorizontal: SPACING.xl,
+            paddingBottom: SPACING.xxl,
             overflow: 'hidden',
           }}
         >
@@ -246,74 +247,78 @@ export function HomeScreen({ navigation }: any) {
           />
 
           {/* Top row: bell + compass — right-aligned */}
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 20, gap: 10 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: SPACING.lg, gap: SPACING.sm }}>
             <Pressable
               onPress={() => navigation.navigate('Activity')}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="View activity notifications"
-              style={{
-                width: 38, height: 38, borderRadius: 19,
-                backgroundColor: 'rgba(255,255,255,0.15)',
+              style={({ pressed }) => ({
+                width: 36, height: 36, borderRadius: 18,
+                backgroundColor: pressed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
                 justifyContent: 'center', alignItems: 'center',
-              }}
+              })}
             >
-              <Ionicons name="notifications-outline" size={19} color="#ffffff" />
+              <Ionicons name="notifications-outline" size={18} color="#ffffff" />
             </Pressable>
             <Pressable
               onPress={() => navigation.navigate('Explore')}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Explore"
-              style={{
-                width: 38, height: 38, borderRadius: 19,
-                backgroundColor: 'rgba(255,255,255,0.15)',
+              style={({ pressed }) => ({
+                width: 36, height: 36, borderRadius: 18,
+                backgroundColor: pressed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
                 justifyContent: 'center', alignItems: 'center',
-              }}
+              })}
             >
-              <Ionicons name="compass-outline" size={19} color="#ffffff" />
+              <Ionicons name="compass-outline" size={18} color="#ffffff" />
             </Pressable>
           </View>
 
           {/* Greeting */}
-          <Text style={{ fontSize: 30, fontWeight: FONT_WEIGHT.bold, color: '#ffffff', letterSpacing: -0.5 }}>
+          <Text style={{ fontSize: FONT_SIZE.heading + 4, fontWeight: FONT_WEIGHT.bold, color: '#ffffff', letterSpacing: -0.3 }}>
             {greeting}
           </Text>
 
           {/* Personal context line */}
-          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.medium, color: 'rgba(255,255,255,0.7)', marginTop: SPACING.xs }}>
+          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.medium, color: 'rgba(255,255,255,0.65)', marginTop: SPACING.xs, letterSpacing: 0.1 }}>
             {myMP
               ? `${dateStr} · ${electorateName ?? ''}`
               : dateStr}
           </Text>
 
           {/* Parliament status pills */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: 14 }}>
-            {/* Pill 1: sitting status */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: SPACING.lg }}>
             <View style={{
-              flexDirection: 'row', alignItems: 'center', gap: 6,
-              backgroundColor: 'rgba(255,255,255,0.14)',
-              borderRadius: BORDER_RADIUS.md,
-              paddingHorizontal: 11, paddingVertical: 8,
+              flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2,
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              borderRadius: BORDER_RADIUS.full,
+              paddingHorizontal: SPACING.md,
+              paddingVertical: SPACING.sm,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.08)',
             }}>
               <View style={{
                 width: 6, height: 6, borderRadius: 3,
                 backgroundColor: isSittingToday ? '#4ADE80' : '#FBBF24',
               }} />
-              <Text style={{ fontSize: 12, fontWeight: FONT_WEIGHT.semibold, color: 'rgba(255,255,255,0.85)' }}>
-                {isSittingToday ? 'Parliament is sitting' : 'Parliament in recess'}
+              <Text style={{ fontSize: FONT_SIZE.caption + 1, fontWeight: FONT_WEIGHT.medium, color: 'rgba(255,255,255,0.9)' }}>
+                {isSittingToday ? 'Parliament is sitting' : 'In recess'}
               </Text>
             </View>
-            {/* Pill 2: resume date */}
             {!isSittingToday && nextSitting && (
               <View style={{
-                flexDirection: 'row', alignItems: 'center', gap: 6,
-                backgroundColor: 'rgba(255,255,255,0.14)',
-                borderRadius: BORDER_RADIUS.md,
-                paddingHorizontal: 11, paddingVertical: 8,
+                flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2,
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                borderRadius: BORDER_RADIUS.full,
+                paddingHorizontal: SPACING.md,
+                paddingVertical: SPACING.sm,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.08)',
               }}>
-                <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.85)" />
-                <Text style={{ fontSize: 12, fontWeight: FONT_WEIGHT.semibold, color: 'rgba(255,255,255,0.85)' }}>
+                <Ionicons name="calendar-outline" size={12} color="rgba(255,255,255,0.9)" />
+                <Text style={{ fontSize: FONT_SIZE.caption + 1, fontWeight: FONT_WEIGHT.medium, color: 'rgba(255,255,255,0.9)' }}>
                   Resumes {formatParliamentDate(nextSitting)}
                 </Text>
               </View>
@@ -803,23 +808,25 @@ export function HomeScreen({ navigation }: any) {
               { icon: 'search-outline' as const, label: 'Search', screen: 'Explore' },
               { icon: 'document-text-outline' as const, label: 'Bills', screen: 'BillList' },
               { icon: 'people-outline' as const, label: 'MPs', screen: 'Explore' },
-              { icon: 'calendar-outline' as const, label: 'Elections', screen: 'Vote' },
+              { icon: 'school-outline' as const, label: 'Learn', screen: 'Learn' },
             ] as const).map(item => (
               <Pressable
                 key={item.label}
-                style={{ alignItems: 'center' }}
+                style={({ pressed }) => ({ alignItems: 'center', opacity: pressed ? 0.7 : 1 })}
                 onPress={() => navigation.navigate(item.screen)}
                 accessibilityRole="button"
                 accessibilityLabel={`Navigate to ${item.label}`}
               >
                 <View style={{
-                  width: 56, height: 56, borderRadius: 28,
+                  width: 52, height: 52, borderRadius: 16,
                   backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border,
                   justifyContent: 'center', alignItems: 'center',
                 }}>
-                  <Ionicons name={item.icon} size={22} color={colors.text} />
+                  <Ionicons name={item.icon} size={21} color={colors.text} />
                 </View>
-                <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginTop: SPACING.xs }}>
+                <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.medium, color: colors.textMuted, marginTop: SPACING.sm }}>
                   {item.label}
                 </Text>
               </Pressable>
@@ -917,37 +924,40 @@ function ContinueLearningCard({ navigation, colors }: { navigation: any; colors:
     <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
       <Pressable
         onPress={() => navigation.navigate('Learn')}
-        style={{
+        style={({ pressed }) => ({
           backgroundColor: colors.card,
-          borderRadius: BORDER_RADIUS.xl,
+          borderRadius: BORDER_RADIUS.lg,
           padding: SPACING.lg,
+          borderWidth: 1,
+          borderColor: colors.border,
+          opacity: pressed ? 0.92 : 1,
           ...SHADOWS.sm,
-        }}
+        })}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.md }}>
           <View style={{
-            width: 32, height: 32, borderRadius: BORDER_RADIUS.md,
-            backgroundColor: '#E8F5EE', alignItems: 'center', justifyContent: 'center',
+            width: 40, height: 40, borderRadius: BORDER_RADIUS.md,
+            backgroundColor: colors.greenBg, alignItems: 'center', justifyContent: 'center',
           }}>
-            <Ionicons name="school" size={18} color="#00843D" />
+            <Ionicons name="school" size={20} color={colors.green} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold as any, color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold, color: colors.green, textTransform: 'uppercase', letterSpacing: 0.6 }}>
               Continue Learning
             </Text>
-            <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold as any, color: colors.text }}>
+            <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text, marginTop: 1 }}>
               {nextModule.title}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
         </View>
 
         {/* Progress bar */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
-          <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: 'hidden' }}>
-            <View style={{ height: '100%', width: `${progress * 100}%`, backgroundColor: '#00843D', borderRadius: 3 }} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
+          <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden' }}>
+            <View style={{ height: '100%', width: `${progress * 100}%`, backgroundColor: colors.green, borderRadius: 2 }} />
           </View>
-          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, fontWeight: FONT_WEIGHT.medium as any }}>
+          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, fontWeight: FONT_WEIGHT.medium }}>
             {completedLessons}/{totalLessons}
           </Text>
         </View>
