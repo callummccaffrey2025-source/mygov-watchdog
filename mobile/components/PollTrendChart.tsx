@@ -151,25 +151,22 @@ function PrimaryChart({ points, height, colors }: { points: PollDataPoint[]; hei
       <DateLabels points={points} colors={colors} />
 
       {/* Latest values */}
-      {points.length > 0 && (() => {
-        const latest = points[points.length - 1];
-        return (
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, marginTop: SPACING.xs, flexWrap: 'wrap' }}>
-            <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold as any, color: PARTY_COLORS.ALP }}>
-              ALP {latest.primary_alp}
-            </Text>
-            <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold as any, color: PARTY_COLORS.ONP }}>
-              ONP {latest.primary_one_nation}
-            </Text>
-            <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold as any, color: PARTY_COLORS.LNP }}>
-              L/NP {latest.primary_lnp}
-            </Text>
-            <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold as any, color: PARTY_COLORS.GRN }}>
-              GRN {latest.primary_grn}
-            </Text>
-          </View>
-        );
-      })()}
+      {points.length > 0 && (
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, marginTop: SPACING.xs, flexWrap: 'wrap' }}>
+          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold as any, color: PARTY_COLORS.ALP }}>
+            ALP {points[points.length - 1].primary_alp}
+          </Text>
+          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold as any, color: PARTY_COLORS.ONP }}>
+            ONP {points[points.length - 1].primary_one_nation}
+          </Text>
+          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold as any, color: PARTY_COLORS.LNP }}>
+            L/NP {points[points.length - 1].primary_lnp}
+          </Text>
+          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold as any, color: PARTY_COLORS.GRN }}>
+            GRN {points[points.length - 1].primary_grn}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -198,6 +195,6 @@ function DateLabels({ points, colors }: { points: PollDataPoint[]; colors: any }
 }
 
 function formatShortDate(dateStr: string): string {
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
 }

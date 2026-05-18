@@ -21,8 +21,8 @@ function PrimaryRow({ label, value, color }: { label: string; value: number | nu
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: SPACING.sm }}>
       <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.medium, color: colors.text }}>{label}</Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
-        <View style={{ width: 100, height: 8, borderRadius: 4, backgroundColor: '#F3F4F6', overflow: 'hidden' }}>
-          <View style={{ width: `${Math.min(value, 100)}%`, height: 8, borderRadius: 4, backgroundColor: color }} />
+        <View style={{ width: 100, height: 8, borderRadius: 4, backgroundColor: colors.cardAlt, overflow: 'hidden' }}>
+          <View style={{ width: `${Math.min((value / 40) * 100, 100)}%`, height: 8, borderRadius: 4, backgroundColor: color }} />
         </View>
         <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color, width: 45, textAlign: 'right' }}>{value}%</Text>
       </View>
@@ -92,7 +92,7 @@ export function PollDetailScreen({ route, navigation }: any) {
         </View>
 
         {/* TPP headline */}
-        {poll.tpp_alp && poll.tpp_lnp && (
+        {poll.tpp_alp != null && poll.tpp_lnp != null && (
           <View style={{
             marginHorizontal: SPACING.xl, backgroundColor: colors.card,
             borderRadius: BORDER_RADIUS.lg, padding: SPACING.xl, marginBottom: SPACING.xl,
@@ -150,7 +150,7 @@ export function PollDetailScreen({ route, navigation }: any) {
           </Text>
 
           <View style={{ gap: SPACING.sm }}>
-            {poll.sample_size && (
+            {poll.sample_size != null && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text style={{ fontSize: FONT_SIZE.body, color: colors.textBody }}>Sample size</Text>
                 <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: colors.text }}>{poll.sample_size.toLocaleString()}</Text>

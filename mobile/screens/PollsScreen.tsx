@@ -18,6 +18,13 @@ import { timeAgo } from '../lib/timeAgo';
 
 const GREEN = '#00843D';
 
+const REPORT_REASONS = [
+  { id: 'misleading', label: 'Misleading question' },
+  { id: 'offensive', label: 'Offensive content' },
+  { id: 'factually_wrong', label: 'Factually wrong' },
+  { id: 'other', label: 'Other' },
+];
+
 type TabMode = 'federal' | 'daily';
 
 interface DailyPoll {
@@ -41,9 +48,9 @@ interface PollResult {
 }
 
 function getAESTDate(offsetDays = 0): string {
-  const now = new Date();
-  const aest = new Date(now.getTime() + 10 * 60 * 60 * 1000 + offsetDays * 24 * 60 * 60 * 1000);
-  return aest.toISOString().slice(0, 10);
+  // Use Intl to get the actual AEST/AEDT date (handles daylight saving correctly)
+  const now = new Date(Date.now() + offsetDays * 86400000);
+  return now.toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' }); // en-CA gives YYYY-MM-DD
 }
 
 function formatDate(dateStr: string): string {
@@ -81,13 +88,6 @@ export function PollsScreen({ navigation }: any) {
   const [reportReason, setReportReason] = useState<string>('misleading');
   const [reportText, setReportText] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
-
-  const REPORT_REASONS = [
-    { id: 'misleading', label: 'Misleading question' },
-    { id: 'offensive', label: 'Offensive content' },
-    { id: 'factually_wrong', label: 'Factually wrong' },
-    { id: 'other', label: 'Other' },
-  ];
 
   const handleSubmitReport = async () => {
     if (!todayPoll || !user) return;
@@ -142,7 +142,9 @@ export function PollsScreen({ navigation }: any) {
           setUserVoteYesterday(uv?.option_chosen ?? null);
         }
       }
-    } catch {}
+    } catch (e) {
+      // Supabase queries failed — still dismiss loading so user isn't stuck on skeleton
+    }
     setLoading(false);
   }, [user?.id]);
 
@@ -265,7 +267,7 @@ export function PollsScreen({ navigation }: any) {
                 { key: 'ONP', value: aggregate.primary_onp ?? 0, color: PARTY_COLORS.ONP },
                 { key: 'L/NP', value: aggregate.primary_lnp ?? 0, color: PARTY_COLORS.LNP },
                 { key: 'GRN', value: aggregate.primary_grn ?? 0, color: PARTY_COLORS.GRN },
-              ].sort((a, b) => b.value - a.value);
+              ].filter(p => p.value > 0).sort((a, b) => b.value - a.value);
 
               return (
                 <>
@@ -446,7 +448,7 @@ export function PollsScreen({ navigation }: any) {
               </View>
 
               {/* TPP numbers */}
-              {poll.tpp_alp && poll.tpp_lnp && (
+              {poll.tpp_alp != null && poll.tpp_lnp != null && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.sm }}>
                   <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
                     <Text style={{ fontSize: 11, color: PARTY_COLORS.ALP, fontWeight: FONT_WEIGHT.semibold }}>ALP</Text>
@@ -474,7 +476,7 @@ export function PollsScreen({ navigation }: any) {
 
               {/* Meta row */}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
-                {poll.sample_size && (
+                {poll.sample_size != null && (
                   <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>n={poll.sample_size.toLocaleString()}</Text>
                 )}
                 {poll.methodology && (
