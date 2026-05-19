@@ -1,0 +1,118 @@
+name: Ingestion Health Audit
+
+# Weekly pipeline health audit using opencode (plan agent).
+# Shell steps collect metrics + write report; opencode provides AI analysis.
+
+on:
+  # ── Cron: Monday 06:00 AEST = Sunday 20:00 UTC ──
+  # UNCOMMENT after first successful workflow_dispatch run:
+  # schedule:
+  #   - cron: '0 20 * * 0'
+  workflow_dispatch: {}
+
+# Needed for opencode OIDC token exchange
+permissions:
+  contents: write
+  issues: write
+  id-token: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      # ── Setup ────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install deps
+        run: pip install supabase python-dotenv
+
+      # ── Run health checks ───────────────────────────────────────────
+      - name: Run health checks
+        id: health
+        continue-on-error: true
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python scripts/ingestion_health.py
+
+      # ── Commit report ───────────────────────────────────────────────
+      - name: Commit report
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/ingestion-health/ || true
+          git diff --cached --quiet || git commit -m "chore: ingestion health report $(date -u +%Y-%m-%d)"
+          git push || true
+
+      # ── Create issue on failure ─────────────────────────────────────
+      - name: Ensure label exists
+        if: steps.health.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: .
+        run: |
+          gh label create "ingestion-health" \
+            --color "D93F0B" \
+            --description "Weekly pipeline health audit" \
+            2>/dev/null || true
+
+      - name: Open issue
+        if: steps.health.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: .
+        run: |
+          REPORT_DATE=$(date -u +%Y-%m-%d)
+          gh issue create \
+            --title "Ingestion health check failed — ${REPORT_DATE}" \
+            --label "ingestion-health" \
+            --body "The weekly ingestion health audit flagged failures.
+
+          See the **[full report](mobile/docs/ingestion-health/${REPORT_DATE}.md)** for details.
+
+          [Workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+      # ── AI analysis (opencode plan agent) ───────────────────────────
+      # Read-only: reads the generated report + pipeline scripts,
+      # provides trend analysis in the step summary.
+      - name: AI audit review
+        if: always()
+        uses: anomalyco/opencode/github@latest
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          model: anthropic/claude-sonnet-4-20250514
+          agent: plan
+          use_github_token: "true"
+          prompt: |
+            You are auditing the Verity news ingestion pipeline. This is a
+            READ-ONLY review — do not suggest or make code changes.
+
+            1. Read the latest health report in mobile/docs/ingestion-health/
+            2. Read the state file at mobile/docs/ingestion-health/_state.json
+            3. Read the pipeline scripts:
+               - mobile/scripts/ingest_news.py (news ingestion)
+               - mobile/scripts/ingest_federal_bills.py (bills)
+               - mobile/scripts/ingest_votes.py (votes)
+            4. Read mobile/CLAUDE.md for pipeline documentation
+
+            Produce a brief analysis (under 500 words):
+            - Are any metrics trending in a concerning direction?
+            - Could any failure modes in the scripts explain stale data?
+            - Top 3 recommendations for improving pipeline reliability.
+
+            Format as markdown suitable for a GitHub step summary.
