@@ -56,7 +56,7 @@ export function useContradictions(options: UseContradictionsOptions): UseContrad
       try {
         let query = supabase
           .from('mp_contradictions')
-          .select('*, member:members(id, first_name, last_name, photo_url, party:parties(name, short_name, colour))')
+          .select('*, member:members(id, first_name, last_name, photo_url, party:parties!members_party_id_fkey(name, short_name, colour))')
           .eq('status', 'confirmed')
           .order('confidence', { ascending: false });
 

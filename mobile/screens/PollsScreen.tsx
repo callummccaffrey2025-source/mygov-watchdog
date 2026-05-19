@@ -247,8 +247,39 @@ export function PollsScreen({ navigation }: any) {
   // ═══════════════════════════════════════════════════════════════════════
 
   function renderFederalPolls() {
+    // Election countdown
+    const electionDate = new Date('2028-05-20T00:00:00+10:00');
+    const now = new Date();
+    const daysUntil = Math.max(0, Math.ceil((electionDate.getTime() - now.getTime()) / 86400000));
+
     return (
       <View style={{ paddingHorizontal: SPACING.xl }}>
+
+        {/* ── Election Countdown ───────────────────────────────────────── */}
+        {daysUntil > 0 && (
+          <View style={{
+            backgroundColor: '#00843D', borderRadius: BORDER_RADIUS.lg,
+            padding: SPACING.lg, marginBottom: SPACING.xl,
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <View>
+              <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold, color: 'rgba(255,255,255,0.8)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                Next Federal Election
+              </Text>
+              <Text style={{ fontSize: FONT_SIZE.body, color: '#ffffff', marginTop: 2 }}>
+                Due by 20 May 2028
+              </Text>
+            </View>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 28, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>
+                {daysUntil}
+              </Text>
+              <Text style={{ fontSize: FONT_SIZE.caption, color: 'rgba(255,255,255,0.8)' }}>
+                days
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* ── Primary Vote Hero ────────────────────────────────────────── */}
         {aggregate && aggregate.primary_alp && aggregate.primary_lnp ? (

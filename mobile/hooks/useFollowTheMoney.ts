@@ -74,7 +74,7 @@ export function useFollowTheMoney(storyId: number | null): FollowTheMoneyData {
             memberEntities.map(async (entity) => {
               const { data: memberData } = await supabase
                 .from('members')
-                .select('first_name, last_name, party:parties(name, short_name, colour)')
+                .select('first_name, last_name, party:parties!members_party_id_fkey(name, short_name, colour)')
                 .eq('id', entity.member_id)
                 .maybeSingle();
 

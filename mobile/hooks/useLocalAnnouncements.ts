@@ -61,7 +61,7 @@ export function useLocalAnnouncements(
         if (electorateId) {
           const { data: rows } = await supabase
             .from('local_announcements')
-            .select('*, member:members(first_name,last_name,party:parties(colour,short_name))')
+            .select('*, member:members(first_name,last_name,party:parties!members_party_id_fkey(colour,short_name))')
             .eq('electorate_id', electorateId)
             .not('source_url', 'is', null)
             .order('announced_at', { ascending: false })
@@ -72,7 +72,7 @@ export function useLocalAnnouncements(
         if (data.length < 2 && state) {
           const { data: stateRows } = await supabase
             .from('local_announcements')
-            .select('*, member:members(first_name,last_name,party:parties(colour,short_name))')
+            .select('*, member:members(first_name,last_name,party:parties!members_party_id_fkey(colour,short_name))')
             .eq('state', state)
             .is('electorate_id', null)
             .not('source_url', 'is', null)
@@ -113,7 +113,7 @@ export function useElectorateAnnouncements(electorateId: string | undefined | nu
       try {
         const { data } = await supabase
           .from('local_announcements')
-          .select('*, member:members(first_name,last_name,party:parties(colour,short_name))')
+          .select('*, member:members(first_name,last_name,party:parties!members_party_id_fkey(colour,short_name))')
           .eq('electorate_id', electorateId)
           .not('source_url', 'is', null)
           .order('announced_at', { ascending: false })

@@ -40,7 +40,7 @@ export function ContradictionDetailScreen({ route, navigation }: any) {
       try {
         const { data } = await supabase
           .from('mp_contradictions')
-          .select('*, member:members(id, first_name, last_name, photo_url, party:parties(name, short_name, colour))')
+          .select('*, member:members(id, first_name, last_name, photo_url, party:parties!members_party_id_fkey(name, short_name, colour))')
           .eq('id', contradictionId)
           .maybeSingle();
         if (data) setContradiction(data as Contradiction);

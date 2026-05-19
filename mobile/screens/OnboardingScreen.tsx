@@ -112,7 +112,7 @@ export function OnboardingScreen({ onComplete }: Props) {
         if (elec) {
           const { data: members } = await supabase
             .from('members')
-            .select('id, first_name, last_name, party:parties(name, short_name, colour), electorate:electorates(name, state)')
+            .select('id, first_name, last_name, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates(name, state)')
             .eq('electorate_id', elec.id)
             .eq('chamber', 'house')
             .eq('is_active', true)
