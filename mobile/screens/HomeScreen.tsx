@@ -34,6 +34,9 @@ import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
 import { useLearnModules } from '../hooks/useLearnModules';
 import { usePollAggregate } from '../hooks/usePublishedPolls';
+import { useMPPosts } from '../hooks/useMPPosts';
+import { useMPPostReaction } from '../hooks/useMPPostReaction';
+import { MPPostCard } from '../components/MPPostCard';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -536,6 +539,10 @@ export function HomeScreen({ navigation }: any) {
 
         <SectionDivider />
 
+        {/* ═══ 4a. YOUR MP'S LATEST POST ═══ */}
+        <MPPostFeedCard navigation={navigation} memberId={myMP?.id ?? null} colors={colors} />
+
+        <SectionDivider />
 
         {/* ═══ 4b. HAVE YOUR SAY — Bill Swipe ═══ */}
         {currentBill && (
@@ -962,6 +969,38 @@ function ContinueLearningCard({ navigation, colors }: { navigation: any; colors:
           </Text>
         </View>
       </Pressable>
+    </View>
+  );
+}
+
+function MPPostFeedCard({ navigation, memberId, colors }: { navigation: any; memberId: string | null; colors: any }) {
+  const { posts, loading } = useMPPosts(memberId, 1);
+  const post = posts[0] ?? null;
+  const { myReaction, react } = useMPPostReaction(post?.id ?? '');
+  const { user } = useUser();
+
+  if (!memberId || loading || !post) return null;
+
+  const handleReact = (type: 'agree' | 'disagree' | 'insightful') => {
+    if (!user) return; // AuthPromptSheet handled at higher level
+    react(type);
+  };
+
+  return (
+    <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+      <SectionHeader
+        color={colors.green}
+        label="FROM YOUR MP"
+        rightLabel="All posts →"
+        onRightPress={() => navigation.navigate('MemberProfile', { memberId })}
+      />
+      <MPPostCard
+        post={post}
+        myReaction={myReaction}
+        onReact={handleReact}
+        onPress={() => navigation.navigate('MPPostDetail', { post })}
+        maxLines={3}
+      />
     </View>
   );
 }

@@ -49,6 +49,7 @@ import { AdminPollsScreen } from './screens/AdminPollsScreen';
 import { LearnScreen } from './screens/LearnScreen';
 import { LearnModuleScreen } from './screens/LearnModuleScreen';
 import { LessonScreen } from './screens/LessonScreen';
+import { MPPostDetailScreen } from './screens/MPPostDetailScreen';
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
 
@@ -387,6 +388,7 @@ function App() {
               <Stack.Screen name="AdminPolls" component={AdminPollsScreen} />
               <Stack.Screen name="LearnModule" component={LearnModuleScreen} />
               <Stack.Screen name="Lesson" component={LessonScreen} />
+              <Stack.Screen name="MPPostDetail" component={MPPostDetailScreen} />
             </Stack.Navigator>
             <AppNotificationGate />
           </NavigationContainer>
