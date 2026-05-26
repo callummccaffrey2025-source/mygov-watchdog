@@ -11,6 +11,11 @@ export interface HypocrisyTopic {
   vote_count?: number;
   speech_excerpt: string | null;
   speech_date: string | null;
+  example_vote?: {
+    division_name: string;
+    date: string;
+    vote: string;
+  } | null;
 }
 
 export interface HypocrisyData {

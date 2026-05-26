@@ -86,6 +86,30 @@ function TopicCard({ topic, colors }: { topic: HypocrisyTopic; colors: any }) {
         </View>
       )}
 
+      {/* They voted */}
+      {topic.example_vote && (
+        <View style={{ backgroundColor: '#F3F4F6', borderRadius: 8, padding: 12, marginTop: SPACING.sm }}>
+          <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#6B7280', marginBottom: 4 }}>They voted:</Text>
+          <Text style={{ fontSize: 14, color: '#1F2937', lineHeight: 20 }} numberOfLines={3}>
+            {topic.example_vote.division_name}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
+            <View style={{
+              backgroundColor: topic.example_vote.vote === 'aye' ? '#E8F5EE' : topic.example_vote.vote === 'no' ? '#FDECEA' : '#F3F4F6',
+              borderRadius: 6, paddingHorizontal: 10, paddingVertical: 3,
+            }}>
+              <Text style={{
+                fontSize: 12, fontWeight: FONT_WEIGHT.bold,
+                color: topic.example_vote.vote === 'aye' ? '#00843D' : topic.example_vote.vote === 'no' ? '#DC3545' : '#6B7280',
+              }}>
+                {topic.example_vote.vote === 'aye' ? 'Voted Aye' : topic.example_vote.vote === 'no' ? 'Voted No' : `Voted ${topic.example_vote.vote}`}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 11, color: '#9CA3AF' }}>{topic.example_vote.date}</Text>
+          </View>
+        </View>
+      )}
+
       {/* Stats */}
       <View style={{ flexDirection: 'row', gap: SPACING.lg, marginTop: SPACING.sm }}>
         {topic.speech_count != null && (

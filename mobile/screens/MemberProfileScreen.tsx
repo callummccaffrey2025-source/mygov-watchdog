@@ -611,12 +611,37 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             </View>
                           </View>
 
-                          {/* Excerpt */}
+                          {/* They said */}
                           {topic.speech_excerpt && (
                             <View style={{ backgroundColor: '#FFF0D6', borderRadius: 8, padding: 10, marginTop: 4 }}>
+                              <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.bold, color: '#92400E', marginBottom: 2 }}>They said:</Text>
                               <Text style={{ fontSize: 12, fontStyle: 'italic', color: '#1F2937', lineHeight: 18 }} numberOfLines={2}>
                                 "{topic.speech_excerpt}"
                               </Text>
+                            </View>
+                          )}
+
+                          {/* They voted */}
+                          {topic.example_vote && (
+                            <View style={{ backgroundColor: '#F3F4F6', borderRadius: 8, padding: 10, marginTop: 4 }}>
+                              <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.bold, color: '#6B7280', marginBottom: 2 }}>They voted:</Text>
+                              <Text style={{ fontSize: 12, color: '#1F2937', lineHeight: 18 }} numberOfLines={2}>
+                                {topic.example_vote.division_name}
+                              </Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                                <View style={{
+                                  backgroundColor: topic.example_vote.vote === 'aye' ? '#E8F5EE' : topic.example_vote.vote === 'no' ? '#FDECEA' : '#F3F4F6',
+                                  borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2,
+                                }}>
+                                  <Text style={{
+                                    fontSize: 11, fontWeight: FONT_WEIGHT.bold,
+                                    color: topic.example_vote.vote === 'aye' ? '#00843D' : topic.example_vote.vote === 'no' ? '#DC3545' : '#6B7280',
+                                  }}>
+                                    {topic.example_vote.vote === 'aye' ? 'Aye' : topic.example_vote.vote === 'no' ? 'No' : topic.example_vote.vote}
+                                  </Text>
+                                </View>
+                                <Text style={{ fontSize: 10, color: '#9CA3AF' }}>{topic.example_vote.date}</Text>
+                              </View>
                             </View>
                           )}
                         </View>
