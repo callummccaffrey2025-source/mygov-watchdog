@@ -251,8 +251,21 @@ export function HomeScreen({ navigation }: any) {
             }}
           />
 
-          {/* Top row: bell + compass — right-aligned */}
+          {/* Top row: watchlist + bell + compass — right-aligned */}
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: SPACING.lg, gap: SPACING.sm }}>
+            <Pressable
+              onPress={() => navigation.navigate('Watchlist')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="View watchlist"
+              style={({ pressed }) => ({
+                width: 36, height: 36, borderRadius: 18,
+                backgroundColor: pressed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
+                justifyContent: 'center', alignItems: 'center',
+              })}
+            >
+              <Ionicons name="eye-outline" size={18} color="#ffffff" />
+            </Pressable>
             <Pressable
               onPress={() => navigation.navigate('Activity')}
               hitSlop={8}
@@ -330,6 +343,40 @@ export function HomeScreen({ navigation }: any) {
             )}
           </View>
         </LinearGradient>
+
+        {/* ═══ 2b. DAILY AUDIO BRIEF ═══ */}
+        <View style={{ paddingHorizontal: 20, marginTop: SPACING.lg }}>
+          <Pressable
+            onPress={() => navigation.navigate('AudioBrief')}
+            accessibilityRole="button"
+            accessibilityLabel="Listen to your daily brief"
+            style={({ pressed }) => ({
+              backgroundColor: '#1E1B4B',
+              borderRadius: BORDER_RADIUS.lg,
+              padding: SPACING.lg,
+              flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+              opacity: pressed ? 0.92 : 1,
+              ...SHADOWS.md,
+            })}
+          >
+            <View style={{
+              width: 44, height: 44, borderRadius: 22,
+              backgroundColor: 'rgba(167,139,250,0.2)',
+              justifyContent: 'center', alignItems: 'center',
+            }}>
+              <Ionicons name="headset-outline" size={20} color="#A78BFA" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>
+                Your daily brief
+              </Text>
+              <Text style={{ fontSize: FONT_SIZE.small, color: 'rgba(255,255,255,0.6)' }}>
+                Listen · ~3 min
+              </Text>
+            </View>
+            <Ionicons name="play-circle" size={28} color="#A78BFA" />
+          </Pressable>
+        </View>
 
         <SectionDivider />
 
@@ -821,6 +868,76 @@ export function HomeScreen({ navigation }: any) {
 
         <SectionDivider />
 
+        {/* ═══ 6b. SERVICES — escape the niche ═══ */}
+        <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.lg }}>
+            <View style={{ width: 3, height: 14, borderRadius: 1.5, backgroundColor: '#7C3AED' }} />
+            <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, letterSpacing: 0.8, color: '#6B7280', textTransform: 'uppercase' }}>
+              SERVICES
+            </Text>
+          </View>
+
+          {/* Who Represents Me */}
+          <Pressable
+            onPress={() => navigation.navigate('MyRepresentatives')}
+            accessibilityRole="button"
+            accessibilityLabel="Find all your representatives"
+            style={({ pressed }) => ({
+              backgroundColor: colors.card,
+              borderRadius: BORDER_RADIUS.lg,
+              padding: SPACING.lg,
+              marginBottom: SPACING.sm,
+              flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+              opacity: pressed ? 0.92 : 1,
+              ...SHADOWS.sm,
+            })}
+          >
+            <View style={{ width: 40, height: 40, borderRadius: BORDER_RADIUS.md, backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="people" size={20} color="#00843D" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                Who represents me?
+              </Text>
+              <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+                Federal, state & local — all from your postcode
+              </Text>
+            </View>
+            <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
+          </Pressable>
+
+          {/* Get Help — Casework */}
+          <Pressable
+            onPress={() => navigation.navigate('Casework')}
+            accessibilityRole="button"
+            accessibilityLabel="Get help from your MP"
+            style={({ pressed }) => ({
+              backgroundColor: colors.card,
+              borderRadius: BORDER_RADIUS.lg,
+              padding: SPACING.lg,
+              marginBottom: SPACING.sm,
+              flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+              opacity: pressed ? 0.92 : 1,
+              ...SHADOWS.sm,
+            })}
+          >
+            <View style={{ width: 40, height: 40, borderRadius: BORDER_RADIUS.md, backgroundColor: '#FFF7ED', justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="hand-left" size={20} color="#EA580C" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                Get help from your MP
+              </Text>
+              <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+                Centrelink, visas, NDIS, aged care & more
+              </Text>
+            </View>
+            <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
+          </Pressable>
+        </View>
+
+        <SectionDivider />
+
         {/* ═══ 8. MP RECENT VOTES ═══ */}
         {myMP && mpRecentVotes.length > 0 && (
           <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
@@ -889,10 +1006,10 @@ export function HomeScreen({ navigation }: any) {
         <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             {([
+              { icon: 'eye-outline' as const, label: 'Watchlist', screen: 'Watchlist' },
               { icon: 'search-outline' as const, label: 'Search', screen: 'Explore' },
               { icon: 'document-text-outline' as const, label: 'Bills', screen: 'BillList' },
-              { icon: 'people-outline' as const, label: 'MPs', screen: 'Explore' },
-              { icon: 'school-outline' as const, label: 'Learn', screen: 'Learn' },
+              { icon: 'hand-left-outline' as const, label: 'Get Help', screen: 'Casework' },
             ] as const).map(item => (
               <Pressable
                 key={item.label}

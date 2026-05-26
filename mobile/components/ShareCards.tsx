@@ -910,4 +910,210 @@ const s = StyleSheet.create({
     lineHeight: 18,
     marginTop: 8,
   },
+
+  // Mirror (prediction) card
+  mirrorHero: {
+    alignItems: 'center' as const,
+    paddingTop: 20,
+    paddingBottom: 8,
+    gap: 4,
+  },
+  mirrorEmoji: { fontSize: 48, lineHeight: 56 },
+  mirrorResult: { fontSize: 20, fontWeight: '800' as const, color: DARK, marginTop: 4 },
+  mirrorCompare: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-around' as const,
+    marginHorizontal: 20,
+    marginTop: 16,
+    paddingVertical: 14,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+  },
+  mirrorCompareCol: { alignItems: 'center' as const, gap: 4 },
+  mirrorCompareLabel: { fontSize: 9, fontWeight: '700' as const, color: GREY, letterSpacing: 1 },
+  mirrorCompareValue: { fontSize: 22, fontWeight: '900' as const },
+  mirrorArrow: { alignSelf: 'center' as const },
+
+  // Representation Index card
+  repIdxHero: {
+    alignItems: 'center' as const,
+    paddingTop: 20,
+    paddingBottom: 8,
+  },
+  repIdxScore: { fontSize: 56, fontWeight: '900' as const, lineHeight: 64 },
+  repIdxLabel: { fontSize: 14, fontWeight: '600' as const, color: GREY, marginTop: 2 },
+  repIdxRank: { fontSize: 12, color: GREY, marginTop: 4 },
+  repIdxIssues: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    gap: 6,
+  },
+  repIdxIssueRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingVertical: 4,
+  },
+  repIdxIssueName: { fontSize: 13, fontWeight: '600' as const, color: DARK, flex: 1 },
+  repIdxIssueBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  repIdxCoverage: {
+    fontSize: 11,
+    color: GREY,
+    textAlign: 'center' as const,
+    marginHorizontal: 20,
+    marginTop: 12,
+  },
 });
+
+// ─── 8. Mirror (Prediction) Share Card ────────────────────────────────────────
+
+interface MirrorShareCardProps {
+  mpName: string;
+  mpPhotoUrl: string | null;
+  partyName: string;
+  partyColour: string;
+  divisionName: string;
+  userGuess: string;
+  actualVote: string;
+}
+
+export function MirrorShareCard({
+  mpName, mpPhotoUrl, partyName, partyColour, divisionName,
+  userGuess, actualVote,
+}: MirrorShareCardProps) {
+  const wasCorrect = userGuess === actualVote;
+  const guessLabel = userGuess === 'aye' ? 'FOR' : userGuess === 'no' ? 'AGAINST' : 'ABSENT';
+  const actualLabel = actualVote === 'aye' ? 'FOR' : actualVote === 'no' ? 'AGAINST' : 'ABSENT';
+  const guessColour = userGuess === 'aye' ? GREEN : userGuess === 'no' ? '#DC3545' : GREY;
+  const actualColour = actualVote === 'aye' ? GREEN : actualVote === 'no' ? '#DC3545' : GREY;
+
+  return (
+    <View style={s.card}>
+      <CardHeader subtitle="THE MIRROR" />
+
+      <View style={s.mpRow}>
+        {mpPhotoUrl ? (
+          <Image source={{ uri: mpPhotoUrl }} style={s.mpPhoto} />
+        ) : (
+          <View style={[s.mpPhotoPlaceholder, { backgroundColor: partyColour + '33' }]}>
+            <Text style={[s.mpInitials, { color: partyColour }]}>
+              {mpName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            </Text>
+          </View>
+        )}
+        <View style={s.mpInfo}>
+          <Text style={s.mpName}>{mpName}</Text>
+          <View style={[s.partyBadge, { backgroundColor: partyColour + '22' }]}>
+            <Text style={[s.partyBadgeText, { color: partyColour }]}>{partyName}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={s.divisionBox}>
+        <Text style={s.divisionLabel}>VOTED ON</Text>
+        <Text style={s.divisionName} numberOfLines={3}>{divisionName}</Text>
+      </View>
+
+      <View style={s.mirrorHero}>
+        <Text style={s.mirrorEmoji}>{wasCorrect ? '\u2705' : '\u{1F62E}'}</Text>
+        <Text style={s.mirrorResult}>
+          {wasCorrect ? 'I knew it!' : 'I was wrong about my MP'}
+        </Text>
+      </View>
+
+      <View style={s.mirrorCompare}>
+        <View style={s.mirrorCompareCol}>
+          <Text style={s.mirrorCompareLabel}>I GUESSED</Text>
+          <Text style={[s.mirrorCompareValue, { color: guessColour }]}>{guessLabel}</Text>
+        </View>
+        <Text style={[s.mirrorArrow, { color: GREY, fontSize: 18 }]}>{'\u2192'}</Text>
+        <View style={s.mirrorCompareCol}>
+          <Text style={s.mirrorCompareLabel}>THEY VOTED</Text>
+          <Text style={[s.mirrorCompareValue, { color: actualColour }]}>{actualLabel}</Text>
+        </View>
+      </View>
+
+      <CardFooter cta="How well do you know your MP? Find out on Verity" />
+    </View>
+  );
+}
+
+// ─── 9. Representation Index Share Card ──────────────────────────────────────
+
+interface RepIndexShareCardProps {
+  mpName: string;
+  mpPhotoUrl: string | null;
+  partyName: string;
+  partyColour: string;
+  electorate: string;
+  score: number;
+  rank: number;
+  totalRanked: number;
+  issues: { name: string; aligned: boolean }[];
+  sampleSize: number;
+}
+
+export function RepIndexShareCard({
+  mpName, mpPhotoUrl, partyName, partyColour, electorate,
+  score, rank, totalRanked, issues, sampleSize,
+}: RepIndexShareCardProps) {
+  const scoreColour = score >= 70 ? GREEN : score >= 40 ? '#EAB308' : '#DC3545';
+
+  return (
+    <View style={s.card}>
+      <CardHeader subtitle="REPRESENTATION INDEX" />
+
+      <View style={s.mpRow}>
+        {mpPhotoUrl ? (
+          <Image source={{ uri: mpPhotoUrl }} style={s.mpPhoto} />
+        ) : (
+          <View style={[s.mpPhotoPlaceholder, { backgroundColor: partyColour + '33' }]}>
+            <Text style={[s.mpInitials, { color: partyColour }]}>
+              {mpName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            </Text>
+          </View>
+        )}
+        <View style={s.mpInfo}>
+          <Text style={s.mpName}>{mpName}</Text>
+          <View style={[s.partyBadge, { backgroundColor: partyColour + '22' }]}>
+            <Text style={[s.partyBadgeText, { color: partyColour }]}>{partyName}</Text>
+          </View>
+          <Text style={{ fontSize: 11, color: GREY, marginTop: 2 }}>{electorate}</Text>
+        </View>
+      </View>
+
+      <View style={s.repIdxHero}>
+        <Text style={[s.repIdxScore, { color: scoreColour }]}>{score}%</Text>
+        <Text style={s.repIdxLabel}>votes with {electorate}</Text>
+        <Text style={s.repIdxRank}>#{rank} of {totalRanked} MPs scored</Text>
+      </View>
+
+      <View style={s.repIdxIssues}>
+        {issues.slice(0, 6).map((issue, i) => (
+          <View key={i} style={s.repIdxIssueRow}>
+            <Text style={s.repIdxIssueName}>{issue.name}</Text>
+            <View style={[s.repIdxIssueBadge, {
+              backgroundColor: issue.aligned ? GREEN + '15' : '#DC3545' + '15',
+            }]}>
+              <Text style={{ fontSize: 12, color: issue.aligned ? GREEN : '#DC3545' }}>
+                {issue.aligned ? '\u2713' : '\u2717'}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
+
+      <Text style={s.repIdxCoverage}>
+        Based on {sampleSize}+ local respondents across {issues.length} issues
+      </Text>
+
+      <CardFooter cta="Does your MP represent you? Check on Verity" />
+    </View>
+  );
+}

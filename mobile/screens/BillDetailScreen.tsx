@@ -640,7 +640,7 @@ export function BillDetailScreen({ route, navigation }: any) {
             }}>
               <Ionicons name="time-outline" size={20} color={colors.textMuted} />
               <Text style={{ flex: 1, fontSize: 14, color: colors.textBody, lineHeight: 20 }}>
-                This bill hasn't been voted on yet. Follow it to be notified when a vote happens.
+                This bill hasn't been voted on yet. Add it to your watchlist to be notified when a vote happens.
               </Text>
             </View>
           )}
@@ -699,12 +699,12 @@ export function BillDetailScreen({ route, navigation }: any) {
             }}
           >
             <Ionicons
-              name={bookmarked ? 'notifications' : 'notifications-outline'}
+              name={bookmarked ? 'eye' : 'eye-outline'}
               size={18}
               color={bookmarked ? '#00843D' : colors.text}
             />
             <Text style={{ fontSize: 14, fontWeight: '600', color: bookmarked ? '#00843D' : colors.text }}>
-              {bookmarked ? 'Following — you\'ll be notified of updates' : 'Follow this bill for updates'}
+              {bookmarked ? 'Watching — you\'ll be notified of changes' : 'Add to watchlist'}
             </Text>
           </Pressable>
         </View>

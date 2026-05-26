@@ -30,6 +30,8 @@ import { useContradictions } from '../hooks/useContradictions';
 import { useHypocrisyIndex } from '../hooks/useHypocrisyIndex';
 import { useRepresentationGap } from '../hooks/useRepresentationGap';
 import { RepresentationGapCard } from '../components/RepresentationGapCard';
+import { useDecisiveVotes } from '../hooks/useDecisiveVotes';
+import { DecisiveVotesCard } from '../components/DecisiveVotesCard';
 import { ContradictionCard } from '../components/ContradictionCard';
 import { RebellionCard } from '../components/RebellionCard';
 import { useElectorateDemographics } from '../hooks/useElectorateDemographics';
@@ -38,6 +40,9 @@ import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../cons
 import { supabase } from '../lib/supabase';
 import { decodeHtml } from '../utils/decodeHtml';
 import { timeAgo } from '../lib/timeAgo';
+import { useVotePrediction } from '../hooks/useVotePrediction';
+import { GuessReveal } from '../components/GuessReveal';
+import { useCivicEvents } from '../hooks/useCivicEvents';
 
 const PROCEDURAL_PREFIXES = ['Business —', 'Motions —', 'Procedure', 'Adjournment', 'Business of the Senate', 'Business of the House'];
 
@@ -79,6 +84,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const { votes, loading: votesLoading } = useVotes(member?.id ?? null);
   const { data: hypocrisyData, loading: hypocrisyLoading } = useHypocrisyIndex(member?.id ?? null);
   const { records: repGapRecords } = useRepresentationGap(member?.id);
+  const { votes: decisiveVotes, winningCount: decisiveWinning } = useDecisiveVotes(member?.id);
 
   useEffect(() => {
     setVisibleCount(20);
@@ -106,6 +112,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const totalVotes = votes.length;
   const accountabilityScore = useAccountabilityScore(votes, hansardEntries, committees, party?.name);
   const participationIndex = useParticipationIndex(votes, hansardEntries, committees);
+  const { guess: submitGuess, hasGuessed, accuracy: predictionAccuracy } = useVotePrediction(member?.id ?? null);
+  const { log: logCivicEvent } = useCivicEvents();
+  const [guessExpandedId, setGuessExpandedId] = useState<string | null>(null);
 
   // Share cards
   const voteCardRef = useRef<any>(null);
@@ -307,9 +316,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
               paddingVertical: SPACING.md,
             }}
           >
-            <Ionicons name={followingMP ? 'heart' : 'heart-outline'} size={16} color="#ffffff" />
+            <Ionicons name={followingMP ? 'eye' : 'eye-outline'} size={16} color="#ffffff" />
             <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '600', color: '#ffffff' }}>
-              {followingMP ? 'Following' : 'Follow'}
+              {followingMP ? 'Watching' : 'Watch'}
             </Text>
           </Pressable>
           <Pressable
@@ -736,35 +745,90 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     electorateName={member?.electorate?.name || ''}
                   />
 
+                  <DecisiveVotesCard
+                    votes={decisiveVotes}
+                    winningCount={decisiveWinning}
+                    memberFirstName={member?.first_name || ''}
+                  />
+
+                  {/* Prediction accuracy banner */}
+                  {predictionAccuracy.total > 0 && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md, paddingHorizontal: SPACING.sm }}>
+                      <Ionicons name="bulb-outline" size={14} color={colors.green} />
+                      <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+                        You've predicted {predictionAccuracy.correct} of {predictionAccuracy.total} votes correctly ({predictionAccuracy.rate}%)
+                      </Text>
+                    </View>
+                  )}
+
                   {votes.slice(0, visibleCount).map(v => {
                     const rawName = v.division?.name || 'Unknown division';
                     const procedural = isProcedural(rawName);
                     const title = cleanDivisionTitle(rawName);
                     const isAye = v.vote_cast === 'aye';
                     const isNo = v.vote_cast === 'no';
+                    const divId = v.division?.id;
+                    const isGuessExpanded = guessExpandedId === v.id;
+                    const existingPrediction = divId ? hasGuessed(divId) : null;
+                    const showGuessPrompt = divId && !procedural && !existingPrediction?.was_correct;
                     return (
-                      <View key={v.id} style={{ borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.sm + 2, backgroundColor: colors.card, ...SHADOWS.sm }}>
-                        <View style={{ width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center', flexShrink: 0, backgroundColor: isAye ? colors.greenBg : isNo ? colors.redBg : colors.cardAlt }}>
-                          <Ionicons
-                            name={isAye ? 'checkmark' : isNo ? 'close' : 'remove'}
-                            size={16}
-                            color={isAye ? '#00843D' : isNo ? '#d32f2f' : '#9aabb8'}
-                          />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={procedural ? { fontSize: FONT_SIZE.small - 1, lineHeight: 17, color: colors.textMuted } : { fontSize: FONT_SIZE.small, lineHeight: 18, color: colors.text }} numberOfLines={2}>{title}</Text>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: 2 }}>
-                            <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
-                              {v.division?.date ? timeAgo(v.division.date) : ''}
-                            </Text>
-                            {v.rebelled && (
-                              <Text style={{ fontSize: 10, color: '#b45309', backgroundColor: '#fef3c7', borderRadius: BORDER_RADIUS.sm - 2, paddingHorizontal: 6, paddingVertical: 1, fontWeight: '700' }}>Crossed floor</Text>
-                            )}
+                      <View key={v.id} style={{ marginBottom: SPACING.sm + 2 }}>
+                        <View style={{ borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: SPACING.md, backgroundColor: colors.card, ...SHADOWS.sm }}>
+                          <View style={{ width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center', flexShrink: 0, backgroundColor: isAye ? colors.greenBg : isNo ? colors.redBg : colors.cardAlt }}>
+                            <Ionicons
+                              name={isAye ? 'checkmark' : isNo ? 'close' : 'remove'}
+                              size={16}
+                              color={isAye ? '#00843D' : isNo ? '#d32f2f' : '#9aabb8'}
+                            />
                           </View>
+                          <Pressable style={{ flex: 1 }} onPress={() => showGuessPrompt ? setGuessExpandedId(isGuessExpanded ? null : v.id) : undefined}>
+                            <Text style={procedural ? { fontSize: FONT_SIZE.small - 1, lineHeight: 17, color: colors.textMuted } : { fontSize: FONT_SIZE.small, lineHeight: 18, color: colors.text }} numberOfLines={2}>{title}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: 2 }}>
+                              <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
+                                {v.division?.date ? timeAgo(v.division.date) : ''}
+                              </Text>
+                              {v.rebelled && (
+                                <Text style={{ fontSize: 10, color: '#b45309', backgroundColor: '#fef3c7', borderRadius: BORDER_RADIUS.sm - 2, paddingHorizontal: 6, paddingVertical: 1, fontWeight: '700' }}>Crossed floor</Text>
+                              )}
+                              {showGuessPrompt && !isGuessExpanded && !existingPrediction && (
+                                <Text style={{ fontSize: 10, color: '#00843D', fontWeight: '600' }}>Guess</Text>
+                              )}
+                              {existingPrediction?.was_correct === true && (
+                                <Ionicons name="checkmark-circle" size={12} color="#00843D" />
+                              )}
+                              {existingPrediction?.was_correct === false && (
+                                <Ionicons name="close-circle" size={12} color="#DC3545" />
+                              )}
+                            </View>
+                          </Pressable>
+                          <Pressable onPress={() => setShareVoteData(v)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share this vote" style={{ padding: SPACING.xs, marginLeft: SPACING.xs }}>
+                            <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={15} color="#9aabb8" />
+                          </Pressable>
                         </View>
-                        <Pressable onPress={() => setShareVoteData(v)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share this vote" style={{ padding: SPACING.xs, marginLeft: SPACING.xs }}>
-                          <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={15} color="#9aabb8" />
-                        </Pressable>
+                        {/* GuessReveal expanded below the vote row */}
+                        {isGuessExpanded && divId && (
+                          <View style={{ marginTop: SPACING.xs }}>
+                            <GuessReveal
+                              divisionId={divId}
+                              divisionName={title}
+                              mpName={displayName}
+                              existingPrediction={existingPrediction}
+                              onGuess={async (dId, g) => {
+                                const result = await submitGuess(dId, g);
+                                if (result) {
+                                  logCivicEvent('prediction_made', { division_id: dId, member_id: member?.id, guess: g });
+                                  if (!result.wasCorrect) {
+                                    logCivicEvent('prediction_revealed', { division_id: dId, was_correct: false, surprise: true });
+                                  }
+                                }
+                                return result;
+                              }}
+                              onShare={() => {
+                                logCivicEvent('share_generated', { type: 'mirror', division_id: divId, member_id: member?.id });
+                              }}
+                            />
+                          </View>
+                        )}
                       </View>
                     );
                   })}

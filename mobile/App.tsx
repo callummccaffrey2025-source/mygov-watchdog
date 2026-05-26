@@ -53,6 +53,11 @@ import { LessonScreen } from './screens/LessonScreen';
 import { MPPostDetailScreen } from './screens/MPPostDetailScreen';
 import { DARadarScreen } from './screens/DARadarScreen';
 import { DADetailScreen } from './screens/DADetailScreen';
+import { WatchlistScreen } from './screens/WatchlistScreen';
+import { MyRepresentativesScreen } from './screens/MyRepresentativesScreen';
+import { CaseworkScreen } from './screens/CaseworkScreen';
+import { AudioBriefScreen } from './screens/AudioBriefScreen';
+import { RepresentationIndexScreen } from './screens/RepresentationIndexScreen';
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
 
@@ -395,6 +400,11 @@ function App() {
               <Stack.Screen name="MPPostDetail" component={MPPostDetailScreen} />
               <Stack.Screen name="DARadar" component={DARadarScreen} />
               <Stack.Screen name="DADetail" component={DADetailScreen} />
+              <Stack.Screen name="Watchlist" component={WatchlistScreen} />
+              <Stack.Screen name="MyRepresentatives" component={MyRepresentativesScreen} />
+              <Stack.Screen name="Casework" component={CaseworkScreen} />
+              <Stack.Screen name="AudioBrief" component={AudioBriefScreen} />
+              <Stack.Screen name="RepresentationIndex" component={RepresentationIndexScreen} />
             </Stack.Navigator>
             <AppNotificationGate />
           </NavigationContainer>

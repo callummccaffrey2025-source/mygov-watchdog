@@ -114,6 +114,31 @@
 - **Daily Brief AI** — Edge Function `generate-daily-brief` is wired up with `ANTHROPIC_API_KEY` Supabase secret. Generates 3-section brief (`what_happened[]`, `what_it_means`, `one_thing_to_know`) in `daily_briefs.ai_text`. Triggered daily via pg_cron (jobid 3) at 7am AEST.
 - **AI Claim Verification** — VerifyModal in ExploreScreen calls `supabase.functions.invoke('verify-claim', { mpName, claim, votes })`. Edge Function source at `supabase/functions/verify-claim/index.ts`. Falls back silently if Edge Function not deployed. Deploy with: `supabase functions deploy verify-claim --project-ref zmmglikiryuftqmoprqm`
 
+## Growth Features (May 2026)
+
+### Civic Events (Prompt 11)
+- Table: `civic_events` (device_id, user_id, event_type, payload jsonb, created_at)
+- Hook: `hooks/useCivicEvents.ts` — fire-and-forget `log(eventType, payload)`
+- Event types: `stance_set`, `stance_changed`, `match_viewed`, `poll_voted`, `bill_viewed`, `prediction_made`, `prediction_revealed`, `share_generated`, `daily_streak`, `mp_contacted`, `biggest_gap_seen`
+- Purpose: longitudinal substrate for future Wrapped and constituent-pressure aggregation. No UI — data capture only.
+- RLS: device/user isolation for select; open insert; service_role for aggregation.
+
+### The Mirror — Predict Your MP's Vote (Prompt 10)
+- Table: `vote_predictions` (device_id, division_id, member_id, guess, actual_vote, was_correct, revealed_at)
+- Hook: `hooks/useVotePrediction.ts` — `guess()`, `hasGuessed()`, per-device accuracy tracking
+- Component: `components/GuessReveal.tsx` — reusable across feed, MP profile, Daily Brief
+- Share card: `MirrorShareCard` in ShareCards.tsx — "I was wrong about my MP" viral hook
+- Scope: historical reveals only (votes already happened). Extension point for upcoming-vote mode when APH OpenData provides reliable upcoming-divisions data — not built now.
+
+### Representation Index (Prompt 9)
+- RPC: `compute_representation_index(p_min_sample, p_min_issues)` — SQL function computing per-MP alignment with electorate stance data
+- Hook: `hooks/useRepresentationIndex.ts` + `useMPRepresentationScore(memberId)`
+- Screen: `screens/RepresentationIndexScreen.tsx` — national leaderboard, sortable, expandable show-your-working
+- Share card: `RepIndexShareCard` in ShareCards.tsx
+- **INTEGRITY GUARDS**: MIN_SAMPLE=10 (per-electorate respondents), MIN_ISSUES=3. MPs below threshold show "not enough local data yet" — never ranked on noise.
+- **`index_publish_ready` = false**. The leaderboard renders in-app with honest coverage labelling, but is NOT externally-citable/PR-ready until coverage is credible. Do not promote this feature externally until: (a) 30+ electorates have MIN_SAMPLE respondents, (b) manual audit confirms scoring makes sense for 10+ MPs. Gate lives here as a documented policy, not a code flag.
+- Methodology: electorate majority position (from `user_issue_stances` aggregated by electorate) vs MP lean (from `division_votes` + `division_issue_tags` where confidence >= 0.6). Weighted share of aligned issues = score.
+
 ## Managed Agents (~/verity/agents/) — 7 total
 - `media-scraper.yaml` — scrapes pm.gov.au + Treasurer + Cabinet sites for real media releases (5am AEST)
 - `news-pipeline.yaml` — daily news ingestion + AI summary post-step (6am AEST)

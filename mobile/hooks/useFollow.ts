@@ -3,8 +3,9 @@ import AsyncStorage from '../lib/storage';
 import { supabase } from '../lib/supabase';
 import { useUser } from '../context/UserContext';
 import { hapticLight } from '../lib/haptics';
+import { track } from '../lib/analytics';
 
-export type FollowEntityType = 'bill' | 'member' | 'topic';
+export type FollowEntityType = 'bill' | 'member' | 'topic' | 'party';
 
 export function useFollow(entityType: FollowEntityType, entityId: string) {
   const { user } = useUser();
@@ -79,6 +80,22 @@ export function useFollow(entityType: FollowEntityType, entityId: string) {
         });
         if (error) setFollowing(!next);
       }
+
+      // Log to analytics
+      track(next ? 'watchlist_follow' : 'watchlist_unfollow', {
+        entity_type: entityType,
+        entity_id: entityId,
+      }, 'Watchlist');
+
+      // Log to civic_events (fire and forget)
+      Promise.resolve(
+        supabase.from('civic_events').insert({
+          device_id: deviceId,
+          user_id: user?.id ?? null,
+          event_type: next ? 'follow' : 'unfollow',
+          payload: { entity_type: entityType, entity_id: entityId },
+        })
+      ).catch(() => {});
     } catch {
       setFollowing(!next); // revert on error
     }

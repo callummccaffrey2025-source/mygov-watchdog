@@ -11,6 +11,8 @@ import { usePartyDonations, DONOR_TYPE_LABELS } from '../hooks/useDonations';
 import { useTheme } from '../context/ThemeContext';
 import { decodeHtml } from '../utils/decodeHtml';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
+import { useFollow } from '../hooks/useFollow';
+import { hapticLight } from '../lib/haptics';
 
 // ── Policy topic config ─────────────────────────────────────────────────────
 
@@ -49,6 +51,7 @@ export function PartyProfileScreen({ route, navigation }: any) {
   const [policiesLoading, setPoliciesLoading] = useState(true);
   const { donations, totalAmount } = usePartyDonations(party.id);
   const partyColour = party.colour || '#6B7280';
+  const { following: followingParty, toggle: toggleFollowParty } = useFollow('party', party.id);
 
   // For coalition parties (LNP, CLP), also fetch policies from parent parties
   useEffect(() => {
@@ -171,6 +174,22 @@ export function PartyProfileScreen({ route, navigation }: any) {
                 {party.short_name || party.abbreviation}
               </Text>
             )}
+            <Pressable
+              onPress={toggleFollowParty}
+              accessibilityRole="button"
+              accessibilityLabel={followingParty ? 'Unfollow party' : 'Follow party'}
+              style={{
+                flexDirection: 'row', alignItems: 'center', gap: 6,
+                backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20,
+                paddingHorizontal: 14, paddingVertical: 7, marginTop: SPACING.md,
+                alignSelf: 'flex-start',
+              }}
+            >
+              <Ionicons name={followingParty ? 'heart' : 'heart-outline'} size={14} color="#ffffff" />
+              <Text style={{ fontSize: 13, fontWeight: FONT_WEIGHT.semibold, color: '#ffffff' }}>
+                {followingParty ? 'Following' : 'Follow'}
+              </Text>
+            </Pressable>
           </View>
 
           {/* Stats bar */}
