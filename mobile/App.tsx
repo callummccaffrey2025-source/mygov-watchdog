@@ -27,6 +27,7 @@ import { ExploreScreen } from './screens/ExploreScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { MemberProfileScreen } from './screens/MemberProfileScreen';
 import { BillDetailScreen } from './screens/BillDetailScreen';
+import { HypocrisyDetailScreen } from './screens/HypocrisyDetailScreen';
 import { PartyProfileScreen } from './screens/PartyProfileScreen';
 import { PrivacyPolicyScreen } from './screens/PrivacyPolicyScreen';
 import { TermsScreen } from './screens/TermsScreen';
@@ -366,6 +367,7 @@ function App() {
               <Stack.Screen name="Main" component={HomeTabs} />
               <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
               <Stack.Screen name="BillDetail" component={BillDetailScreen} />
+              <Stack.Screen name="HypocrisyDetail" component={HypocrisyDetailScreen} />
               <Stack.Screen name="PartyProfile" component={PartyProfileScreen} />
               <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
               <Stack.Screen name="Terms" component={TermsScreen} />

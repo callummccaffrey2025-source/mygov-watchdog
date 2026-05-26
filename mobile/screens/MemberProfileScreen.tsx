@@ -27,6 +27,7 @@ import { useAccountabilityScore, useParticipationIndex } from '../hooks/useAccou
 import { useRegisteredInterests } from '../hooks/useRegisteredInterests';
 import { getIndustryLabel, getIndustryColor } from '../constants/industryColors';
 import { useContradictions } from '../hooks/useContradictions';
+import { useHypocrisyIndex } from '../hooks/useHypocrisyIndex';
 import { ContradictionCard } from '../components/ContradictionCard';
 import { RebellionCard } from '../components/RebellionCard';
 import { useElectorateDemographics } from '../hooks/useElectorateDemographics';
@@ -74,6 +75,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const [visibleCount, setVisibleCount] = useState(20);
   const [showMethodology, setShowMethodology] = useState(false);
   const { votes, loading: votesLoading } = useVotes(member?.id ?? null);
+  const { data: hypocrisyData, loading: hypocrisyLoading } = useHypocrisyIndex(member?.id ?? null);
 
   useEffect(() => {
     setVisibleCount(20);
@@ -527,6 +529,115 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 )}
               </View>
 
+
+              {/* ───── HYPOCRISY INDEX ───── */}
+              {hypocrisyLoading ? (
+                <View style={{ marginBottom: SPACING.xl }}>
+                  <SkeletonLoader height={200} borderRadius={16} />
+                </View>
+              ) : hypocrisyData?.status === 'scored' ? (
+                <View style={{ marginBottom: SPACING.xl }}>
+                  <View style={{
+                    backgroundColor: '#FFF8E7', borderRadius: 16, borderWidth: 2,
+                    borderColor: '#DC3545', overflow: 'hidden',
+                  }}>
+                    {/* Pink header bar */}
+                    <View style={{ backgroundColor: '#E91E63', paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Ionicons name="scale-outline" size={18} color="#fff" />
+                      <Text style={{ fontSize: 15, fontWeight: '800', color: '#fff' }}>Hypocrisy Index</Text>
+                    </View>
+
+                    <View style={{ padding: SPACING.lg, alignItems: 'center' }}>
+                      {/* Big score number */}
+                      <Text style={{
+                        fontSize: 56, fontWeight: '800',
+                        color: (hypocrisyData.overall_score ?? 0) > 66 ? '#DC3545' : (hypocrisyData.overall_score ?? 0) > 33 ? '#F59E0B' : '#00843D',
+                      }}>
+                        {hypocrisyData.overall_score}
+                      </Text>
+                      <Text style={{ fontSize: 13, color: '#4B5563', marginBottom: SPACING.lg }}>
+                        Ranks #{hypocrisyData.rank_among_mps} of {hypocrisyData.total_mps_scored} MPs scored
+                      </Text>
+
+                      {/* Top 3 topics */}
+                      {(hypocrisyData.top_topics ?? []).slice(0, 3).map((topic, i) => (
+                        <View key={topic.policy_id ?? i} style={{ width: '100%', marginBottom: SPACING.md }}>
+                          {/* Topic pill */}
+                          <View style={{ flexDirection: 'row', marginBottom: 6 }}>
+                            <View style={{ backgroundColor: '#FCE4EC', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
+                              <Text style={{ fontSize: 13, fontWeight: FONT_WEIGHT.semibold, color: '#C2185B' }}>{topic.policy_name}</Text>
+                            </View>
+                          </View>
+
+                          {/* Position bar */}
+                          <View style={{ marginVertical: 4 }}>
+                            <View style={{ height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, position: 'relative' }}>
+                              <View style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, backgroundColor: '#D1D5DB' }} />
+                              <View style={{
+                                position: 'absolute', left: `${((topic.stated_position + 1) / 2) * 100}%`,
+                                top: -4, width: 12, height: 12, borderRadius: 6,
+                                backgroundColor: '#2563EB', borderWidth: 2, borderColor: '#fff', marginLeft: -6,
+                              }} />
+                              <View style={{
+                                position: 'absolute', left: `${((topic.voting_position + 1) / 2) * 100}%`,
+                                top: -4, width: 12, height: 12, borderRadius: 6,
+                                backgroundColor: '#DC3545', borderWidth: 2, borderColor: '#fff', marginLeft: -6,
+                              }} />
+                            </View>
+                            <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: 6 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#2563EB' }} />
+                                <Text style={{ fontSize: 9, color: '#9CA3AF' }}>Said</Text>
+                              </View>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#DC3545' }} />
+                                <Text style={{ fontSize: 9, color: '#9CA3AF' }}>Voted</Text>
+                              </View>
+                            </View>
+                          </View>
+
+                          {/* Excerpt */}
+                          {topic.speech_excerpt && (
+                            <View style={{ backgroundColor: '#FFF0D6', borderRadius: 8, padding: 10, marginTop: 4 }}>
+                              <Text style={{ fontSize: 12, fontStyle: 'italic', color: '#1F2937', lineHeight: 18 }} numberOfLines={2}>
+                                "{topic.speech_excerpt}"
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      ))}
+
+                      {/* See full breakdown */}
+                      <Pressable
+                        onPress={() => navigation.navigate('HypocrisyDetail', { memberId: member!.id, memberName: `${member!.first_name} ${member!.last_name}` })}
+                        style={{
+                          backgroundColor: '#00843D', borderRadius: 20, paddingHorizontal: 20,
+                          paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: SPACING.sm,
+                        }}
+                        accessibilityRole="button"
+                      >
+                        <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: '#fff' }}>See full breakdown</Text>
+                        <Ionicons name="arrow-forward" size={16} color="#fff" />
+                      </Pressable>
+                    </View>
+                  </View>
+                </View>
+              ) : hypocrisyData?.status === 'insufficient_data' ? (
+                <View style={{ marginBottom: SPACING.xl }}>
+                  <View style={{
+                    backgroundColor: '#FFF8E7', borderRadius: 16, borderWidth: 2, borderColor: '#DC3545',
+                    padding: SPACING.lg, flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+                  }}>
+                    <Ionicons name="scale-outline" size={24} color="#DC3545" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>Hypocrisy Index</Text>
+                      <Text style={{ fontSize: 12, color: colors.textMuted, lineHeight: 18 }}>
+                        Not enough data yet. {hypocrisyData.speeches_classified ?? 0} speeches classified, {hypocrisyData.votes_linked ?? 0} votes linked.
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ) : null}
 
               {/* ───── 9. SECONDARY CHIPS ROW ───── */}
               <View style={{ flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.xl }}>
