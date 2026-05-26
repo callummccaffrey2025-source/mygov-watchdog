@@ -28,6 +28,8 @@ import { useRegisteredInterests } from '../hooks/useRegisteredInterests';
 import { getIndustryLabel, getIndustryColor } from '../constants/industryColors';
 import { useContradictions } from '../hooks/useContradictions';
 import { useHypocrisyIndex } from '../hooks/useHypocrisyIndex';
+import { useRepresentationGap } from '../hooks/useRepresentationGap';
+import { RepresentationGapCard } from '../components/RepresentationGapCard';
 import { ContradictionCard } from '../components/ContradictionCard';
 import { RebellionCard } from '../components/RebellionCard';
 import { useElectorateDemographics } from '../hooks/useElectorateDemographics';
@@ -76,6 +78,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const [showMethodology, setShowMethodology] = useState(false);
   const { votes, loading: votesLoading } = useVotes(member?.id ?? null);
   const { data: hypocrisyData, loading: hypocrisyLoading } = useHypocrisyIndex(member?.id ?? null);
+  const { records: repGapRecords } = useRepresentationGap(member?.id);
 
   useEffect(() => {
     setVisibleCount(20);
@@ -700,6 +703,14 @@ export function MemberProfileScreen({ route, navigation }: any) {
                       Voted in {totalVotes} division{totalVotes !== 1 ? 's' : ''}{totalVotes > 0 ? ` · ${Math.round((ayeCount / totalVotes) * 100)}% aye rate` : ''}
                     </Text>
                   </View>
+
+                  {/* Representation Gap */}
+                  <RepresentationGapCard
+                    records={repGapRecords}
+                    memberFirstName={member?.first_name || ''}
+                    electorateName={member?.electorate?.name || ''}
+                  />
+
                   {votes.slice(0, visibleCount).map(v => {
                     const rawName = v.division?.name || 'Unknown division';
                     const procedural = isProcedural(rawName);
