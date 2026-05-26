@@ -13,7 +13,7 @@ import { useCommittees } from '../hooks/useCommittees';
 import { useHansard } from '../hooks/useHansard';
 import { PartyBadge } from '../components/PartyBadge';
 import { SkeletonLoader } from '../components/SkeletonLoader';
-import { VoteShareCard } from '../components/ShareCards';
+import { VoteShareCard, HypocrisyShareCard } from '../components/ShareCards';
 import { MPReportShareCard } from '../components/MPReportShareCard';
 import { captureAndShare } from '../utils/shareContent';
 import { DivisionVote } from '../hooks/useVotes';
@@ -107,8 +107,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
   // Share cards
   const voteCardRef = useRef<any>(null);
   const reportCardRef = useRef<any>(null);
+  const hypocrisyCardRef = useRef<any>(null);
   const [shareVoteData, setShareVoteData] = useState<DivisionVote | null>(null);
   const [shareReport, setShareReport] = useState(false);
+  const [shareHypocrisy, setShareHypocrisy] = useState(false);
 
   useEffect(() => {
     if (shareVoteData) {
@@ -123,6 +125,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
         .finally(() => setShareReport(false));
     }
   }, [shareReport]);
+
+  useEffect(() => {
+    if (shareHypocrisy && member) {
+      captureAndShare(hypocrisyCardRef, 'hypocrisy_index', member.id, user?.id)
+        .finally(() => setShareHypocrisy(false));
+    }
+  }, [shareHypocrisy]);
 
   // Top donors for report card
   const topDonors = Array.from(
@@ -544,7 +553,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     {/* Pink header bar */}
                     <View style={{ backgroundColor: '#E91E63', paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Ionicons name="scale-outline" size={18} color="#fff" />
-                      <Text style={{ fontSize: 15, fontWeight: '800', color: '#fff' }}>Hypocrisy Index</Text>
+                      <Text style={{ flex: 1, fontSize: 15, fontWeight: '800', color: '#fff' }}>Hypocrisy Index</Text>
+                      <Pressable onPress={() => setShareHypocrisy(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share Hypocrisy Index">
+                        <Ionicons name="share-outline" size={18} color="#fff" />
+                      </Pressable>
                     </View>
 
                     <View style={{ padding: SPACING.lg, alignItems: 'center' }}>
@@ -1284,6 +1296,21 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   return acc;
                 }, new Map<string, number>())
               ).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([name, amount]) => ({ name, amount }))}
+            />
+          )}
+        </View>
+        <View ref={hypocrisyCardRef}>
+          {shareHypocrisy && hypocrisyData?.status === 'scored' && (
+            <HypocrisyShareCard
+              mpName={displayName}
+              mpPhotoUrl={member.photo_url}
+              partyName={party?.short_name || party?.name || ''}
+              partyColour={partyColour}
+              electorate={member.electorate?.name ?? ''}
+              score={hypocrisyData.overall_score ?? 0}
+              rank={hypocrisyData.rank_among_mps ?? 0}
+              totalMps={hypocrisyData.total_mps_scored ?? 0}
+              topTopic={hypocrisyData.top_topics?.[0] ?? null}
             />
           )}
         </View>

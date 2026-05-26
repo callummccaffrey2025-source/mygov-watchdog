@@ -430,6 +430,106 @@ export function BillShareCard({ title, status, summaryPlain, ayeVotes, noVotes }
   );
 }
 
+// ─── 7. Hypocrisy Index Share Card ───────────────────────────────────────────
+
+interface HypocrisyShareCardProps {
+  mpName: string;
+  mpPhotoUrl: string | null;
+  partyName: string;
+  partyColour: string;
+  electorate: string;
+  score: number;
+  rank: number;
+  totalMps: number;
+  topTopic: { policy_name: string; stated_position: number; voting_position: number; speech_excerpt: string | null } | null;
+}
+
+export function HypocrisyShareCard({
+  mpName, mpPhotoUrl, partyName, partyColour, electorate,
+  score, rank, totalMps, topTopic,
+}: HypocrisyShareCardProps) {
+  const scoreColour = score > 66 ? '#DC3545' : score > 33 ? '#F59E0B' : '#00843D';
+
+  return (
+    <View style={s.card}>
+      <CardHeader subtitle="HYPOCRISY INDEX" />
+
+      {/* MP identity */}
+      <View style={s.mpRow}>
+        {mpPhotoUrl ? (
+          <Image source={{ uri: mpPhotoUrl }} style={s.mpPhoto} />
+        ) : (
+          <View style={[s.mpPhotoPlaceholder, { backgroundColor: partyColour + '33' }]}>
+            <Text style={[s.mpInitials, { color: partyColour }]}>
+              {mpName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            </Text>
+          </View>
+        )}
+        <View style={s.mpInfo}>
+          <Text style={s.mpName}>{mpName}</Text>
+          <View style={[s.partyBadge, { backgroundColor: partyColour + '22' }]}>
+            <Text style={[s.partyBadgeText, { color: partyColour }]}>{partyName}</Text>
+          </View>
+          <Text style={{ fontSize: 11, color: GREY, marginTop: 2 }}>{electorate}</Text>
+        </View>
+      </View>
+
+      {/* Big score */}
+      <View style={s.hypocrisyHero}>
+        <Text style={[s.hypocrisyScore, { color: scoreColour }]}>{score}</Text>
+        <Text style={s.hypocrisyLabel}>out of 100</Text>
+        <Text style={s.hypocrisyRank}>Ranks #{rank} of {totalMps} MPs scored</Text>
+      </View>
+
+      {/* Top disconnect topic */}
+      {topTopic && (
+        <View style={s.hypocrisyTopicBox}>
+          <Text style={s.hypocrisyTopicLabel}>BIGGEST GAP</Text>
+          <Text style={s.hypocrisyTopicName} numberOfLines={2}>{topTopic.policy_name}</Text>
+
+          {/* Position bar */}
+          <View style={s.hypocrisyBar}>
+            <View style={s.hypocrisyBarTrack}>
+              <View style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, backgroundColor: '#D1D5DB' }} />
+              <View style={{
+                position: 'absolute',
+                left: `${((topTopic.stated_position + 1) / 2) * 100}%`,
+                top: -4, width: 16, height: 16, borderRadius: 8,
+                backgroundColor: '#2563EB', borderWidth: 2, borderColor: '#fff', marginLeft: -8,
+              }} />
+              <View style={{
+                position: 'absolute',
+                left: `${((topTopic.voting_position + 1) / 2) * 100}%`,
+                top: -4, width: 16, height: 16, borderRadius: 8,
+                backgroundColor: '#DC3545', borderWidth: 2, borderColor: '#fff', marginLeft: -8,
+              }} />
+            </View>
+            <View style={s.hypocrisyBarLegend}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#2563EB' }} />
+                <Text style={{ fontSize: 10, color: GREY }}>What they said</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#DC3545' }} />
+                <Text style={{ fontSize: 10, color: GREY }}>How they voted</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Excerpt */}
+          {topTopic.speech_excerpt && (
+            <Text style={s.hypocrisyExcerpt} numberOfLines={2}>
+              "{topTopic.speech_excerpt}"
+            </Text>
+          )}
+        </View>
+      )}
+
+      <CardFooter cta="Check your MP's Hypocrisy Index on Verity" />
+    </View>
+  );
+}
+
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
@@ -743,5 +843,71 @@ const s = StyleSheet.create({
   rebellionVoteBadgeText: {
     fontSize: 11,
     fontWeight: '700',
+  },
+
+  // Hypocrisy card
+  hypocrisyHero: {
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  hypocrisyScore: {
+    fontSize: 72,
+    fontWeight: '900',
+    lineHeight: 80,
+  },
+  hypocrisyLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: GREY,
+    marginTop: -4,
+  },
+  hypocrisyRank: {
+    fontSize: 12,
+    color: GREY,
+    marginTop: 4,
+  },
+  hypocrisyTopicBox: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    backgroundColor: '#FFF8E7',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#F3E8D0',
+  },
+  hypocrisyTopicLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#92400E',
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+  hypocrisyTopicName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: DARK,
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  hypocrisyBar: {
+    gap: 6,
+  },
+  hypocrisyBarTrack: {
+    height: 8,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 4,
+    position: 'relative' as const,
+  },
+  hypocrisyBarLegend: {
+    flexDirection: 'row' as const,
+    gap: 16,
+  },
+  hypocrisyExcerpt: {
+    fontSize: 12,
+    fontStyle: 'italic' as const,
+    color: '#5a6a7a',
+    lineHeight: 18,
+    marginTop: 8,
   },
 });

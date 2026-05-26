@@ -5,7 +5,7 @@ import * as Sharing from 'expo-sharing';
 import { supabase } from '../lib/supabase';
 import { trackEvent } from '../lib/engagementTracker';
 
-export type ShareContentType = 'mp_vote' | 'news_story' | 'mp_report_card' | 'bill' | 'coverage' | 'rebellion_report';
+export type ShareContentType = 'mp_vote' | 'news_story' | 'mp_report_card' | 'bill' | 'coverage' | 'rebellion_report' | 'hypocrisy_index';
 
 /**
  * Captures a hidden React Native view as a PNG and opens the system share sheet.
