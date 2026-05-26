@@ -201,7 +201,7 @@ export function HomeScreen({ navigation }: any) {
     : null;
 
   // ── Loading state ──
-  const initialLoading = false;
+  const initialLoading = mpLoading && !!postcode;
   if (initialLoading && !refreshing) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>

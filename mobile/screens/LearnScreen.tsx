@@ -75,6 +75,17 @@ export function LearnScreen({ navigation }: any) {
           </View>
         }
         renderItem={renderModulePair}
+        ListEmptyComponent={
+          <View style={{ alignItems: 'center', paddingTop: SPACING.xxxl }}>
+            <Ionicons name="school-outline" size={48} color={colors.textMuted} />
+            <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.semibold, color: colors.text, marginTop: SPACING.md }}>
+              Lessons loading
+            </Text>
+            <Text style={{ fontSize: FONT_SIZE.body, color: colors.textMuted, marginTop: SPACING.xs, textAlign: 'center' }}>
+              Pull to refresh if content doesn't appear.
+            </Text>
+          </View>
+        }
         ListFooterComponent={
           currentEvents.length > 0 ? (
             <View style={styles.currentEventsSection}>

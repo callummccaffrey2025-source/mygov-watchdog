@@ -63,13 +63,15 @@ export function BillDetailScreen({ route, navigation }: any) {
   const [bill, setBill] = useState<Bill | null>(billParam ?? null);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
 
+  const [billError, setBillError] = useState(false);
   useEffect(() => {
     if (!bill && billId) {
       (async () => {
         try {
-          const { data } = await supabase.from('bills').select('*').eq('id', billId).maybeSingle();
-          if (data) setBill(data as Bill);
-        } catch {}
+          const { data, error } = await supabase.from('bills').select('*').eq('id', billId).maybeSingle();
+          if (error || !data) setBillError(true);
+          else setBill(data as Bill);
+        } catch { setBillError(true); }
       })();
     }
   }, [billId]);
@@ -124,8 +126,19 @@ export function BillDetailScreen({ route, navigation }: any) {
   // ── Early return ────────────────────────────────────────────────────────────
   if (!bill) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-        <SkeletonLoader width="100%" height={200} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: billError ? 'center' : 'flex-start', alignItems: billError ? 'center' : 'stretch' }}>
+        {billError ? (
+          <View style={{ alignItems: 'center', padding: 40 }}>
+            <Ionicons name="alert-circle-outline" size={48} color={colors.textMuted} />
+            <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, marginTop: 12 }}>Bill not found</Text>
+            <Text style={{ fontSize: 15, color: colors.textMuted, marginTop: 8, textAlign: 'center' }}>This bill may have been removed or is temporarily unavailable.</Text>
+            <Pressable onPress={() => navigation.goBack()} style={{ marginTop: 20, backgroundColor: '#00843D', borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 }}>
+              <Text style={{ color: '#fff', fontWeight: '700' }}>Go back</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <SkeletonLoader width="100%" height={200} />
+        )}
       </SafeAreaView>
     );
   }
