@@ -37,6 +37,7 @@ import { usePollAggregate } from '../hooks/usePublishedPolls';
 import { useMPPosts } from '../hooks/useMPPosts';
 import { useMPPostReaction } from '../hooks/useMPPostReaction';
 import { MPPostCard } from '../components/MPPostCard';
+import { useAffectsYou } from '../hooks/useAffectsYou';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -124,6 +125,7 @@ export function HomeScreen({ navigation }: any) {
   const electorateName = electorateResult.electorate?.name ?? null;
 
   const { votes: mpVotes } = useVotes(myMP?.id ?? null);
+  const { items: affectsYouItems, loading: affectsYouLoading } = useAffectsYou(postcode, myMP?.id ?? null);
   const { isSittingToday, nextSitting } = useSittingCalendar();
 
   const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
@@ -536,6 +538,48 @@ export function HomeScreen({ navigation }: any) {
             </View>
           )}
         </View>
+
+        {/* ═══ 3b. THIS AFFECTS YOU ═══ */}
+        {affectsYouItems.length > 0 && (
+          <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+            <SectionHeader color="#DC3545" label="THIS AFFECTS YOU" />
+            {affectsYouItems.slice(0, 3).map((item, idx) => (
+              <Pressable
+                key={item.bill_id}
+                onPress={() => navigation.navigate('BillDetail', { billId: item.bill_id })}
+                accessibilityRole="button"
+                style={{
+                  backgroundColor: idx === 0 ? '#FFF8E7' : colors.card,
+                  borderRadius: BORDER_RADIUS.lg,
+                  padding: SPACING.lg,
+                  marginBottom: SPACING.sm,
+                  borderLeftWidth: 3,
+                  borderLeftColor: idx === 0 ? '#DC3545' : '#F59E0B',
+                  ...SHADOWS.sm,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <Ionicons name={item.impact_icon as any} size={16} color={idx === 0 ? '#DC3545' : '#F59E0B'} />
+                  <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: idx === 0 ? '#DC3545' : '#F59E0B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    {item.impact_group}
+                  </Text>
+                  <View style={{ flex: 1 }} />
+                  <View style={{ backgroundColor: item.current_status === 'introduced' ? '#E8F5EE' : '#FFF3CD', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                    <Text style={{ fontSize: 9, fontWeight: FONT_WEIGHT.bold, color: item.current_status === 'introduced' ? '#00843D' : '#856404' }}>
+                      {item.current_status === 'introduced' ? 'NEW' : 'IN PROGRESS'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 20, marginBottom: 4 }} numberOfLines={2}>
+                  {item.bill_title}
+                </Text>
+                <Text style={{ fontSize: 13, color: colors.textMuted, lineHeight: 18 }} numberOfLines={2}>
+                  {item.why_it_matters}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
 
         <SectionDivider />
 
