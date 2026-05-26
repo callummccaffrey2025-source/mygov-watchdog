@@ -51,6 +51,8 @@ import { LearnScreen } from './screens/LearnScreen';
 import { LearnModuleScreen } from './screens/LearnModuleScreen';
 import { LessonScreen } from './screens/LessonScreen';
 import { MPPostDetailScreen } from './screens/MPPostDetailScreen';
+import { DARadarScreen } from './screens/DARadarScreen';
+import { DADetailScreen } from './screens/DADetailScreen';
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
 
@@ -391,6 +393,8 @@ function App() {
               <Stack.Screen name="LearnModule" component={LearnModuleScreen} />
               <Stack.Screen name="Lesson" component={LessonScreen} />
               <Stack.Screen name="MPPostDetail" component={MPPostDetailScreen} />
+              <Stack.Screen name="DARadar" component={DARadarScreen} />
+              <Stack.Screen name="DADetail" component={DADetailScreen} />
             </Stack.Navigator>
             <AppNotificationGate />
           </NavigationContainer>

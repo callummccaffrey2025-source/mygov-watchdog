@@ -744,6 +744,39 @@ export function HomeScreen({ navigation }: any) {
 
         <SectionDivider />
 
+        {/* ═══ 6. DA RADAR ═══ */}
+        <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+          <Pressable
+            onPress={() => navigation.navigate('DARadar')}
+            accessibilityRole="button"
+            accessibilityLabel="View development applications near you"
+            style={({ pressed }) => ({
+              backgroundColor: colors.card,
+              borderRadius: BORDER_RADIUS.lg,
+              padding: SPACING.lg,
+              opacity: pressed ? 0.92 : 1,
+              ...SHADOWS.md,
+            })}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
+              <View style={{ width: 40, height: 40, borderRadius: BORDER_RADIUS.md, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="construct" size={20} color="#1D4ED8" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                  DA Radar
+                </Text>
+                <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+                  Development applications near you
+                </Text>
+              </View>
+              <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
+            </View>
+          </Pressable>
+        </View>
+
+        <SectionDivider />
+
         {/* ═══ 8. MP RECENT VOTES ═══ */}
         {myMP && mpRecentVotes.length > 0 && (
           <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
