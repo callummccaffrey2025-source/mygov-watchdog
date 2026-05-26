@@ -39,7 +39,7 @@ export function PrivacyPolicyScreen({ navigation }: any) {
         />
         <Section
           title="AI Features"
-          body={'Verity uses AI (powered by Anthropic\'s Claude) to generate daily briefs, summarise bills, and verify political claims. AI-generated content is clearly labelled throughout the app.\n\nWhen you use the "Verify a Claim" feature, the claim text and relevant voting data are sent to Anthropic\'s API for analysis. No personal information (name, email, postcode) is included in AI requests.\n\nWe do not use your personal data to train AI models. Anthropic\'s data retention policy applies to API requests: see anthropic.com/privacy.'}
+          body={'Verity uses AI (powered by Anthropic\'s Claude) to generate daily briefs, summarise bills, analyse political claims, assess speech-vote consistency, and answer questions about parliament. All AI-generated content is labelled in the app.\n\nData sent to Anthropic\'s API includes: claim text, voting records, bill text, and Hansard excerpts. No personal information (your name, email, or postcode) is included in AI requests. The "Ask Verity" feature sends your question text to Anthropic for processing.\n\nWe do not use your personal data to train AI models. Anthropic may retain API request data per their data retention policy (anthropic.com/privacy). AI outputs are analysis, not fact-checks — always verify important claims with official parliamentary records.'}
         />
         <Section
           title="Cross-Border Data Transfers"

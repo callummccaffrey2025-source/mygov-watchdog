@@ -117,7 +117,7 @@ export function HypocrisyDetailScreen({ route, navigation }: any) {
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </Pressable>
         <Text style={{ flex: 1, fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
-          Hypocrisy Index
+          Consistency Index
         </Text>
         <Pressable onPress={() => setShowMethodology(true)} hitSlop={8} accessibilityRole="button">
           <Ionicons name="information-circle-outline" size={24} color={colors.textMuted} />
@@ -150,6 +150,9 @@ export function HypocrisyDetailScreen({ route, navigation }: any) {
               <Text style={{ fontSize: 13, color: '#4B5563' }}>
                 Ranks #{data.rank_among_mps} of {data.total_mps_scored} MPs scored
               </Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted, textAlign: 'center', marginTop: SPACING.sm, lineHeight: 16, paddingHorizontal: SPACING.xl }}>
+                Measures speech-vote consistency. Gaps may reflect legitimate position changes, not bad faith. AI-assisted analysis.
+              </Text>
             </View>
 
             {/* All topic cards */}
@@ -175,7 +178,7 @@ export function HypocrisyDetailScreen({ route, navigation }: any) {
             </View>
             <ScrollView>
               <Text style={{ fontSize: 14, color: colors.textBody, lineHeight: 22, marginBottom: SPACING.md }}>
-                The Hypocrisy Index measures the gap between what an MP says in parliament and how they actually vote. A higher score means a bigger gap between words and actions.
+                The Consistency Index measures the gap between what an MP says in parliament and how they actually vote. A higher score means a bigger gap between words and actions.
               </Text>
               <Text style={{ fontSize: 14, color: colors.textBody, lineHeight: 22, marginBottom: SPACING.md }}>
                 We analyse Hansard speeches and classify them against policy topics curated by TheyVoteForYou.org.au. Then we compare each MP's stated position in speeches with their voting record on divisions linked to those same policies.

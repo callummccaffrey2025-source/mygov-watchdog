@@ -103,7 +103,7 @@ export function ContradictionDetailScreen({ route, navigation }: any) {
             fontWeight: FONT_WEIGHT.semibold,
             color: colors.text,
           }}>
-            Contradiction evidence
+            Consistency analysis
           </Text>
           <Pressable onPress={() => setSharing(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share contradiction">
             <Ionicons
@@ -151,7 +151,14 @@ export function ContradictionDetailScreen({ route, navigation }: any) {
           </View>
         </View>
 
-        {/* Side-by-side evidence cards */}
+        {/* Disclaimer */}
+        <View style={{ paddingHorizontal: SPACING.lg, marginBottom: SPACING.sm }}>
+          <Text style={{ fontSize: 11, color: colors.textMuted, lineHeight: 16 }}>
+            AI-detected inconsistency between speech and vote. MPs may have legitimate reasons for changing positions. Confidence reflects statistical matching, not factual certainty.
+          </Text>
+        </View>
+
+        {/* Side-by-side analysis cards */}
         <View style={{ paddingHorizontal: SPACING.lg, marginBottom: SPACING.xl }}>
           {/* What they said */}
           <View style={{

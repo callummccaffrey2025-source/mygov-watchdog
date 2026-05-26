@@ -319,7 +319,7 @@ export function FollowTheMoneyCard({ storyId, headline, category, onPressMember 
           color: colors.textMuted,
           fontWeight: FONT_WEIGHT.medium,
         }}>
-          Source: AEC annual returns
+          Source: AEC annual returns. Donations shown alongside news coverage for transparency. This does not imply donations influenced any MP's position or vote.
         </Text>
       </View>
     </View>

@@ -185,7 +185,7 @@ export function AskScreen({ navigation }: any) {
                 textAlign: 'center', lineHeight: 22, marginBottom: SPACING.xl,
                 paddingHorizontal: 20,
               }}>
-                Powered by real parliamentary data — bills, votes, donations, contracts, and speeches.
+                AI-generated answers using Claude + real parliamentary data. Verify important claims with official sources.
               </Text>
 
               <View style={{ width: '100%', gap: SPACING.sm }}>

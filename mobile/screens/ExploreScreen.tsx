@@ -208,7 +208,7 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
                           <Text style={[verifyStyles.aiCardVerdict, { color: colors.text }]}>
                             {aiVerdict}
                           </Text>
-                          <Text style={verifyStyles.aiCardFooter}>Powered by Claude Haiku 4.5</Text>
+                          <Text style={verifyStyles.aiCardFooter}>AI-generated analysis by Claude. Not a fact-check. Verify with official records.</Text>
                         </>
                       ) : null}
                     </View>

@@ -191,6 +191,25 @@ export function CommunityPostDetailScreen({ route, navigation }: any) {
                     userId={user?.id}
                   />
                   <Text style={[styles.commentTime, { color: colors.textMuted }]}>{timeAgo(comment.created_at)}</Text>
+                  <Pressable
+                    onPress={() => {
+                      Alert.alert('Report Comment', 'Report this comment as inappropriate?', [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Report', style: 'destructive', onPress: () => {
+                          supabase.from('community_reports').insert({
+                            target_type: 'comment', target_id: comment.id,
+                            user_id: user?.id, device_id: deviceId, reason: 'user_report',
+                          }).then(() => Alert.alert('Reported', 'Thanks. We will review this comment.'));
+                        }},
+                      ]);
+                    }}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Report comment"
+                    style={{ marginLeft: 'auto', padding: 4 }}
+                  >
+                    <Ionicons name="flag-outline" size={14} color={colors.textMuted} />
+                  </Pressable>
                 </View>
               </View>
             ))
