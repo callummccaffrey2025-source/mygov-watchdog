@@ -58,8 +58,16 @@ import { MyRepresentativesScreen } from './screens/MyRepresentativesScreen';
 import { CaseworkScreen } from './screens/CaseworkScreen';
 import { AudioBriefScreen } from './screens/AudioBriefScreen';
 import { RepresentationIndexScreen } from './screens/RepresentationIndexScreen';
+import { StatsScreen } from './screens/StatsScreen';
+import { MatchScreen } from './screens/MatchScreen';
+import { Daily90Screen } from './screens/Daily90Screen';
+import { WalletScreen } from './screens/WalletScreen';
+import { ConflictRadarScreen } from './screens/ConflictRadarScreen';
+import { BallotDecodedScreen } from './screens/BallotDecodedScreen';
+import { PollDetailScreen } from './screens/PollDetailScreen';
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
+import { initFeatureFlags } from './lib/featureFlags';
 
 // Suppress system notification UI when app is in foreground — we show our own banner instead
 Notifications.setNotificationHandler({
@@ -255,6 +263,7 @@ function App() {
     });
     initErrorReporting();
     initAnalytics().then(() => track('app_open'));
+    initFeatureFlags();
   }, []);
 
   useEffect(() => {
@@ -405,6 +414,13 @@ function App() {
               <Stack.Screen name="Casework" component={CaseworkScreen} />
               <Stack.Screen name="AudioBrief" component={AudioBriefScreen} />
               <Stack.Screen name="RepresentationIndex" component={RepresentationIndexScreen} />
+              <Stack.Screen name="Stats" component={StatsScreen} />
+              <Stack.Screen name="Match" component={MatchScreen} />
+              <Stack.Screen name="Daily90" component={Daily90Screen} />
+              <Stack.Screen name="Wallet" component={WalletScreen} />
+              <Stack.Screen name="ConflictRadar" component={ConflictRadarScreen} />
+              <Stack.Screen name="BallotDecoded" component={BallotDecodedScreen} />
+              <Stack.Screen name="PollDetail" component={PollDetailScreen} />
             </Stack.Navigator>
             <AppNotificationGate />
           </NavigationContainer>

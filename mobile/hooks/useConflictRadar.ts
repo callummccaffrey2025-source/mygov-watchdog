@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { isFeatureEnabled } from '../lib/featureFlags';
 
 /**
  * Conflict Radar: flags votes where an MP has a DECLARED financial interest
@@ -9,8 +10,6 @@ import { supabase } from '../lib/supabase';
  * Only surfaces verified declarations (verified = true).
  * Uses registered_interests table joined against division sector tags.
  */
-
-const FEATURE_ENABLED = false; // LEGAL GATE: set true only after legal sign-off
 
 export interface ConflictFlag {
   division_id: string;
@@ -28,7 +27,8 @@ export function useConflictRadar(memberId: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!FEATURE_ENABLED || !memberId) {
+    const enabled = isFeatureEnabled('conflict_radar');
+    if (!enabled || !memberId) {
       setFlags([]);
       setLoading(false);
       return;
@@ -107,7 +107,7 @@ export function useConflictRadar(memberId: string | undefined) {
     return () => { cancelled = true; };
   }, [memberId]);
 
-  return { flags, loading, enabled: FEATURE_ENABLED };
+  return { flags, loading, enabled: isFeatureEnabled('conflict_radar') };
 }
 
 function extractKeywords(description: string): string[] {
