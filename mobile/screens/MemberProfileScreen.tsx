@@ -28,6 +28,9 @@ import { useRegisteredInterests } from '../hooks/useRegisteredInterests';
 import { getIndustryLabel, getIndustryColor } from '../constants/industryColors';
 import { useContradictions } from '../hooks/useContradictions';
 import { useHypocrisyIndex } from '../hooks/useHypocrisyIndex';
+import { useDonationVoteLinks } from '../hooks/useDonationVoteLinks';
+import { useVoteMoneySummary } from '../hooks/useVoteMoneyLinks';
+import { VoteMoneyCard } from '../components/VoteMoneyCard';
 import { useRepresentationGap } from '../hooks/useRepresentationGap';
 import { RepresentationGapCard } from '../components/RepresentationGapCard';
 import { useDecisiveVotes } from '../hooks/useDecisiveVotes';
@@ -83,6 +86,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const [showMethodology, setShowMethodology] = useState(false);
   const { votes, loading: votesLoading } = useVotes(member?.id ?? null);
   const { data: hypocrisyData, loading: hypocrisyLoading } = useHypocrisyIndex(member?.id ?? null);
+  const { links: moneyVoteLinks } = useDonationVoteLinks(member?.id ?? null);
+  const { summary: voteMoneyData, loading: voteMoneyLoading } = useVoteMoneySummary(member?.id);
   const { records: repGapRecords } = useRepresentationGap(member?.id);
   const { votes: decisiveVotes, winningCount: decisiveWinning } = useDecisiveVotes(member?.id);
 
@@ -688,6 +693,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 </View>
               ) : null}
 
+              {/* ───── 8b. VOTE × MONEY CARD ───── */}
+              <VoteMoneyCard
+                summary={voteMoneyData}
+                loading={voteMoneyLoading}
+                memberFirstName={member?.first_name || ''}
+              />
+
               {/* ───── 9. SECONDARY CHIPS ROW ───── */}
               <View style={{ flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.xl }}>
                 <Pressable
@@ -950,6 +962,63 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   </>
                 ) : null}
               </View>
+
+              {/* ── Follow the Money ── */}
+              {moneyVoteLinks.length > 0 && (
+                <View style={{ marginBottom: SPACING.xl }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: SPACING.md }}>
+                    <Ionicons name="cash-outline" size={18} color="#DC3545" />
+                    <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text }}>Follow the Money</Text>
+                  </View>
+                  <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginBottom: SPACING.md, lineHeight: 18 }}>
+                    Donors to this MP and how they voted on related legislation.
+                  </Text>
+                  {moneyVoteLinks.map((link, idx) => {
+                    const isAye = link.vote_cast === 'aye';
+                    const isNo = link.vote_cast === 'no';
+                    return (
+                      <View key={idx} style={{
+                        backgroundColor: '#FFF8F0', borderRadius: BORDER_RADIUS.lg,
+                        borderLeftWidth: 3, borderLeftColor: '#DC3545',
+                        padding: SPACING.md, marginBottom: SPACING.sm,
+                      }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: colors.text, flex: 1 }} numberOfLines={1}>
+                            {link.donor_name}
+                          </Text>
+                          <View style={{ backgroundColor: '#DC354518', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2 }}>
+                            <Text style={{ fontSize: 12, fontWeight: FONT_WEIGHT.bold, color: '#DC3545' }}>
+                              ${link.total_donated >= 1000 ? `${(link.total_donated / 1000).toFixed(0)}k` : link.total_donated.toLocaleString()}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text style={{ fontSize: 11, color: colors.textMuted, marginBottom: 6 }}>
+                          {link.donor_industry} donor
+                        </Text>
+                        <View style={{ backgroundColor: colors.card, borderRadius: 8, padding: SPACING.sm }}>
+                          <Text style={{ fontSize: 12, color: colors.text, lineHeight: 18 }} numberOfLines={2}>
+                            {link.related_bill_title}
+                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                            <View style={{
+                              backgroundColor: isAye ? '#E8F5EE' : isNo ? '#FDECEA' : '#F3F4F6',
+                              borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2,
+                            }}>
+                              <Text style={{
+                                fontSize: 11, fontWeight: FONT_WEIGHT.bold,
+                                color: isAye ? '#00843D' : isNo ? '#DC3545' : '#6B7280',
+                              }}>
+                                Voted {isAye ? 'Aye' : isNo ? 'No' : link.vote_cast}
+                              </Text>
+                            </View>
+                            {link.vote_date && <Text style={{ fontSize: 10, color: '#9CA3AF' }}>{link.vote_date}</Text>}
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
 
               {/* ── Funding ── */}
               <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>Funding</Text>

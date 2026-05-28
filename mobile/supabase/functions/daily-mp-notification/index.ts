@@ -113,7 +113,7 @@ Deno.serve(async (req: Request) => {
 
     if (!parliamentSat) {
       const { data: recentSpeeches } = await supabase
-        .from('hansard_speeches')
+        .from('hansard_entries')
         .select('id')
         .gte('date', yesterday)
         .lte('date', today)
@@ -267,7 +267,7 @@ Deno.serve(async (req: Request) => {
       // ── Priority 2: Spoke in parliament ────────────────────────────────
       if (!notifType) {
         const { data: speeches } = await supabase
-          .from('hansard_speeches')
+          .from('hansard_entries')
           .select('debate_topic, date')
           .eq('member_id', memberId)
           .gte('date', yesterday)
@@ -315,7 +315,6 @@ Deno.serve(async (req: Request) => {
       }
 
       // Priority 4: removed (official_posts system removed)
-      }
 
       // ── Priority 5: Absent on a sitting day ────────────────────────────
       if (!notifType && parliamentSat) {

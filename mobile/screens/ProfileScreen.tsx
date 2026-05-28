@@ -467,6 +467,12 @@ export function ProfileScreen({ navigation }: any) {
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </Pressable>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Methodology')} accessibilityRole="button" accessibilityLabel="How Verity Works">
+              <Ionicons name="book-outline" size={20} color={colors.textBody} />
+              <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>How Verity Works</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+            </Pressable>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <Pressable style={styles.settingRow} onPress={() => navigation.navigate('PrivacyPolicy')} accessibilityRole="button" accessibilityLabel="Privacy Policy">
               <Ionicons name="shield-outline" size={20} color={colors.textBody} />
               <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Privacy Policy</Text>

@@ -38,6 +38,8 @@ import { useMPPosts } from '../hooks/useMPPosts';
 import { useMPPostReaction } from '../hooks/useMPPostReaction';
 import { MPPostCard } from '../components/MPPostCard';
 import { useAffectsYou } from '../hooks/useAffectsYou';
+import { useBlindspots } from '../hooks/useBlindspots';
+import { useStatsMetrics, pickStatOfTheDay } from '../hooks/useStatsMetrics';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -126,10 +128,19 @@ export function HomeScreen({ navigation }: any) {
 
   const { votes: mpVotes } = useVotes(myMP?.id ?? null);
   const { items: affectsYouItems, loading: affectsYouLoading } = useAffectsYou(postcode, myMP?.id ?? null);
+  const { stories: blindspotStories } = useBlindspots();
   const { isSittingToday, nextSitting } = useSittingCalendar();
 
   const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
   const { aggregate } = usePollAggregate(30);
+
+  // ── Stats metrics for stat-of-the-day ──
+  const { mpStats: homeStatsMp } = useStatsMetrics(myMP?.id, electorateResult.electorate?.id);
+  const mpFullName = myMP ? `${myMP.first_name} ${myMP.last_name}` : '';
+  const statOfTheDay = useMemo(
+    () => mpFullName ? pickStatOfTheDay(homeStatsMp, mpFullName) : null,
+    [homeStatsMp, mpFullName],
+  );
 
   // ── MP recent substantive votes ──
   const mpRecentVotes = useMemo(() => {
@@ -586,6 +597,44 @@ export function HomeScreen({ navigation }: any) {
           )}
         </View>
 
+        {/* ═══ STAT OF THE DAY ═══ */}
+        {statOfTheDay && (
+          <Pressable
+            onPress={() => navigation.navigate('Stats')}
+            style={({ pressed }) => ({
+              marginHorizontal: 20,
+              marginTop: SPACING.xl,
+              backgroundColor: colors.card,
+              borderRadius: BORDER_RADIUS.lg,
+              padding: SPACING.lg,
+              borderLeftWidth: 3,
+              borderLeftColor: '#00843D',
+              ...SHADOWS.sm,
+              opacity: pressed ? 0.92 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}
+            accessibilityRole="button"
+            accessibilityLabel="View Verity Stats"
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm }}>
+              <View style={{ backgroundColor: '#E8F5EE', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: SPACING.sm }}>
+                <Ionicons name="stats-chart" size={13} color="#00843D" />
+              </View>
+              <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold, color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                Stat of the day
+              </Text>
+              <View style={{ flex: 1 }} />
+              <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
+            </View>
+            <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.bold, color: colors.text, marginBottom: 2 }}>
+              {statOfTheDay.headline}
+            </Text>
+            <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+              {statOfTheDay.detail}
+            </Text>
+          </Pressable>
+        )}
+
         {/* ═══ 3b. THIS AFFECTS YOU ═══ */}
         {affectsYouItems.length > 0 && (
           <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
@@ -623,6 +672,48 @@ export function HomeScreen({ navigation }: any) {
                 <Text style={{ fontSize: 13, color: colors.textMuted, lineHeight: 18 }} numberOfLines={2}>
                   {item.why_it_matters}
                 </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        {/* ═══ 3c. BLINDSPOT ═══ */}
+        {blindspotStories.length > 0 && (
+          <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+            <SectionHeader color="#7C3AED" label="BLINDSPOT" />
+            {blindspotStories.slice(0, 2).map((story) => (
+              <Pressable
+                key={story.id}
+                onPress={() => navigation.navigate('NewsStoryDetail', { storyId: story.id })}
+                accessibilityRole="button"
+                style={{
+                  backgroundColor: '#F5F0FF', borderRadius: BORDER_RADIUS.lg,
+                  padding: SPACING.lg, marginBottom: SPACING.sm,
+                  borderLeftWidth: 3, borderLeftColor: '#7C3AED',
+                  ...SHADOWS.sm,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <Ionicons name="eye-off-outline" size={14} color="#7C3AED" />
+                  <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: 0.5, flex: 1 }}>
+                    {story.missing_side_label}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 20, marginBottom: 8 }} numberOfLines={2}>
+                  {story.headline}
+                </Text>
+                {/* Coverage bar */}
+                <View style={{ height: 8, borderRadius: 4, flexDirection: 'row', overflow: 'hidden', marginBottom: 4 }}>
+                  {story.left_count > 0 && <View style={{ flex: story.left_count, backgroundColor: '#2563EB' }} />}
+                  {story.center_count > 0 && <View style={{ flex: story.center_count, backgroundColor: '#6B7280' }} />}
+                  {story.right_count > 0 && <View style={{ flex: story.right_count, backgroundColor: '#DC2626' }} />}
+                </View>
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <Text style={{ fontSize: 10, color: '#2563EB', fontWeight: '600' }}>Left {story.left_count}</Text>
+                  <Text style={{ fontSize: 10, color: '#6B7280', fontWeight: '600' }}>Centre {story.center_count}</Text>
+                  <Text style={{ fontSize: 10, color: '#DC2626', fontWeight: '600' }}>Right {story.right_count}</Text>
+                  <Text style={{ fontSize: 10, color: colors.textMuted }}>{story.article_count} sources</Text>
+                </View>
               </Pressable>
             ))}
           </View>
