@@ -25,6 +25,9 @@ import time
 from datetime import datetime, timezone
 from typing import Any
 
+import hashlib
+import json
+
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -80,6 +83,136 @@ def normalise_status(raw: str) -> str:
         if key in lower:
             return val
     return "introduced"
+
+
+def compute_version_hash(detail: dict) -> str:
+    """Compute a stable hash of the bill's current state for change detection."""
+    # Include fields that indicate meaningful changes
+    payload = json.dumps({
+        "status": detail.get("current_status"),
+        "title": detail.get("title"),
+        "summary": detail.get("summary"),
+        "passed_house": detail.get("passed_house"),
+        "passed_senate": detail.get("passed_senate"),
+        "assent_date": detail.get("assent_date"),
+    }, sort_keys=True, default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()[:32]
+
+
+def determine_reading_stage(detail: dict) -> str:
+    """Infer the reading stage from the bill's current status."""
+    status = (detail.get("current_status") or "").lower()
+    if status == "royal_assent":
+        return "assent"
+    if status == "passed_senate":
+        return "passed"
+    if status == "passed_house":
+        return "third_reading"
+    if status in ("defeated", "withdrawn"):
+        return status
+    return "introduced"
+
+
+def record_bill_version(db, bill_uuid: str, detail: dict, progress: list | None = None) -> dict | None:
+    """Record a version snapshot. Returns the version row if new, None if unchanged."""
+    content_hash = compute_version_hash(detail)
+
+    # Check if this exact version already exists
+    existing = (
+        db.table("bill_versions")
+        .select("id, version_number")
+        .eq("bill_id", bill_uuid)
+        .eq("content_hash", content_hash)
+        .execute()
+    )
+    if existing.data:
+        return None  # No change
+
+    # Get the latest version number
+    latest = (
+        db.table("bill_versions")
+        .select("id, version_number")
+        .eq("bill_id", bill_uuid)
+        .order("version_number", desc=True)
+        .limit(1)
+        .execute()
+    )
+    prev_version = latest.data[0] if latest.data else None
+    next_number = (prev_version["version_number"] + 1) if prev_version else 1
+
+    # Insert new version
+    version_row = {
+        "bill_id": bill_uuid,
+        "version_number": next_number,
+        "reading_stage": determine_reading_stage(detail),
+        "status_snapshot": detail.get("current_status"),
+        "title_snapshot": detail.get("title"),
+        "summary_snapshot": detail.get("summary"),
+        "progress_snapshot": progress or [],
+        "content_hash": content_hash,
+        "source_url": detail.get("aph_url"),
+    }
+
+    result = db.table("bill_versions").insert(version_row).execute()
+    new_version = result.data[0] if result.data else None
+
+    # If there's a previous version, create a delta
+    if prev_version and new_version:
+        # Fetch previous version for comparison
+        prev_data = (
+            db.table("bill_versions")
+            .select("*")
+            .eq("id", prev_version["id"])
+            .single()
+            .execute()
+        )
+        if prev_data.data:
+            prev = prev_data.data
+            # Determine what changed
+            status_changed = prev.get("status_snapshot") != detail.get("current_status")
+            title_changed = prev.get("title_snapshot") != detail.get("title")
+            summary_changed = prev.get("summary_snapshot") != detail.get("summary")
+
+            # Find new progress stages
+            prev_stages = set(
+                json.dumps(s, sort_keys=True) for s in (prev.get("progress_snapshot") or [])
+            )
+            current_stages = progress or []
+            new_stages = [
+                s for s in current_stages
+                if json.dumps(s, sort_keys=True) not in prev_stages
+            ]
+
+            delta_row = {
+                "bill_id": bill_uuid,
+                "from_version_id": prev_version["id"],
+                "to_version_id": new_version["id"],
+                "status_changed": status_changed,
+                "title_changed": title_changed,
+                "summary_changed": summary_changed,
+                "progress_stages_added": new_stages,
+                "change_summary": _build_change_summary(prev, detail, new_stages),
+            }
+            try:
+                db.table("bill_deltas").insert(delta_row).execute()
+            except Exception as e:
+                log.warning("Failed to insert bill delta: %s", e)
+
+    return new_version
+
+
+def _build_change_summary(prev: dict, current: dict, new_stages: list) -> str:
+    """Build a human-readable summary of what changed between versions."""
+    parts = []
+    if prev.get("status_snapshot") != current.get("current_status"):
+        parts.append(f"Status changed from '{prev.get('status_snapshot')}' to '{current.get('current_status')}'")
+    if prev.get("title_snapshot") != current.get("title"):
+        parts.append("Title was modified")
+    if prev.get("summary_snapshot") != current.get("summary"):
+        parts.append("Summary was updated")
+    for stage in new_stages:
+        parts.append(f"New stage: {stage.get('stage', '?')} in {stage.get('chamber', '?')} ({stage.get('date', '?')})")
+    return "; ".join(parts) if parts else "Minor metadata change"
 
 
 def parse_aph_date(raw: str | None) -> str | None:
@@ -328,6 +461,7 @@ def fetch_bill_detail(bill_id: str) -> dict | None:
         "passed_senate": passed_senate_date,
         "assent_date": assent_date,
         "aph_url": aph_url,
+        "progress": progress,
     }
 
 
@@ -466,6 +600,18 @@ def main() -> None:
                     stats["inserted"] += 1
                 else:
                     stats["updated"] += 1
+
+                # Record version snapshot (bill_versions + bill_deltas)
+                try:
+                    # Get the bill's UUID (we need it for bill_versions FK)
+                    bill_row = db.table("bills").select("id").eq("aph_id", bill_id).limit(1).execute()
+                    if bill_row.data:
+                        bill_uuid = bill_row.data[0]["id"]
+                        new_ver = record_bill_version(db, bill_uuid, detail, detail.get("progress"))
+                        if new_ver:
+                            log.info("  Version %s recorded (v%s)", bill_id, new_ver.get("version_number", "?"))
+                except Exception as ve:
+                    log.warning("  Version tracking failed for %s: %s", bill_id, ve)
 
                 log_entries.append({
                     "bill_id": bill_id,
