@@ -61,6 +61,7 @@ import { AudioBriefScreen } from './screens/AudioBriefScreen';
 import { RepresentationIndexScreen } from './screens/RepresentationIndexScreen';
 import { StatsScreen } from './screens/StatsScreen';
 import { MatchScreen } from './screens/MatchScreen';
+import { MatchResultScreen } from './screens/MatchResultScreen';
 import { Daily90Screen } from './screens/Daily90Screen';
 import { WalletScreen } from './screens/WalletScreen';
 import { ConflictRadarScreen } from './screens/ConflictRadarScreen';
@@ -418,6 +419,7 @@ function App() {
               <Stack.Screen name="RepresentationIndex" component={RepresentationIndexScreen} />
               <Stack.Screen name="Stats" component={StatsScreen} />
               <Stack.Screen name="Match" component={MatchScreen} />
+              <Stack.Screen name="MatchResult" component={MatchResultScreen} />
               <Stack.Screen name="Daily90" component={Daily90Screen} />
               <Stack.Screen name="Wallet" component={WalletScreen} />
               <Stack.Screen name="ConflictRadar" component={ConflictRadarScreen} />

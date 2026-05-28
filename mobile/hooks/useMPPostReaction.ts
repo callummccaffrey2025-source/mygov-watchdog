@@ -65,7 +65,7 @@ export function useMPPostReaction(postId: string) {
 
     setLoading(false);
     return true;
-  }, [user?.id, postId, myReaction, loading]);
+  }, [user?.id, postId]);
 
   return { myReaction, react, loading };
 }

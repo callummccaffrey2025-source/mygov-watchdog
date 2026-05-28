@@ -84,9 +84,7 @@ export function useBills(filters: Filters = {}) {
           ?? (filters.activeOnly ? 'date_introduced' : 'last_updated');
         query = query.order(orderCol, { ascending: false, nullsFirst: false });
 
-        if (filters.limit) {
-          query = query.limit(filters.limit);
-        }
+        query = query.limit(filters.limit ?? 100);
 
         const { data, error: err } = await query;
         if (!cancelled) {

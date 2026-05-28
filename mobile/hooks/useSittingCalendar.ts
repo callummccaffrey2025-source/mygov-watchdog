@@ -16,11 +16,11 @@ export function useSittingCalendar() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const fetch = async () => {
       try {
         const today = new Date().toISOString().slice(0, 10);
 
-        // Check if today is a sitting day
         const { data: todayData } = await supabase
           .from('sitting_calendar')
           .select('*')
@@ -28,11 +28,12 @@ export function useSittingCalendar() {
           .eq('is_sitting', true)
           .limit(1);
 
+        if (cancelled) return;
+
         if (todayData && todayData.length > 0) {
           setIsSittingToday(true);
           setTodayInfo(todayData[0] as SittingDay);
         } else {
-          // Find next sitting day
           const { data: nextData } = await supabase
             .from('sitting_calendar')
             .select('date')
@@ -41,15 +42,16 @@ export function useSittingCalendar() {
             .order('date', { ascending: true })
             .limit(1);
 
-          if (nextData?.[0]) {
+          if (!cancelled && nextData?.[0]) {
             setNextSitting(nextData[0].date);
           }
         }
       } catch {}
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     };
 
     fetch();
+    return () => { cancelled = true; };
   }, []);
 
   return { isSittingToday, todayInfo, nextSitting, loading };

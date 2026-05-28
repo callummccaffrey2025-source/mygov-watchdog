@@ -33,7 +33,8 @@ export function useRepresentationGap(memberId: string | undefined) {
           .select('poll_id, division_id, division_name, division_date, question, vote_cast, alignment, data_level, majority_pct, majority_direction, sample_size')
           .eq('member_id', memberId)
           .neq('alignment', 'insufficient_data')
-          .order('division_date', { ascending: false });
+          .order('division_date', { ascending: false })
+          .limit(100);
 
         if (!cancelled) {
           setRecords((data as AlignmentRecord[]) || []);

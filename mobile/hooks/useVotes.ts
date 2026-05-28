@@ -35,7 +35,18 @@ export function useVotes(memberId: string | null) {
           .order('created_at', { ascending: false })
           .limit(100);
         if (cancelled) return;
-        if (!error) setVotes((data as unknown as DivisionVote[]) || []);
+        if (!error && data) {
+          setVotes(
+            (data as any[]).map((v: any) => ({
+              id: v.id,
+              vote_cast: v.vote_cast ?? '',
+              rebelled: v.rebelled ?? false,
+              member_id: v.member_id,
+              created_at: v.created_at,
+              division: v.division ?? null,
+            })) as DivisionVote[],
+          );
+        }
       } catch {
         // Network/Supabase failure — leave votes empty so UI shows empty state
       }

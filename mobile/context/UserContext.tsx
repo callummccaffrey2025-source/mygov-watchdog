@@ -25,20 +25,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    // Generate a unique device_id on first launch if not already set
-    AsyncStorage.getItem('device_id').then(existing => {
+    // Ensure device_id exists before anything else runs
+    const init = async () => {
+      const existing = await AsyncStorage.getItem('device_id');
       if (!existing) {
         const id = `device_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-        AsyncStorage.setItem('device_id', id);
+        await AsyncStorage.setItem('device_id', id);
       }
-    });
+    };
+    init();
 
     AsyncStorage.getItem('postcode').then(v => { if (v) setPostcodeState(v); });
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
       setSession(s);
       // Update analytics identity
-      AsyncStorage.getItem('device_id').then(did => setAnalyticsUser(s?.user?.id ?? null, did));
+      const did = await AsyncStorage.getItem('device_id');
+      setAnalyticsUser(s?.user?.id ?? null, did);
 
       // Migrate anonymous data on first sign-in
       if (event === 'SIGNED_IN' && s?.user) {

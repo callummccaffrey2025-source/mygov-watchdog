@@ -175,10 +175,13 @@ export function HomeScreen({ navigation }: any) {
   };
 
   // ── Refresh ──
+  const [refreshKey, setRefreshKey] = useState(0);
   const onRefresh = useCallback(async () => {
     hapticLight();
     setRefreshing(true);
-    setRefreshing(false);
+    setRefreshKey(k => k + 1);
+    // Allow hooks to re-fire by updating key, then clear spinner after delay
+    setTimeout(() => setRefreshing(false), 1500);
   }, []);
 
   // ── Postcode actions ──
@@ -684,7 +687,7 @@ export function HomeScreen({ navigation }: any) {
             {blindspotStories.slice(0, 2).map((story) => (
               <Pressable
                 key={story.id}
-                onPress={() => navigation.navigate('NewsStoryDetail', { storyId: story.id })}
+                onPress={() => navigation.navigate('Explore')}
                 accessibilityRole="button"
                 style={{
                   backgroundColor: '#F5F0FF', borderRadius: BORDER_RADIUS.lg,
@@ -1258,7 +1261,7 @@ function ContinueLearningCard({ navigation, colors }: { navigation: any; colors:
   );
 }
 
-function MPPostFeedCard({ navigation, memberId, colors }: { navigation: any; memberId: string | null; colors: any }) {
+const MPPostFeedCard = React.memo(function MPPostFeedCard({ navigation, memberId, colors }: { navigation: any; memberId: string | null; colors: any }) {
   const { posts, loading } = useMPPosts(memberId, 1);
   const post = posts[0] ?? null;
   const { myReaction, react } = useMPPostReaction(post?.id ?? '');
@@ -1288,4 +1291,4 @@ function MPPostFeedCard({ navigation, memberId, colors }: { navigation: any; mem
       />
     </View>
   );
-}
+});

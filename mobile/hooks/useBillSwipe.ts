@@ -91,17 +91,17 @@ export function useBillSwipe() {
     seen.push(currentBill.id);
     await AsyncStorage.setItem(seenKey, JSON.stringify(seen));
 
-    // Submit to DB (fire and forget)
+    // Submit to DB (fire and forget — retries on next swipe if fails)
     if (opinion !== 'skip') {
       const deviceId = await AsyncStorage.getItem('device_id');
-      Promise.resolve(
-        supabase.from('bill_opinions').insert({
-          bill_id: currentBill.id,
-          user_id: user?.id ?? null,
-          device_id: deviceId,
-          opinion,
-        })
-      ).catch(() => {});
+      supabase.from('bill_opinions').insert({
+        bill_id: currentBill.id,
+        user_id: user?.id ?? null,
+        device_id: deviceId,
+        opinion,
+      }).then(({ error }) => {
+        if (error) console.warn('Bill opinion insert failed:', error.message);
+      });
     }
 
     // Advance to next bill

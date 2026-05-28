@@ -83,7 +83,8 @@ export function useAffectsYou(postcode: string | null, mpId: string | null) {
           .order('date_introduced', { ascending: false })
           .limit(50);
 
-        if (cancelled || !bills) { setLoading(false); return; }
+        if (cancelled) return;
+        if (!bills) { setLoading(false); return; }
 
         // Match each bill against impact groups
         const results: AffectsYouItem[] = [];

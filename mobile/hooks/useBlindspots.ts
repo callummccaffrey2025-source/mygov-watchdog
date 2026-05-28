@@ -28,7 +28,8 @@ export function useBlindspots() {
           .order('article_count', { ascending: false })
           .limit(100);
 
-        if (cancelled || !data) { setLoading(false); return; }
+        if (cancelled) return;
+        if (!data) { setLoading(false); return; }
 
         const blindspots: BlindspotStory[] = [];
         for (const s of data) {
