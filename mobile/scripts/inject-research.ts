@@ -12,6 +12,10 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load .env
 const envPath = path.join(__dirname, '..', '.env');
@@ -125,9 +129,9 @@ async function main() {
 
   // Fallback: find any file with overlapping keywords
   if (!bestFile) {
-    const keywords = searchTerm.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const keywords = searchTerm.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3);
     for (const f of cacheFiles.sort().reverse()) {
-      if (keywords.some(kw => f.includes(kw))) { bestFile = f; break; }
+      if (keywords.some((kw: string) => f.includes(kw))) { bestFile = f; break; }
     }
   }
 
