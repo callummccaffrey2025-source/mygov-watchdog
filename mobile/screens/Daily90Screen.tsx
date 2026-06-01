@@ -1,745 +1,465 @@
-import React, { useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  RefreshControl,
-  Share,
-  Platform,
+  View, Text, Pressable, ScrollView, RefreshControl, Share, Platform, Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { useTheme } from '../context/ThemeContext';
-import {
-  useMorningSignal,
-  MorningSignalStory,
-  ShiftedPosition,
-  BillMovement,
-  Blindspot,
-} from '../hooks/useMorningSignal';
+import { useUser } from '../context/UserContext';
+import { useMorningSignal, MorningSignalStory } from '../hooks/useMorningSignal';
+import { useDailyPoll } from '../hooks/useDailyPoll';
+import { useDaily90Streak } from '../hooks/useDaily90Streak';
+import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
 import { SkeletonLoader } from '../components/SkeletonLoader';
-import {
-  SPACING,
-  FONT_SIZE,
-  FONT_WEIGHT,
-  BORDER_RADIUS,
-  SHADOWS,
-} from '../constants/design';
+import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { hapticLight } from '../lib/haptics';
-import { track } from '../lib/analytics';
+import { supabase } from '../lib/supabase';
+import { timeAgo } from '../lib/timeAgo';
 
-/* ───────────────────────── Helpers ───────────────────────── */
+/* ─────────────────────── Helpers ──────────────────────── */
 
 function formatHeaderDate(): string {
   return new Date().toLocaleDateString('en-AU', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+    weekday: 'long', day: 'numeric', month: 'long',
   });
 }
 
-/* ───────────────────────── Sub-components ────────────────── */
+/* ─────────────────────── 1. Daily Brief Card ─────────── */
 
-function SectionHeader({
-  icon,
-  label,
-  iconColor,
-  textColor,
+function DailyBriefCard({
+  stories,
+  colors,
+  onStoryPress,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  iconColor: string;
-  textColor: string;
+  stories: MorningSignalStory[];
+  colors: any;
+  onStoryPress?: (id: string) => void;
 }) {
+  if (stories.length === 0) return null;
+
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: SPACING.sm,
-        marginBottom: SPACING.md,
-      }}
-    >
-      <Ionicons name={icon} size={16} color={iconColor} />
-      <Text
-        style={{
-          fontSize: FONT_SIZE.caption,
-          fontWeight: FONT_WEIGHT.bold,
-          color: textColor,
-          letterSpacing: 0.8,
-          textTransform: 'uppercase',
-        }}
-      >
-        {label}
-      </Text>
+    <View style={{
+      backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
+      padding: SPACING.lg, ...SHADOWS.sm,
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md }}>
+        <Ionicons name="newspaper-outline" size={16} color="#00843D" />
+        <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, color: '#00843D', letterSpacing: 0.8, textTransform: 'uppercase' }}>
+          Today's Brief
+        </Text>
+      </View>
+      {stories.slice(0, 3).map((story, i) => (
+        <Pressable
+          key={story.story_id ?? i}
+          onPress={() => story.story_id && onStoryPress?.(String(story.story_id))}
+          style={{ flexDirection: 'row', gap: SPACING.md, marginBottom: i < 2 ? SPACING.md : 0 }}
+        >
+          <View style={{
+            width: 24, height: 24, borderRadius: 12,
+            backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center',
+          }}>
+            <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, color: '#00843D' }}>
+              {i + 1}
+            </Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: colors.text, lineHeight: 20 }} numberOfLines={2}>
+              {story.headline}
+            </Text>
+            {story.why_it_matters && (
+              <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginTop: 2, lineHeight: 18 }} numberOfLines={2}>
+                {story.why_it_matters}
+              </Text>
+            )}
+          </View>
+        </Pressable>
+      ))}
     </View>
   );
 }
 
-function StoryCard({
-  story,
-  index,
+/* ─────────────────────── 2. Daily Poll Card ──────────── */
+
+function DailyPollCard({
+  poll,
+  userVote,
+  counts,
+  onVote,
+  requiresAuth,
   colors,
-  onPress,
 }: {
-  story: MorningSignalStory;
-  index: number;
+  poll: { question: string; option_a_text: string; option_b_text: string; skip_text: string; source_article_outlet: string | null };
+  userVote: string | null;
+  counts: { option_a: number; option_b: number; skip: number } | null;
+  onVote: (option: 'option_a' | 'option_b' | 'skip') => void;
+  requiresAuth: boolean;
   colors: any;
-  onPress?: () => void;
 }) {
+  const total = (counts?.option_a ?? 0) + (counts?.option_b ?? 0) + (counts?.skip ?? 0);
+  const hasVoted = !!userVote;
+
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={story.headline}
-      style={({ pressed }) => ({
-        backgroundColor: colors.card,
-        borderRadius: BORDER_RADIUS.lg,
-        padding: SPACING.lg,
-        marginBottom: SPACING.sm,
-        opacity: pressed ? 0.85 : 1,
-        ...SHADOWS.sm,
-      })}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          gap: SPACING.md,
-        }}
-      >
-        <View
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 14,
-            backgroundColor: '#E8F5EE',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: FONT_SIZE.caption,
-              fontWeight: FONT_WEIGHT.bold,
-              color: '#00843D',
-            }}
-          >
-            {index + 1}
+    <View style={{
+      backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
+      padding: SPACING.lg, ...SHADOWS.sm,
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md }}>
+        <Ionicons name="chatbubble-outline" size={16} color="#2563EB" />
+        <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, color: '#2563EB', letterSpacing: 0.8, textTransform: 'uppercase' }}>
+          Today's Poll
+        </Text>
+        {poll.source_article_outlet && (
+          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginLeft: 'auto' }}>
+            via {poll.source_article_outlet}
+          </Text>
+        )}
+      </View>
+
+      <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.semibold, color: colors.text, lineHeight: 24, marginBottom: SPACING.lg }}>
+        {poll.question}
+      </Text>
+
+      {hasVoted ? (
+        // Results view
+        <View style={{ gap: SPACING.sm }}>
+          {(['option_a', 'option_b'] as const).map(opt => {
+            const text = opt === 'option_a' ? poll.option_a_text : poll.option_b_text;
+            const count = counts?.[opt] ?? 0;
+            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+            const isUser = userVote === opt;
+            return (
+              <View key={opt} style={{ gap: 4 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: FONT_SIZE.body, fontWeight: isUser ? FONT_WEIGHT.bold : FONT_WEIGHT.medium, color: colors.text }}>
+                    {text} {isUser ? '✓' : ''}
+                  </Text>
+                  <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: colors.textMuted }}>{pct}%</Text>
+                </View>
+                <View style={{ height: 6, backgroundColor: colors.surface, borderRadius: 3, overflow: 'hidden' }}>
+                  <View style={{ height: 6, width: `${pct}%`, backgroundColor: isUser ? '#00843D' : '#9CA3AF', borderRadius: 3 }} />
+                </View>
+              </View>
+            );
+          })}
+          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, textAlign: 'center', marginTop: SPACING.xs }}>
+            {total} vote{total !== 1 ? 's' : ''}
           </Text>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              fontSize: FONT_SIZE.subtitle,
-              fontWeight: FONT_WEIGHT.semibold,
-              color: colors.text,
-              lineHeight: 22,
-              marginBottom: SPACING.xs,
-            }}
-            numberOfLines={3}
-          >
-            {story.headline}
-          </Text>
-          {story.why_it_matters ? (
-            <Text
-              style={{
-                fontSize: FONT_SIZE.body,
-                color: colors.textBody,
-                lineHeight: 21,
-              }}
-              numberOfLines={3}
+      ) : (
+        // Vote buttons
+        <View style={{ gap: SPACING.sm }}>
+          {(['option_a', 'option_b'] as const).map(opt => (
+            <Pressable
+              key={opt}
+              onPress={() => { hapticLight(); onVote(opt); }}
+              style={({ pressed }) => ({
+                paddingVertical: SPACING.md, paddingHorizontal: SPACING.lg,
+                borderRadius: BORDER_RADIUS.md,
+                backgroundColor: pressed ? '#E8F5EE' : colors.surface,
+                borderWidth: 1, borderColor: colors.border,
+                alignItems: 'center',
+              })}
             >
-              {story.why_it_matters}
+              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: colors.text }}>
+                {opt === 'option_a' ? poll.option_a_text : poll.option_b_text}
+              </Text>
+            </Pressable>
+          ))}
+          <Pressable onPress={() => { hapticLight(); onVote('skip'); }}>
+            <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, textAlign: 'center', marginTop: SPACING.xs }}>
+              {poll.skip_text}
             </Text>
-          ) : null}
-          {story.source_ids && story.source_ids.length > 0 && (
-            <Text
-              style={{
-                fontSize: FONT_SIZE.caption,
-                color: colors.textMuted,
-                marginTop: SPACING.xs,
-              }}
-            >
-              {story.source_ids.length} source{story.source_ids.length !== 1 ? 's' : ''}
+          </Pressable>
+          {requiresAuth && (
+            <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, textAlign: 'center', fontStyle: 'italic' }}>
+              Sign in to vote
             </Text>
           )}
         </View>
+      )}
+    </View>
+  );
+}
+
+/* ─────────────────────── 3. MP Activity Card ─────────── */
+
+interface MPActivity {
+  division_name: string;
+  division_date: string;
+  vote_cast: string;
+  division_id: string;
+}
+
+function MPActivityCard({
+  member,
+  activity,
+  colors,
+  onPress,
+}: {
+  member: { first_name: string; last_name: string; photo_url: string | null; party?: { colour?: string } };
+  activity: MPActivity | null;
+  colors: any;
+  onPress?: () => void;
+}) {
+  const partyColour = member.party?.colour ?? '#6B7280';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={!activity}
+      style={{
+        backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
+        padding: SPACING.lg, ...SHADOWS.sm,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md }}>
+        <Ionicons name="person-outline" size={16} color={partyColour} />
+        <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, color: partyColour, letterSpacing: 0.8, textTransform: 'uppercase' }}>
+          Your MP
+        </Text>
+      </View>
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
+        {member.photo_url ? (
+          <Image
+            source={{ uri: member.photo_url }}
+            style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: partyColour }}
+            contentFit="cover"
+          />
+        ) : (
+          <View style={{
+            width: 40, height: 40, borderRadius: 20,
+            backgroundColor: partyColour + '22', justifyContent: 'center', alignItems: 'center',
+          }}>
+            <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: partyColour }}>
+              {member.first_name[0]}{member.last_name[0]}
+            </Text>
+          </View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: colors.text }}>
+            {member.first_name} {member.last_name}
+          </Text>
+          {activity ? (
+            <>
+              <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginTop: 2 }} numberOfLines={2}>
+                Voted {activity.vote_cast.toUpperCase()} on: {activity.division_name.replace(/^Bills?\s*[—\-]\s*/i, '').trim()}
+              </Text>
+              <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginTop: 2 }}>
+                {timeAgo(activity.division_date)}
+              </Text>
+            </>
+          ) : (
+            <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginTop: 2 }}>
+              No recent voting activity
+            </Text>
+          )}
+        </View>
+        {activity && <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />}
       </View>
     </Pressable>
   );
 }
 
-function ShiftedPositionCard({
-  shift,
-  colors,
-}: {
-  shift: ShiftedPosition;
-  colors: any;
-}) {
+/* ─────────────────────── Streak badge ────────────────── */
+
+function StreakBadge({ streak, completedToday, colors }: { streak: number; completedToday: boolean; colors: any }) {
+  if (streak === 0 && !completedToday) return null;
+
   return (
-    <View
-      style={{
-        backgroundColor: colors.card,
-        borderRadius: BORDER_RADIUS.lg,
-        padding: SPACING.lg,
-        marginBottom: SPACING.sm,
-        ...SHADOWS.sm,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: FONT_SIZE.subtitle,
-          fontWeight: FONT_WEIGHT.semibold,
-          color: colors.text,
-          marginBottom: SPACING.xs,
-        }}
-      >
-        {shift.member_name}
+    <View style={{
+      flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+      backgroundColor: completedToday ? '#E8F5EE' : colors.surface,
+      borderRadius: BORDER_RADIUS.full, paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs,
+      alignSelf: 'flex-start',
+    }}>
+      <Ionicons name="flame-outline" size={14} color={completedToday ? '#00843D' : colors.textMuted} />
+      <Text style={{
+        fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold,
+        color: completedToday ? '#00843D' : colors.textMuted,
+      }}>
+        {streak}-day informed streak
       </Text>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: SPACING.sm,
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: '#FFF7ED',
-            paddingHorizontal: SPACING.sm,
-            paddingVertical: SPACING.xs,
-            borderRadius: BORDER_RADIUS.sm,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: FONT_SIZE.caption,
-              fontWeight: FONT_WEIGHT.medium,
-              color: '#EA580C',
-            }}
-          >
-            {shift.old_position}
-          </Text>
-        </View>
-        <Ionicons name="arrow-forward" size={14} color={colors.textMuted} />
-        <View
-          style={{
-            backgroundColor: '#E8F5EE',
-            paddingHorizontal: SPACING.sm,
-            paddingVertical: SPACING.xs,
-            borderRadius: BORDER_RADIUS.sm,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: FONT_SIZE.caption,
-              fontWeight: FONT_WEIGHT.medium,
-              color: '#00843D',
-            }}
-          >
-            {shift.new_position}
-          </Text>
-        </View>
-      </View>
+      {completedToday && <Ionicons name="checkmark-circle" size={14} color="#00843D" />}
     </View>
   );
 }
 
-function BillMovementCard({
-  bill,
-  colors,
-}: {
-  bill: BillMovement;
-  colors: any;
-}) {
-  return (
-    <View
-      style={{
-        backgroundColor: colors.card,
-        borderRadius: BORDER_RADIUS.lg,
-        padding: SPACING.lg,
-        marginBottom: SPACING.sm,
-        ...SHADOWS.sm,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: FONT_SIZE.body,
-          fontWeight: FONT_WEIGHT.semibold,
-          color: colors.text,
-          lineHeight: 21,
-          marginBottom: SPACING.sm,
-        }}
-        numberOfLines={2}
-      >
-        {bill.bill_title}
-      </Text>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: SPACING.sm,
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: colors.surface,
-            paddingHorizontal: SPACING.sm,
-            paddingVertical: SPACING.xs,
-            borderRadius: BORDER_RADIUS.sm,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: FONT_SIZE.caption,
-              color: colors.textMuted,
-            }}
-          >
-            {bill.from_stage}
-          </Text>
-        </View>
-        <Ionicons name="arrow-forward" size={12} color={colors.textMuted} />
-        <View
-          style={{
-            backgroundColor: '#EFF6FF',
-            paddingHorizontal: SPACING.sm,
-            paddingVertical: SPACING.xs,
-            borderRadius: BORDER_RADIUS.sm,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: FONT_SIZE.caption,
-              fontWeight: FONT_WEIGHT.medium,
-              color: '#2563EB',
-            }}
-          >
-            {bill.to_stage}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function BlindspotCard({
-  blindspot,
-  colors,
-}: {
-  blindspot: Blindspot;
-  colors: any;
-}) {
-  return (
-    <View
-      style={{
-        backgroundColor: colors.card,
-        borderRadius: BORDER_RADIUS.lg,
-        padding: SPACING.lg,
-        borderLeftWidth: 3,
-        borderLeftColor: '#8B5CF6',
-        ...SHADOWS.sm,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: SPACING.sm,
-          marginBottom: SPACING.sm,
-        }}
-      >
-        <Ionicons name="eye-off-outline" size={16} color="#8B5CF6" />
-        <Text
-          style={{
-            fontSize: FONT_SIZE.caption,
-            fontWeight: FONT_WEIGHT.bold,
-            color: '#8B5CF6',
-            textTransform: 'uppercase',
-            letterSpacing: 0.5,
-          }}
-        >
-          Coverage gap: {blindspot.gap_side}
-        </Text>
-      </View>
-      <Text
-        style={{
-          fontSize: FONT_SIZE.subtitle,
-          fontWeight: FONT_WEIGHT.semibold,
-          color: colors.text,
-          marginBottom: SPACING.xs,
-        }}
-      >
-        {blindspot.topic}
-      </Text>
-      <Text
-        style={{
-          fontSize: FONT_SIZE.small,
-          color: colors.textMuted,
-        }}
-      >
-        {blindspot.story_ids.length} stor{blindspot.story_ids.length !== 1 ? 'ies' : 'y'} with limited coverage from the {blindspot.gap_side}
-      </Text>
-    </View>
-  );
-}
-
-/* ───────────────────────── Loading skeleton ──────────────── */
-
-function LoadingSkeleton() {
-  return (
-    <View style={{ padding: 20, gap: SPACING.lg }}>
-      <SkeletonLoader height={24} width="60%" borderRadius={BORDER_RADIUS.sm} />
-      <SkeletonLoader height={100} borderRadius={BORDER_RADIUS.lg} />
-      <SkeletonLoader height={100} borderRadius={BORDER_RADIUS.lg} />
-      <SkeletonLoader height={100} borderRadius={BORDER_RADIUS.lg} />
-      <SkeletonLoader height={20} width="40%" borderRadius={BORDER_RADIUS.sm} />
-      <SkeletonLoader height={80} borderRadius={BORDER_RADIUS.lg} />
-      <SkeletonLoader height={20} width="40%" borderRadius={BORDER_RADIUS.sm} />
-      <SkeletonLoader height={80} borderRadius={BORDER_RADIUS.lg} />
-    </View>
-  );
-}
-
-/* ───────────────────────── Empty state ───────────────────── */
-
-function EmptyState({ colors }: { colors: any }) {
-  return (
-    <View style={{ padding: 20, alignItems: 'center', marginTop: SPACING.xxl }}>
-      <Ionicons name="newspaper-outline" size={48} color={colors.textMuted} />
-      <Text
-        style={{
-          fontSize: FONT_SIZE.subtitle,
-          fontWeight: FONT_WEIGHT.bold,
-          color: colors.text,
-          marginTop: SPACING.lg,
-          textAlign: 'center',
-        }}
-      >
-        No digest available yet
-      </Text>
-      <Text
-        style={{
-          fontSize: FONT_SIZE.body,
-          color: colors.textMuted,
-          textAlign: 'center',
-          marginTop: SPACING.sm,
-          lineHeight: 22,
-        }}
-      >
-        Your daily 90-second digest is generated each morning.{'\n'}Pull down to refresh.
-      </Text>
-    </View>
-  );
-}
-
-/* ───────────────────────── Main screen ───────────────────── */
+/* ─────────────────────── Main screen ─────────────────── */
 
 export function Daily90Screen({ navigation }: any) {
   const { colors } = useTheme();
-  const { signal, loading, refresh } = useMorningSignal();
-  const [refreshing, setRefreshing] = React.useState(false);
+  const { postcode, user } = useUser();
+  const { signal, loading: signalLoading, refresh: refreshSignal } = useMorningSignal();
+  const { poll, userVote, counts, loading: pollLoading, vote: castVote } = useDailyPoll();
+  const { streak, completedToday, markComplete } = useDaily90Streak();
+  const { member, loading: mpLoading } = useElectorateByPostcode(postcode);
+  const [mpActivity, setMpActivity] = useState<MPActivity | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Track which sections have been seen/actioned
+  const [seenBrief, setSeenBrief] = useState(false);
+  const [seenPoll, setSeenPoll] = useState(false);
+  const [seenMP, setSeenMP] = useState(false);
+
+  // Load MP's most recent vote
+  useEffect(() => {
+    if (!member?.id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('division_votes')
+        .select('vote_cast, division:divisions!inner(id, name, date)')
+        .eq('member_id', member.id)
+        .in('vote_cast', ['aye', 'no'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (data?.[0]) {
+        const div = Array.isArray(data[0].division) ? data[0].division[0] : data[0].division;
+        setMpActivity({
+          division_name: div?.name ?? '',
+          division_date: div?.date ?? '',
+          vote_cast: data[0].vote_cast,
+          division_id: div?.id ?? '',
+        });
+      }
+    })();
+  }, [member?.id]);
+
+  // Mark sections seen on scroll (brief is seen immediately, poll on vote, MP on render)
+  useEffect(() => { if (signal) setSeenBrief(true); }, [signal]);
+  useEffect(() => { if (userVote) setSeenPoll(true); }, [userVote]);
+  useEffect(() => { if (member) setSeenMP(true); }, [member]);
+
+  // Check completion — all three seen/actioned
+  useEffect(() => {
+    if (seenBrief && (seenPoll || !poll) && seenMP && !completedToday) {
+      markComplete();
+    }
+  }, [seenBrief, seenPoll, seenMP, completedToday, poll, markComplete]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refresh();
+    await refreshSignal();
     setRefreshing(false);
-  }, [refresh]);
+  }, [refreshSignal]);
 
-  const handleShare = useCallback(async () => {
-    hapticLight();
-    track('daily90_share', {}, 'Daily90');
-
-    if (!signal) return;
-
-    const headlines = (signal.top_stories ?? [])
-      .slice(0, 3)
-      .map((s, i) => `${i + 1}. ${s.headline}`)
-      .join('\n');
-
-    const message = [
-      `Your Daily 90 — ${formatHeaderDate()}`,
-      '',
-      headlines || 'No top stories today.',
-      '',
-      'Get your daily civic digest on Verity.',
-    ].join('\n');
-
-    try {
-      await Share.share({
-        message,
-        ...(Platform.OS === 'ios' ? { url: 'https://verity.com.au' } : {}),
-      });
-    } catch {
-      // User cancelled or share failed — silent
-    }
-  }, [signal]);
-
+  const loading = signalLoading && pollLoading && mpLoading;
   const topStories = signal?.top_stories?.slice(0, 3) ?? [];
-  const shiftedPositions = signal?.shifted_positions ?? [];
-  const billMovements = signal?.bill_movements ?? [];
-  const blindspot = signal?.blindspot ?? null;
-
-  const hasMP = shiftedPositions.length > 0;
-  const hasBills = billMovements.length > 0;
-  const hasBlindspot = blindspot !== null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.textMuted}
-          />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00843D" />}
       >
-        {/* ── Green gradient header ── */}
+        {/* Green gradient header */}
         <LinearGradient
           colors={['#00843D', '#00A34D']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            paddingTop: SPACING.lg,
-            paddingHorizontal: 20,
-            paddingBottom: SPACING.xxxl,
-            overflow: 'hidden',
-          }}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={{ paddingTop: SPACING.lg, paddingHorizontal: 20, paddingBottom: SPACING.xxl, overflow: 'hidden' }}
         >
-          {/* Decorative circle */}
-          <View
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              top: -30,
-              right: -30,
-              width: 140,
-              height: 140,
-              borderRadius: 70,
-              backgroundColor: 'rgba(255,255,255,0.08)',
-            }}
-          />
+          <View pointerEvents="none" style={{
+            position: 'absolute', top: -30, right: -30,
+            width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(255,255,255,0.08)',
+          }} />
 
-          {/* Back button */}
-          <Pressable
-            onPress={() => navigation.goBack()}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            style={{ marginBottom: SPACING.xl }}
-          >
-            <Ionicons name="arrow-back" size={22} color="#ffffff" />
-          </Pressable>
-
-          {/* Label */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: SPACING.sm,
-              marginBottom: SPACING.sm,
-            }}
-          >
-            <Ionicons name="flash-outline" size={18} color="rgba(255,255,255,0.8)" />
-            <Text
-              style={{
-                fontSize: FONT_SIZE.caption,
-                fontWeight: FONT_WEIGHT.bold,
-                color: 'rgba(255,255,255,0.8)',
-                letterSpacing: 1,
-                textTransform: 'uppercase',
-              }}
-            >
-              90-SECOND DIGEST
-            </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.lg }}>
+            <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
+              <Ionicons name="arrow-back" size={22} color="#fff" />
+            </Pressable>
+            <StreakBadge streak={streak} completedToday={completedToday} colors={colors} />
           </View>
 
-          {/* Title */}
-          <Text
-            style={{
-              fontSize: FONT_SIZE.heading + 6,
-              fontWeight: FONT_WEIGHT.bold,
-              color: '#ffffff',
-              letterSpacing: -0.5,
-            }}
-          >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.sm }}>
+            <Ionicons name="flash-outline" size={18} color="rgba(255,255,255,0.8)" />
+            <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, color: 'rgba(255,255,255,0.8)', letterSpacing: 1, textTransform: 'uppercase' }}>
+              90-SECOND CIVIC RITUAL
+            </Text>
+          </View>
+          <Text style={{ fontSize: FONT_SIZE.heading + 6, fontWeight: FONT_WEIGHT.bold, color: '#fff', letterSpacing: -0.5 }}>
             Your Daily 90
           </Text>
-
-          {/* Date */}
-          <Text
-            style={{
-              fontSize: FONT_SIZE.body,
-              color: 'rgba(255,255,255,0.7)',
-              marginTop: SPACING.sm,
-            }}
-          >
+          <Text style={{ fontSize: FONT_SIZE.body, color: 'rgba(255,255,255,0.7)', marginTop: SPACING.sm }}>
             {formatHeaderDate()}
           </Text>
         </LinearGradient>
 
-        {/* ── Content ── */}
-        {loading && !signal ? (
-          <LoadingSkeleton />
-        ) : !signal ? (
-          <EmptyState colors={colors} />
-        ) : (
-          <View style={{ paddingHorizontal: 20 }}>
-            {/* ── Top Stories ── */}
-            {topStories.length > 0 && (
-              <View style={{ marginTop: SPACING.xl }}>
-                <SectionHeader
-                  icon="newspaper-outline"
-                  label="Top Stories"
-                  iconColor="#00843D"
-                  textColor={colors.textMuted}
-                />
-                {topStories.map((story, i) => (
-                  <StoryCard
-                    key={story.story_id ?? i}
-                    story={story}
-                    index={i}
-                    colors={colors}
-                    onPress={() => {
-                      track('daily90_story_tap', { story_id: story.story_id }, 'Daily90');
-                    }}
-                  />
-                ))}
-              </View>
-            )}
+        {/* Content */}
+        <View style={{ paddingHorizontal: 20, gap: SPACING.lg, marginTop: SPACING.xl, paddingBottom: SPACING.xxxl }}>
+          {loading ? (
+            <View style={{ gap: SPACING.lg }}>
+              <SkeletonLoader height={160} borderRadius={BORDER_RADIUS.lg} />
+              <SkeletonLoader height={200} borderRadius={BORDER_RADIUS.lg} />
+              <SkeletonLoader height={100} borderRadius={BORDER_RADIUS.lg} />
+            </View>
+          ) : (
+            <>
+              {/* 1. Daily Brief */}
+              <DailyBriefCard stories={topStories} colors={colors} />
 
-            {/* ── Your MP This Week ── */}
-            {hasMP && (
-              <View style={{ marginTop: SPACING.xl }}>
-                <SectionHeader
-                  icon="person-outline"
-                  label="Your MP This Week"
-                  iconColor="#2563EB"
-                  textColor={colors.textMuted}
+              {/* 2. Daily Poll */}
+              {poll && (
+                <DailyPollCard
+                  poll={poll}
+                  userVote={userVote}
+                  counts={counts}
+                  onVote={castVote}
+                  requiresAuth={!user}
+                  colors={colors}
                 />
-                {shiftedPositions.map((shift, i) => (
-                  <ShiftedPositionCard
-                    key={shift.member_id ?? i}
-                    shift={shift}
-                    colors={colors}
-                  />
-                ))}
-              </View>
-            )}
+              )}
 
-            {/* ── Bills to Watch ── */}
-            {hasBills && (
-              <View style={{ marginTop: SPACING.xl }}>
-                <SectionHeader
-                  icon="document-text-outline"
-                  label="Bills to Watch"
-                  iconColor="#EA580C"
-                  textColor={colors.textMuted}
+              {/* 3. What your MP did */}
+              {member && (
+                <MPActivityCard
+                  member={member as any}
+                  activity={mpActivity}
+                  colors={colors}
+                  onPress={mpActivity ? () => navigation.navigate('MemberProfile', { memberId: member.id }) : undefined}
                 />
-                {billMovements.map((bill, i) => (
-                  <BillMovementCard
-                    key={bill.bill_id ?? i}
-                    bill={bill}
-                    colors={colors}
-                  />
-                ))}
-              </View>
-            )}
+              )}
 
-            {/* ── Blindspot ── */}
-            {hasBlindspot && (
-              <View style={{ marginTop: SPACING.xl }}>
-                <SectionHeader
-                  icon="eye-off-outline"
-                  label="Blindspot"
-                  iconColor="#8B5CF6"
-                  textColor={colors.textMuted}
-                />
-                <BlindspotCard blindspot={blindspot!} colors={colors} />
-              </View>
-            )}
-
-            {/* ── Electorate impact note ── */}
-            {signal.electorate_impact && (
-              <View
-                style={{
-                  marginTop: SPACING.xl,
-                  backgroundColor: colors.greenBg,
-                  borderRadius: BORDER_RADIUS.lg,
-                  padding: SPACING.lg,
-                  flexDirection: 'row',
-                  gap: SPACING.sm,
-                }}
-              >
-                <Ionicons
-                  name="location-outline"
-                  size={16}
-                  color={colors.green}
-                  style={{ marginTop: 2 }}
-                />
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontSize: FONT_SIZE.caption,
-                      fontWeight: FONT_WEIGHT.bold,
-                      color: colors.green,
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.5,
-                      marginBottom: SPACING.xs,
-                    }}
-                  >
-                    Your electorate
+              {/* No MP set */}
+              {!member && !mpLoading && (
+                <Pressable
+                  onPress={() => navigation.navigate('Match')}
+                  style={{
+                    backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
+                    padding: SPACING.lg, alignItems: 'center', ...SHADOWS.sm,
+                  }}
+                >
+                  <Ionicons name="location-outline" size={24} color="#00843D" />
+                  <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: colors.text, marginTop: SPACING.sm }}>
+                    Set your postcode to see your MP's activity
                   </Text>
-                  <Text
-                    style={{
-                      fontSize: FONT_SIZE.body,
-                      color: colors.text,
-                      lineHeight: 21,
-                    }}
-                  >
-                    {signal.electorate_impact}
+                  <Text style={{ fontSize: FONT_SIZE.small, color: '#00843D', marginTop: SPACING.xs }}>
+                    Take the Verity Match →
+                  </Text>
+                </Pressable>
+              )}
+
+              {/* Completion state */}
+              {completedToday && (
+                <View style={{
+                  backgroundColor: '#E8F5EE', borderRadius: BORDER_RADIUS.lg,
+                  padding: SPACING.lg, alignItems: 'center',
+                }}>
+                  <Ionicons name="checkmark-circle" size={32} color="#00843D" />
+                  <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold, color: '#00843D', marginTop: SPACING.sm }}>
+                    You're informed for today
+                  </Text>
+                  <Text style={{ fontSize: FONT_SIZE.small, color: '#00843D', marginTop: SPACING.xs }}>
+                    {streak} day{streak !== 1 ? 's' : ''} and counting
                   </Text>
                 </View>
-              </View>
-            )}
-
-            {/* ── Share button ── */}
-            <Pressable
-              onPress={handleShare}
-              accessibilityRole="button"
-              accessibilityLabel="Share your daily digest"
-              style={({ pressed }) => ({
-                marginTop: SPACING.xxl,
-                marginBottom: SPACING.xxxl,
-                backgroundColor: pressed ? '#006B31' : '#00843D',
-                borderRadius: BORDER_RADIUS.lg,
-                paddingVertical: SPACING.lg,
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: SPACING.sm,
-                ...SHADOWS.md,
-              })}
-            >
-              <Ionicons name="share-outline" size={20} color="#ffffff" />
-              <Text
-                style={{
-                  fontSize: FONT_SIZE.subtitle,
-                  fontWeight: FONT_WEIGHT.bold,
-                  color: '#ffffff',
-                }}
-              >
-                Share this digest
-              </Text>
-            </Pressable>
-          </View>
-        )}
+              )}
+            </>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

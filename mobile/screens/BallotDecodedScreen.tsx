@@ -1,7 +1,20 @@
 /**
  * Ballot Decoded — factual election guide for the user's electorate.
- * LEGAL-GATED via feature flag 'ballot_decoded' (default OFF).
- * Shows candidates, party policies, and voting records. No endorsements.
+ *
+ * ╔══════════════════════════════════════════════════════════════════════╗
+ * ║  LEGAL GATE — DO NOT ENABLE WITHOUT:                               ║
+ * ║  1. Defamation legal sign-off (candidate comparisons)              ║
+ * ║  2. AEC electoral-authorisation review (this is "electoral matter" ║
+ * ║     under the Commonwealth Electoral Act 1918, s.4)                ║
+ * ║                                                                    ║
+ * ║  Feature flag: 'ballot_decoded' — default OFF in featureFlags.ts   ║
+ * ║  Can only be enabled via the remote `feature_flags` table after    ║
+ * ║  legal clearance.                                                  ║
+ * ╚══════════════════════════════════════════════════════════════════════╝
+ *
+ * This feature touches "electoral matter" under Australian law.
+ * It must carry an electoral authorisation statement if enabled during
+ * an election period. The disclaimer component below is required.
  */
 import React, { useState, useCallback, useMemo } from 'react';
 import {
@@ -172,6 +185,13 @@ export function BallotDecodedScreen() {
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <Header colors={colors} onBack={() => nav.goBack()} subtitle={electorate_name} />
 
+      {/* Persistent disclaimer banner — always visible when scrolling */}
+      <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm, borderBottomWidth: 1, borderBottomColor: '#FDE68A' }}>
+        <Text style={{ fontSize: FONT_SIZE.caption, color: '#92400E', textAlign: 'center', fontWeight: FONT_WEIGHT.medium }}>
+          Factual voting record only — not voting advice
+        </Text>
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -253,12 +273,20 @@ export function BallotDecodedScreen() {
           </>
         )}
 
-        {/* ── Disclaimer ───────────────────────────────────────────────── */}
-        <View style={[styles.disclaimerCard, { backgroundColor: colors.cardAlt }]}>
-          <Ionicons name="information-circle-outline" size={18} color={colors.textMuted} />
-          <Text style={[styles.disclaimerText, { color: colors.textMuted }]}>
-            This is a factual guide based on public records. Verity does not endorse any candidate.
-          </Text>
+        {/* ── Persistent legal disclaimer (required for electoral matter) ── */}
+        <View style={[styles.disclaimerCard, { backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#F59E0B' }]}>
+          <Ionicons name="warning-outline" size={18} color="#92400E" />
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: '#92400E', marginBottom: SPACING.xs }}>
+              NOT VOTING ADVICE
+            </Text>
+            <Text style={[styles.disclaimerText, { color: '#78350F' }]}>
+              This is a factual voting record based on public parliamentary data. It is not a recommendation to vote for or against any candidate. Verify all information with official sources.
+            </Text>
+            <Text style={[styles.disclaimerText, { color: '#78350F', marginTop: SPACING.xs, fontStyle: 'italic' }]}>
+              Source: TheyVoteForYou API, APH.gov.au, AEC.gov.au
+            </Text>
+          </View>
         </View>
 
         <View style={{ height: insets.bottom + SPACING.xl }} />

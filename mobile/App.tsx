@@ -324,6 +324,8 @@ function App() {
       navigationRef.navigate('MemberProfile', { memberId: data.memberId });
     } else if (data?.screen === 'ContradictionDetail' && data.contradictionId) {
       navigationRef.navigate('ContradictionDetail', { contradictionId: data.contradictionId });
+    } else if (data?.screen === 'Daily90') {
+      navigationRef.navigate('Daily90');
     }
   };
 

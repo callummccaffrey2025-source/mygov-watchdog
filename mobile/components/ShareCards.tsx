@@ -971,6 +971,215 @@ const s = StyleSheet.create({
   },
 });
 
+// ─── 10. Match Flex Share Card ────────────────────────────────────────────────
+
+interface MatchFlexShareCardProps {
+  matchPct: number;
+  mpName: string;
+  mpPhotoUrl: string | null;
+  partyName: string;
+  partyColour: string;
+  electorate: string;
+  topAligned: string[];
+  topGaps: string[];
+}
+
+export function MatchFlexShareCard({
+  matchPct, mpName, mpPhotoUrl, partyName, partyColour, electorate,
+  topAligned, topGaps,
+}: MatchFlexShareCardProps) {
+  const scoreColour = matchPct >= 70 ? GREEN : matchPct >= 40 ? '#EAB308' : '#DC3545';
+
+  return (
+    <View style={s.card}>
+      <CardHeader subtitle="VERITY MATCH" />
+
+      {/* MP identity */}
+      <View style={s.mpRow}>
+        {mpPhotoUrl ? (
+          <Image source={{ uri: mpPhotoUrl }} style={s.mpPhoto} />
+        ) : (
+          <View style={[s.mpPhotoPlaceholder, { backgroundColor: partyColour + '33' }]}>
+            <Text style={[s.mpInitials, { color: partyColour }]}>
+              {mpName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            </Text>
+          </View>
+        )}
+        <View style={s.mpInfo}>
+          <Text style={s.mpName}>{mpName}</Text>
+          <View style={[s.partyBadge, { backgroundColor: partyColour + '22' }]}>
+            <Text style={[s.partyBadgeText, { color: partyColour }]}>{partyName}</Text>
+          </View>
+          <Text style={{ fontSize: 11, color: GREY, marginTop: 2 }}>{electorate}</Text>
+        </View>
+      </View>
+
+      {/* Big score */}
+      <View style={{ alignItems: 'center', paddingTop: 20, paddingBottom: 8 }}>
+        <Text style={{ fontSize: 72, fontWeight: '900', color: scoreColour, lineHeight: 80 }}>{matchPct}%</Text>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: GREY }}>aligned on what matters to me</Text>
+      </View>
+
+      {/* Aligned + gap chips */}
+      <View style={{ paddingHorizontal: 20, gap: 8, marginTop: 8 }}>
+        {topAligned.length > 0 && (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            {topAligned.slice(0, 3).map(issue => (
+              <View key={issue} style={{ backgroundColor: GREEN + '15', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: GREEN }}>{issue}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        {topGaps.length > 0 && (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            {topGaps.slice(0, 2).map(issue => (
+              <View key={issue} style={{ backgroundColor: '#DC354515', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#DC3545' }}>Gap: {issue}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+
+      <CardFooter cta="Find your match on Verity" />
+    </View>
+  );
+}
+
+// ─── 11. The Receipt Share Card ──────────────────────────────────────────────
+
+interface ReceiptShareCardProps {
+  mpName: string;
+  mpPhotoUrl: string | null;
+  partyName: string;
+  partyColour: string;
+  billTitle: string;
+  voteCast: string;
+  date: string;
+  issueTag: string | null;
+}
+
+export function ReceiptShareCard({
+  mpName, mpPhotoUrl, partyName, partyColour, billTitle, voteCast, date, issueTag,
+}: ReceiptShareCardProps) {
+  const isFor = voteCast === 'aye';
+  const voteLabel = isFor ? 'FOR' : 'AGAINST';
+  const voteColour = isFor ? GREEN : '#DC3545';
+  const voteBg = isFor ? '#E8F5EE' : '#FDECEA';
+  const formattedDate = date
+    ? new Date(date).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+
+  return (
+    <View style={s.card}>
+      <CardHeader subtitle="THE RECEIPT" />
+
+      {/* MP identity */}
+      <View style={s.mpRow}>
+        {mpPhotoUrl ? (
+          <Image source={{ uri: mpPhotoUrl }} style={s.mpPhoto} />
+        ) : (
+          <View style={[s.mpPhotoPlaceholder, { backgroundColor: partyColour + '33' }]}>
+            <Text style={[s.mpInitials, { color: partyColour }]}>
+              {mpName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            </Text>
+          </View>
+        )}
+        <View style={s.mpInfo}>
+          <Text style={s.mpName}>{mpName}</Text>
+          <View style={[s.partyBadge, { backgroundColor: partyColour + '22' }]}>
+            <Text style={[s.partyBadgeText, { color: partyColour }]}>{partyName}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* "Your MP voted..." */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: GREY, letterSpacing: 0.5 }}>YOUR MP VOTED</Text>
+      </View>
+
+      {/* Vote badge */}
+      <View style={[s.voteBadge, { backgroundColor: voteBg }]}>
+        <Text style={[s.voteBadgeText, { color: voteColour }]}>{voteLabel}</Text>
+      </View>
+
+      {/* Bill title */}
+      <View style={[s.divisionBox, { marginTop: 12 }]}>
+        {issueTag && (
+          <View style={{ alignSelf: 'flex-start', backgroundColor: GREEN + '15', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 6 }}>
+            <Text style={{ fontSize: 9, fontWeight: '700', color: GREEN, letterSpacing: 1 }}>{issueTag.toUpperCase()}</Text>
+          </View>
+        )}
+        <Text style={s.divisionName} numberOfLines={3}>{billTitle}</Text>
+      </View>
+
+      {/* Date */}
+      {formattedDate ? <Text style={s.voteDate}>{formattedDate}</Text> : null}
+
+      <CardFooter cta="Every vote recorded. Every MP accountable." />
+    </View>
+  );
+}
+
+// ─── 12. Representation Gap Share Card ───────────────────────────────────────
+
+interface RepGapShareCardProps {
+  electorate: string;
+  issueName: string;
+  electorateStance: string;
+  mpName: string;
+  mpVoteDirection: string;
+  gapPct: number;
+  sampleSize: number;
+}
+
+export function RepGapShareCard({
+  electorate, issueName, electorateStance, mpName, mpVoteDirection, gapPct, sampleSize,
+}: RepGapShareCardProps) {
+  return (
+    <View style={s.card}>
+      <CardHeader subtitle="REPRESENTATION GAP" />
+
+      {/* Electorate name */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
+        <Text style={{ fontSize: 12, fontWeight: '700', color: GREEN, letterSpacing: 2 }}>{electorate.toUpperCase()}</Text>
+      </View>
+
+      {/* Gap stat */}
+      <View style={{ alignItems: 'center', paddingTop: 16, paddingBottom: 12 }}>
+        <Text style={{ fontSize: 64, fontWeight: '900', color: '#DC3545', lineHeight: 72 }}>{gapPct}%</Text>
+        <Text style={{ fontSize: 15, fontWeight: '600', color: DARK, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 }}>
+          of {electorate} wanted {electorateStance.toLowerCase()}
+        </Text>
+      </View>
+
+      {/* "But their MP..." */}
+      <View style={{
+        marginHorizontal: 20, backgroundColor: '#FDECEA', borderRadius: 12,
+        padding: 16, borderLeftWidth: 4, borderLeftColor: '#DC3545',
+      }}>
+        <Text style={{ fontSize: 13, fontWeight: '700', color: '#DC3545', letterSpacing: 1, marginBottom: 6 }}>
+          BUT THEIR MP
+        </Text>
+        <Text style={{ fontSize: 16, fontWeight: '800', color: DARK, lineHeight: 24 }}>
+          {mpName} voted {mpVoteDirection.toLowerCase()}
+        </Text>
+        <Text style={{ fontSize: 15, fontWeight: '700', color: DARK, marginTop: 4 }}>
+          on {issueName}
+        </Text>
+      </View>
+
+      {/* Sample size */}
+      <Text style={{ fontSize: 11, color: GREY, textAlign: 'center', marginTop: 12, paddingHorizontal: 20 }}>
+        Based on {sampleSize}+ local respondents
+      </Text>
+
+      <CardFooter cta="Is your MP representing you? Check on Verity" />
+    </View>
+  );
+}
+
 // ─── 8. Mirror (Prediction) Share Card ────────────────────────────────────────
 
 interface MirrorShareCardProps {

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, Pressable, RefreshControl, Modal, ScrollView,
+  View, Text, Pressable, RefreshControl, Modal, ScrollView, TextInput, ActivityIndicator,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,46 +14,230 @@ import { SkeletonLoader } from '../components/SkeletonLoader';
 import { EmptyState } from '../components/EmptyState';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { hapticLight } from '../lib/haptics';
+import { useUser } from '../context/UserContext';
+import { supabase } from '../lib/supabase';
+import postcodeMap from '../assets/postcode_to_electorate.json';
 
-// ── Stance Quiz (inline) ────────────────────────────────────────────────
+// ── Stance Quiz ────────────────────────────────────────────────────────
 
-const STANCE_LABELS = ['Strongly\nDisagree', 'Disagree', 'Neutral', 'Agree', 'Strongly\nAgree'];
-const STANCE_VALUES = [-2, -1, 0, 1, 2];
-const STANCE_COLORS = ['#DC3545', '#F97316', '#9CA3AF', '#10B981', '#059669'];
+const IMPORTANCE_LABELS = ['Low', 'Med', 'High'];
+const IMPORTANCE_VALUES = [1, 2, 3] as const;
 
 function StanceQuiz({
   onComplete,
   navigation,
 }: {
-  onComplete: () => void;
+  onComplete: (memberId: string | null) => void;
   navigation: any;
 }) {
   const { colors } = useTheme();
+  const { postcode, setPostcode } = useUser();
   const { issues, stances, loading, setStance } = useIssueStances();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedStance, setSelectedStance] = useState<number | null>(null);
+  const [selectedImportance, setSelectedImportance] = useState<1 | 2 | 3>(2);
+  const [phase, setPhase] = useState<'quiz' | 'postcode'>('quiz');
+  const [postcodeInput, setPostcodeInput] = useState(postcode ?? '');
+  const [resolving, setResolving] = useState(false);
+  const [electorateOptions, setElectorateOptions] = useState<string[]>([]);
 
-  if (loading) return <View style={{ gap: 12 }}>
-            {[1,2,3,4,5].map(i => <SkeletonLoader key={i} width="100%" height={20} />)}
-          </View>;
+  if (loading) return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#00843D" />
+    </SafeAreaView>
+  );
 
+  // ── Postcode phase ──────────────────────────────────────────────────
+  if (phase === 'postcode') {
+    const resolvePostcode = async () => {
+      const pc = postcodeInput.trim();
+      if (pc.length !== 4) return;
+
+      setResolving(true);
+      setPostcode(pc);
+
+      const electorates = (postcodeMap as Record<string, string[]>)[pc];
+      if (!electorates || electorates.length === 0) {
+        // Unknown postcode — still complete, just no MP resolution
+        onComplete(null);
+        return;
+      }
+
+      if (electorates.length === 1) {
+        // Single electorate — resolve MP directly
+        const { data: member } = await supabase
+          .from('members')
+          .select('id, electorate:electorates!inner(name)')
+          .eq('is_active', true)
+          .eq('chamber', 'representatives')
+          .eq('electorate.name', electorates[0])
+          .limit(1)
+          .single();
+        onComplete(member?.id ?? null);
+      } else {
+        setElectorateOptions(electorates);
+        setResolving(false);
+      }
+    };
+
+    const selectElectorate = async (name: string) => {
+      setResolving(true);
+      const { data: member } = await supabase
+        .from('members')
+        .select('id, electorate:electorates!inner(name)')
+        .eq('is_active', true)
+        .eq('chamber', 'representatives')
+        .eq('electorate.name', name)
+        .limit(1)
+        .single();
+      onComplete(member?.id ?? null);
+    };
+
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <LinearGradient
+          colors={['#00843D', '#006B31']}
+          style={{ paddingHorizontal: 20, paddingTop: SPACING.lg, paddingBottom: SPACING.xl }}
+        >
+          <Text style={{ fontSize: FONT_SIZE.heading, fontWeight: FONT_WEIGHT.bold, color: '#fff' }}>
+            Find your MP
+          </Text>
+          <Text style={{ fontSize: FONT_SIZE.body, color: 'rgba(255,255,255,0.8)', marginTop: SPACING.xs }}>
+            Enter your postcode to see your personal match
+          </Text>
+        </LinearGradient>
+
+        <View style={{ padding: 20, gap: SPACING.lg }}>
+          <TextInput
+            value={postcodeInput}
+            onChangeText={setPostcodeInput}
+            placeholder="e.g. 2113"
+            placeholderTextColor={colors.textMuted}
+            keyboardType="number-pad"
+            maxLength={4}
+            autoFocus
+            style={{
+              fontSize: FONT_SIZE.hero, fontWeight: FONT_WEIGHT.bold,
+              color: colors.text, textAlign: 'center',
+              paddingVertical: SPACING.xl,
+              backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
+              ...SHADOWS.sm,
+            }}
+          />
+
+          {electorateOptions.length > 0 && (
+            <View style={{ gap: SPACING.sm }}>
+              <Text style={{ fontSize: FONT_SIZE.body, color: colors.textMuted, textAlign: 'center' }}>
+                Your postcode covers multiple electorates
+              </Text>
+              {electorateOptions.map(name => (
+                <Pressable
+                  key={name}
+                  onPress={() => selectElectorate(name)}
+                  style={{
+                    paddingVertical: SPACING.lg, paddingHorizontal: SPACING.xl,
+                    backgroundColor: colors.card, borderRadius: BORDER_RADIUS.md,
+                    ...SHADOWS.sm,
+                  }}
+                >
+                  <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.semibold, color: colors.text }}>
+                    {name}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          {electorateOptions.length === 0 && (
+            <Pressable
+              onPress={resolvePostcode}
+              disabled={postcodeInput.trim().length !== 4 || resolving}
+              style={{
+                paddingVertical: SPACING.lg, borderRadius: BORDER_RADIUS.md,
+                backgroundColor: postcodeInput.trim().length === 4 ? '#00843D' : colors.surface,
+                alignItems: 'center',
+              }}
+            >
+              {resolving ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={{
+                  fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold,
+                  color: postcodeInput.trim().length === 4 ? '#fff' : colors.textMuted,
+                }}>
+                  See My Match
+                </Text>
+              )}
+            </Pressable>
+          )}
+
+          <Pressable onPress={() => onComplete(null)}>
+            <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, textAlign: 'center', marginTop: SPACING.sm }}>
+              Skip — show all MPs
+            </Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── Quiz phase ──────────────────────────────────────────────────────
   const issue = issues[currentIndex];
   if (!issue) return null;
 
   const progress = (currentIndex + 1) / issues.length;
-  const existing = stances.find(s => s.issue_slug === issue.slug);
+  const existing = stances.find(s => s.issue_id === issue.id);
+
+  const handleChoice = async (stance: -1 | 0 | 1) => {
+    hapticLight();
+    setSelectedStance(stance);
+  };
 
   const handleNext = async () => {
-    if (selectedStance !== null) {
-      await setStance(issue.slug, selectedStance);
+    if (selectedStance !== null && selectedStance !== 0) {
+      await setStance(issue.id, issue.slug, selectedStance, selectedImportance);
     }
     if (currentIndex < issues.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setSelectedStance(null);
+      setSelectedImportance(2);
     } else {
-      onComplete();
+      // Quiz complete — move to postcode if we don't have one
+      if (!postcode) {
+        setPhase('postcode');
+      } else {
+        // Already have postcode — resolve MP
+        const pc = postcode.trim();
+        const electorates = (postcodeMap as Record<string, string[]>)[pc];
+        if (electorates?.length === 1) {
+          const { data: member } = await supabase
+            .from('members')
+            .select('id, electorate:electorates!inner(name)')
+            .eq('is_active', true)
+            .eq('chamber', 'representatives')
+            .eq('electorate.name', electorates[0])
+            .limit(1)
+            .single();
+          onComplete(member?.id ?? null);
+        } else {
+          setPhase('postcode');
+        }
+      }
     }
   };
+
+  const handleSkip = () => {
+    if (currentIndex < issues.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setSelectedStance(null);
+      setSelectedImportance(2);
+    } else {
+      if (!postcode) setPhase('postcode');
+      else onComplete(null);
+    }
+  };
+
+  const activeStance = selectedStance ?? existing?.stance ?? null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -62,20 +246,27 @@ function StanceQuiz({
         colors={['#00843D', '#006B31']}
         style={{ paddingHorizontal: 20, paddingTop: SPACING.lg, paddingBottom: SPACING.xl }}
       >
-        <Pressable onPress={() => navigation?.goBack?.()} hitSlop={12} style={{ marginBottom: SPACING.md }}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </Pressable>
-        <Text style={{ fontSize: FONT_SIZE.heading, fontWeight: FONT_WEIGHT.bold, color: '#fff' }}>
-          Verity Match
-        </Text>
-        <Text style={{ fontSize: FONT_SIZE.body, color: 'rgba(255,255,255,0.8)', marginTop: SPACING.xs }}>
-          Tell us where you stand on {issues.length} key issues
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.md }}>
+          {currentIndex > 0 ? (
+            <Pressable onPress={() => { setCurrentIndex(currentIndex - 1); setSelectedStance(null); }} hitSlop={12}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </Pressable>
+          ) : (
+            <Pressable onPress={() => navigation?.goBack?.()} hitSlop={12}>
+              <Ionicons name="close" size={24} color="#fff" />
+            </Pressable>
+          )}
+          <View style={{ flex: 1, marginLeft: SPACING.md }}>
+            <Text style={{ fontSize: FONT_SIZE.title, fontWeight: FONT_WEIGHT.bold, color: '#fff' }}>
+              Verity Match
+            </Text>
+          </View>
+        </View>
 
         {/* Progress bar */}
         <View style={{
           height: 4, backgroundColor: 'rgba(255,255,255,0.2)',
-          borderRadius: 2, marginTop: SPACING.lg, overflow: 'hidden',
+          borderRadius: 2, overflow: 'hidden',
         }}>
           <View style={{
             height: 4, backgroundColor: '#fff',
@@ -87,86 +278,103 @@ function StanceQuiz({
         </Text>
       </LinearGradient>
 
-      {/* Issue card */}
       <ScrollView
         contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{
-          backgroundColor: colors.card,
-          borderRadius: BORDER_RADIUS.lg,
-          padding: SPACING.xl,
-          ...SHADOWS.md,
+        {/* Issue icon + name */}
+        <Text style={{ fontSize: 36, textAlign: 'center', marginBottom: SPACING.sm }}>
+          {issue.icon ?? '📋'}
+        </Text>
+        <Text style={{
+          fontSize: FONT_SIZE.heading, fontWeight: FONT_WEIGHT.bold,
+          color: colors.text, textAlign: 'center', marginBottom: SPACING.lg,
         }}>
-          <Text style={{
-            fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold,
-            color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.5,
-            marginBottom: SPACING.sm,
-          }}>
-            {issue.topic}
-          </Text>
-          <Text style={{
-            fontSize: FONT_SIZE.title, fontWeight: FONT_WEIGHT.bold,
-            color: colors.text, marginBottom: SPACING.md, lineHeight: 28,
-          }}>
-            {issue.name}
-          </Text>
-          <Text style={{
-            fontSize: FONT_SIZE.body, color: colors.textMuted, lineHeight: 22,
-          }}>
-            {issue.description}
-          </Text>
-        </View>
+          {issue.stance_question}
+        </Text>
 
-        {/* Stance buttons */}
-        <View style={{ marginTop: SPACING.xl }}>
-          <Text style={{
-            fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold,
-            color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5,
-            marginBottom: SPACING.md, textAlign: 'center',
-          }}>
-            Where do you stand?
-          </Text>
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: SPACING.sm }}>
-            {STANCE_VALUES.map((val, i) => {
-              const isSelected = (selectedStance ?? existing?.stance) === val;
-              return (
-                <Pressable
-                  key={val}
-                  onPress={() => { hapticLight(); setSelectedStance(val); }}
-                  style={{
-                    flex: 1, alignItems: 'center', paddingVertical: SPACING.md,
-                    borderRadius: BORDER_RADIUS.md,
-                    backgroundColor: isSelected ? STANCE_COLORS[i] : colors.surface,
-                    borderWidth: isSelected ? 0 : 1,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <Text style={{
-                    fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.medium,
-                    color: isSelected ? '#fff' : colors.textMuted,
-                    textAlign: 'center', lineHeight: 14,
-                  }}>
-                    {STANCE_LABELS[i]}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Skip / Next */}
-        <View style={{ flexDirection: 'row', gap: SPACING.md, marginTop: SPACING.xl }}>
+        {/* Support / Oppose buttons */}
+        <View style={{ gap: SPACING.md }}>
           <Pressable
-            onPress={() => {
-              if (currentIndex < issues.length - 1) {
-                setCurrentIndex(currentIndex + 1);
-                setSelectedStance(null);
-              } else {
-                onComplete();
-              }
+            onPress={() => handleChoice(1)}
+            style={{
+              paddingVertical: SPACING.lg, paddingHorizontal: SPACING.xl,
+              borderRadius: BORDER_RADIUS.md,
+              backgroundColor: activeStance === 1 ? '#10B981' : colors.card,
+              borderWidth: activeStance === 1 ? 0 : 1,
+              borderColor: colors.border,
+              ...SHADOWS.sm,
             }}
+          >
+            <Text style={{
+              fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.semibold,
+              color: activeStance === 1 ? '#fff' : colors.text, textAlign: 'center',
+            }}>
+              {issue.support_label}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => handleChoice(-1)}
+            style={{
+              paddingVertical: SPACING.lg, paddingHorizontal: SPACING.xl,
+              borderRadius: BORDER_RADIUS.md,
+              backgroundColor: activeStance === -1 ? '#DC3545' : colors.card,
+              borderWidth: activeStance === -1 ? 0 : 1,
+              borderColor: colors.border,
+              ...SHADOWS.sm,
+            }}
+          >
+            <Text style={{
+              fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.semibold,
+              color: activeStance === -1 ? '#fff' : colors.text, textAlign: 'center',
+            }}>
+              {issue.oppose_label}
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Importance picker (only visible after choosing a stance) */}
+        {activeStance !== null && activeStance !== 0 && (
+          <View style={{ marginTop: SPACING.xl }}>
+            <Text style={{
+              fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.medium,
+              color: colors.textMuted, textAlign: 'center', marginBottom: SPACING.md,
+            }}>
+              How important is this to you?
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: SPACING.md }}>
+              {IMPORTANCE_VALUES.map((val, i) => {
+                const isActive = selectedImportance === val;
+                return (
+                  <Pressable
+                    key={val}
+                    onPress={() => { hapticLight(); setSelectedImportance(val); }}
+                    style={{
+                      paddingVertical: SPACING.sm, paddingHorizontal: SPACING.xl,
+                      borderRadius: BORDER_RADIUS.full,
+                      backgroundColor: isActive ? '#00843D' : colors.surface,
+                      borderWidth: isActive ? 0 : 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <Text style={{
+                      fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold,
+                      color: isActive ? '#fff' : colors.textMuted,
+                    }}>
+                      {IMPORTANCE_LABELS[i]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Next / Skip */}
+        <View style={{ flexDirection: 'row', gap: SPACING.md, marginTop: SPACING.xxl }}>
+          <Pressable
+            onPress={handleSkip}
             style={{
               flex: 1, paddingVertical: SPACING.md, borderRadius: BORDER_RADIUS.md,
               borderWidth: 1, borderColor: colors.border, alignItems: 'center',
@@ -179,15 +387,15 @@ function StanceQuiz({
             onPress={handleNext}
             style={{
               flex: 2, paddingVertical: SPACING.md, borderRadius: BORDER_RADIUS.md,
-              backgroundColor: selectedStance !== null || existing ? '#00843D' : colors.surface,
+              backgroundColor: activeStance !== null && activeStance !== 0 ? '#00843D' : colors.surface,
               alignItems: 'center',
             }}
           >
             <Text style={{
               fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold,
-              color: selectedStance !== null || existing ? '#fff' : colors.textMuted,
+              color: activeStance !== null && activeStance !== 0 ? '#fff' : colors.textMuted,
             }}>
-              {currentIndex < issues.length - 1 ? 'Next' : 'See My Matches'}
+              {currentIndex < issues.length - 1 ? 'Next' : 'See My Match'}
             </Text>
           </Pressable>
         </View>
@@ -258,7 +466,7 @@ function BreakdownModal({
 function IssueRow({ issue, colors }: { issue: IssueMatch; colors: any }) {
   const alignColor = issue.aligned ? '#10B981' : '#DC3545';
   const userLabel = issue.user_stance > 0 ? 'Support' : issue.user_stance < 0 ? 'Oppose' : 'Neutral';
-  const mpLabel = issue.mp_lean > 0.2 ? 'Leans aye' : issue.mp_lean < -0.2 ? 'Leans no' : 'Mixed';
+  const mpLabel = issue.mp_lean > 0.2 ? 'Leans support' : issue.mp_lean < -0.2 ? 'Leans oppose' : 'Mixed';
 
   return (
     <View style={{
@@ -411,9 +619,16 @@ export function MatchScreen({ navigation }: { navigation: any }) {
   const { matches, loading, error, refresh } = useVerityMatch();
   const [selectedMatch, setSelectedMatch] = useState<MatchResult | null>(null);
 
-  // If user hasn't completed the quiz, show it first
+  const handleQuizComplete = useCallback((memberId: string | null) => {
+    setShowQuiz(false);
+    refresh();
+    if (memberId) {
+      navigation.navigate('MatchResult', { memberId });
+    }
+  }, [refresh, navigation]);
+
   if (showQuiz && !hasCompleted) {
-    return <StanceQuiz onComplete={() => { setShowQuiz(false); refresh(); }} navigation={navigation} />;
+    return <StanceQuiz onComplete={handleQuizComplete} navigation={navigation} />;
   }
 
   const renderMatch = useCallback(({ item, index }: { item: MatchResult; index: number }) => (

@@ -390,6 +390,39 @@ export function HomeScreen({ navigation }: any) {
             </View>
             <Ionicons name="play-circle" size={28} color="#A78BFA" />
           </Pressable>
+
+          {/* Daily 90 entry point */}
+          <Pressable
+            onPress={() => navigation.navigate('Daily90')}
+            accessibilityRole="button"
+            accessibilityLabel="Open your Daily 90"
+            style={({ pressed }) => ({
+              backgroundColor: '#00843D',
+              borderRadius: BORDER_RADIUS.lg,
+              padding: SPACING.lg,
+              flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+              opacity: pressed ? 0.92 : 1,
+              marginTop: SPACING.md,
+              ...SHADOWS.md,
+            })}
+          >
+            <View style={{
+              width: 44, height: 44, borderRadius: 22,
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              justifyContent: 'center', alignItems: 'center',
+            }}>
+              <Ionicons name="flash-outline" size={20} color="#fff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>
+                Your Daily 90
+              </Text>
+              <Text style={{ fontSize: FONT_SIZE.small, color: 'rgba(255,255,255,0.7)' }}>
+                Brief · Poll · Your MP · 90 seconds
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+          </Pressable>
         </View>
 
         <SectionDivider />

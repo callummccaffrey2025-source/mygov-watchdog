@@ -110,10 +110,10 @@ export function useBallotGuide(electorateId: string | null) {
                 .filter(Boolean);
 
               if (divisionIds.length > 0) {
-                // Fetch issue tags for those divisions
+                // Fetch issue tags for those divisions (join to policy_issues for slug)
                 const { data: tags } = await supabase
                   .from('division_issue_tags')
-                  .select('division_id,issue_slug,confidence')
+                  .select('division_id, issue_id, confidence, policy_issues(slug)')
                   .in('division_id', divisionIds)
                   .gte('confidence', 0.6);
 
@@ -128,8 +128,8 @@ export function useBallotGuide(electorateId: string | null) {
 
                   // Aggregate by topic
                   const topicAgg: Record<string, { total: number; aye: number }> = {};
-                  for (const tag of tags) {
-                    const topic = tag.issue_slug;
+                  for (const tag of tags as any[]) {
+                    const topic = tag.policy_issues?.slug ?? tag.issue_id;
                     const voteCast = voteMap.get(tag.division_id);
                     if (!voteCast) continue;
                     if (!topicAgg[topic]) topicAgg[topic] = { total: 0, aye: 0 };

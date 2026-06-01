@@ -5,25 +5,24 @@ import { supabase } from '../lib/supabase';
 /**
  * User issue stances — reads/writes positions on policy issues.
  *
- * Table: user_issue_stances
- *   device_id text, user_id uuid nullable, issue_slug text,
- *   stance int (-2 strongly disagree to +2 strongly agree),
- *   importance int (1-3), created_at, updated_at
- *
- * Table: policy_issues
- *   slug text PK, name text, description text, topic text
+ * Table: user_issue_stances (device_id, issue_id uuid, stance -1/0/+1, importance 1-3)
+ * Table: policy_issues (id uuid, slug, name, stance_question, support_label, oppose_label, icon)
  */
 
 export interface PolicyIssue {
+  id: string;
   slug: string;
   name: string;
-  description: string;
-  topic: string;
+  stance_question: string;
+  support_label: string;
+  oppose_label: string;
+  icon: string | null;
 }
 
 export interface UserStance {
+  issue_id: string;
   issue_slug: string;
-  stance: number;       // -2 to +2
+  stance: number;       // -1, 0, +1
   importance: number;   // 1-3
 }
 
@@ -32,7 +31,6 @@ export function useIssueStances() {
   const [stances, setStances] = useState<UserStance[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load issues + existing stances
   useEffect(() => {
     let cancelled = false;
 
@@ -41,18 +39,29 @@ export function useIssueStances() {
         const deviceId = await AsyncStorage.getItem('device_id');
 
         const [issuesResult, stancesResult] = await Promise.all([
-          supabase.from('policy_issues').select('slug, name, description, topic').order('name'),
+          supabase
+            .from('policy_issues')
+            .select('id, slug, name, stance_question, support_label, oppose_label, icon')
+            .eq('active', true)
+            .order('sort_order'),
           deviceId
             ? supabase
                 .from('user_issue_stances')
-                .select('issue_slug, stance, importance')
+                .select('issue_id, stance, importance, policy_issues(slug)')
                 .eq('device_id', deviceId)
             : Promise.resolve({ data: [] }),
         ]);
 
         if (!cancelled) {
           setIssues((issuesResult.data as PolicyIssue[]) ?? []);
-          setStances((stancesResult.data as UserStance[]) ?? []);
+          setStances(
+            ((stancesResult.data ?? []) as any[]).map(s => ({
+              issue_id: s.issue_id,
+              issue_slug: s.policy_issues?.slug ?? '',
+              stance: s.stance,
+              importance: s.importance,
+            })),
+          );
         }
       } catch {}
       if (!cancelled) setLoading(false);
@@ -61,7 +70,7 @@ export function useIssueStances() {
     return () => { cancelled = true; };
   }, []);
 
-  const setStance = useCallback(async (issueSlug: string, stance: number, importance: number = 2) => {
+  const setStance = useCallback(async (issueId: string, issueSlug: string, stance: number, importance: number = 2) => {
     const deviceId = await AsyncStorage.getItem('device_id');
     if (!deviceId) return;
 
@@ -73,17 +82,17 @@ export function useIssueStances() {
         {
           device_id: deviceId,
           user_id: user?.id ?? null,
-          issue_slug: issueSlug,
+          issue_id: issueId,
           stance,
           importance,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: 'device_id,issue_slug' },
+        { onConflict: 'device_id,issue_id' },
       );
 
     setStances(prev => {
-      const existing = prev.findIndex(s => s.issue_slug === issueSlug);
-      const updated = { issue_slug: issueSlug, stance, importance };
+      const existing = prev.findIndex(s => s.issue_id === issueId);
+      const updated = { issue_id: issueId, issue_slug: issueSlug, stance, importance };
       if (existing >= 0) {
         const copy = [...prev];
         copy[existing] = updated;
@@ -94,12 +103,12 @@ export function useIssueStances() {
   }, []);
 
   const getStance = useCallback(
-    (issueSlug: string): UserStance | undefined =>
-      stances.find(s => s.issue_slug === issueSlug),
+    (issueId: string): UserStance | undefined =>
+      stances.find(s => s.issue_id === issueId),
     [stances],
   );
 
-  const hasCompleted = stances.length >= Math.min(issues.length, 5);
+  const hasCompleted = stances.filter(s => s.stance !== 0).length >= Math.min(issues.length, 5);
 
   return { issues, stances, loading, setStance, getStance, hasCompleted };
 }

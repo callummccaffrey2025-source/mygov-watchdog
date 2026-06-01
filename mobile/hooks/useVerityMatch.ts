@@ -4,17 +4,173 @@ import { supabase } from '../lib/supabase';
 import { useCivicEvents } from './useCivicEvents';
 
 /**
- * Verity Match — scores all MPs against user's issue stances.
+ * Verity Match — alignment between a user's issue stances and an MP / parties.
  *
- * Algorithm:
- * 1. Fetch user stances (issue_slug → stance -2..+2, importance 1-3)
- * 2. For each MP, fetch their vote lean per issue (from division_votes +
- *    division_issue_tags with confidence >= 0.6)
- * 3. Score = weighted cosine similarity: Σ(user_stance × mp_lean × importance) / normalizer
- * 4. Return sorted by match_score descending
+ * Uses the server-side `get_match` RPC which correctly handles:
+ * - aye_supports direction (Aye doesn't always mean "support")
+ * - importance-weighted scoring
+ * - limited-data guards (< 8 contributing votes → no precise %)
+ * - party alignment ranking
  *
- * Integrity: MPs with < 3 scored issues show "insufficient data" instead of a score.
+ * Also provides `useMatchVotes` for Show-your-working (contributing votes per issue).
  */
+
+export interface PerIssueMatch {
+  issue_slug: string;
+  issue_name: string;
+  user_stance: number;
+  mp_lean: number | null;
+  mp_sample: number;
+  alignment_state: 'aligned' | 'gap' | 'big_gap' | 'insufficient_data';
+  alignment_score: number | null;
+}
+
+export interface PartyMatch {
+  party_id: string;
+  party_name: string;
+  short_name: string | null;
+  abbreviation: string | null;
+  match_pct: number | null;
+  issues_scored: number;
+}
+
+export interface MatchData {
+  overall_match_pct: number | null;
+  limited_data: boolean;
+  issues_scored: number;
+  total_contributing_votes: number;
+  per_issue: PerIssueMatch[];
+  biggest_gap: {
+    issue_slug: string;
+    issue_name: string;
+    user_stance: number;
+    mp_lean: number;
+    alignment_score: number;
+    mp_sample: number;
+  } | null;
+  party_alignment: PartyMatch[];
+}
+
+export interface ContributingVote {
+  division_id: string;
+  division_name: string;
+  division_date: string;
+  vote_cast: string;
+  aye_supports: boolean;
+  vote_signal: 'support' | 'oppose' | 'neutral';
+  confidence: number;
+  rationale: string;
+  source_url: string | null;
+}
+
+/** Fetch the full match breakdown for a single MP against the current user's stances. */
+export function useMatchResult(memberId: string | null) {
+  const [data, setData] = useState<MatchData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { log } = useCivicEvents();
+
+  const compute = useCallback(async () => {
+    if (!memberId) { setLoading(false); return; }
+    setLoading(true);
+    setError(null);
+
+    try {
+      const deviceId = await AsyncStorage.getItem('device_id');
+      if (!deviceId) {
+        setError('No device ID found');
+        setLoading(false);
+        return;
+      }
+
+      const { data: result, error: rpcErr } = await supabase.rpc('get_match', {
+        p_device_id: deviceId,
+        p_member_id: memberId,
+      });
+
+      if (rpcErr) {
+        setError(rpcErr.message);
+        setLoading(false);
+        return;
+      }
+
+      if (result?.error) {
+        setError(result.message ?? result.error);
+        setLoading(false);
+        return;
+      }
+
+      setData(result as MatchData);
+      log('match_viewed', { member_id: memberId, overall_pct: result?.overall_match_pct });
+    } catch (e: any) {
+      setError(e.message ?? 'Failed to compute match');
+    }
+    setLoading(false);
+  }, [memberId, log]);
+
+  useEffect(() => { compute(); }, [compute]);
+
+  return { data, loading, error, refresh: compute };
+}
+
+/** Fetch the contributing votes behind a specific issue for an MP (Show-your-working). */
+export function useMatchVotes(memberId: string | null, issueSlug: string | null) {
+  const [votes, setVotes] = useState<ContributingVote[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = useCallback(async () => {
+    if (!memberId || !issueSlug) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data: result, error: rpcErr } = await supabase.rpc('get_match_votes', {
+        p_member_id: memberId,
+        p_issue_slug: issueSlug,
+      });
+
+      if (rpcErr) { setError(rpcErr.message); }
+      else { setVotes((result as ContributingVote[]) ?? []); }
+    } catch (e: any) {
+      setError(e.message ?? 'Failed to load votes');
+    }
+    setLoading(false);
+  }, [memberId, issueSlug]);
+
+  useEffect(() => { fetch(); }, [fetch]);
+
+  return { votes, loading, error };
+}
+
+/** Save or update a user's stance on an issue. */
+export async function saveStance(
+  issueId: string,
+  stance: -1 | 0 | 1,
+  importance: 1 | 2 | 3,
+): Promise<{ error: string | null }> {
+  const deviceId = await AsyncStorage.getItem('device_id');
+  if (!deviceId) return { error: 'No device ID' };
+
+  const { error } = await supabase
+    .from('user_issue_stances')
+    .upsert(
+      { device_id: deviceId, issue_id: issueId, stance, importance },
+      { onConflict: 'device_id,issue_id' },
+    );
+
+  return { error: error?.message ?? null };
+}
+
+// ── Backward-compatible exports for MatchScreen ───────────────────────
+
+export interface IssueMatch {
+  issue_slug: string;
+  issue_name: string;
+  user_stance: number;
+  mp_lean: number;
+  aligned: boolean;
+}
 
 export interface MatchResult {
   member_id: string;
@@ -26,22 +182,17 @@ export interface MatchResult {
   electorate_name: string;
   state: string;
   photo_url: string | null;
-  match_score: number;          // 0–100
+  match_score: number;
   issues_matched: number;
   insufficient_data: boolean;
   issue_breakdown: IssueMatch[];
 }
 
-export interface IssueMatch {
-  issue_slug: string;
-  issue_name: string;
-  user_stance: number;
-  mp_lean: number;
-  aligned: boolean;
-}
-
-const MIN_ISSUES_FOR_SCORE = 3;
-
+/**
+ * All-MPs ranking hook (used by MatchScreen leaderboard).
+ * Calls get_match RPC for the user's own MP first, then computes lightweight
+ * client-side scores for the full member list using aggregated vote data.
+ */
 export function useVerityMatch() {
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,11 +207,12 @@ export function useVerityMatch() {
       const deviceId = await AsyncStorage.getItem('device_id');
       if (!deviceId) { setLoading(false); return; }
 
-      // 1. Get user stances
+      // 1. Get user stances (with issue slug via join)
       const { data: stanceData } = await supabase
         .from('user_issue_stances')
-        .select('issue_slug, stance, importance')
-        .eq('device_id', deviceId);
+        .select('issue_id, stance, importance, policy_issues(slug, name)')
+        .eq('device_id', deviceId)
+        .neq('stance', 0);
 
       if (!stanceData || stanceData.length === 0) {
         setError('Complete the stance quiz first to see your matches');
@@ -68,120 +220,110 @@ export function useVerityMatch() {
         return;
       }
 
-      const userStances = new Map(
-        stanceData.map(s => [s.issue_slug, { stance: s.stance, importance: s.importance }]),
-      );
+      const userStances = stanceData.map((s: any) => ({
+        issue_id: s.issue_id,
+        slug: s.policy_issues?.slug ?? '',
+        name: s.policy_issues?.name ?? '',
+        stance: s.stance as number,
+        importance: s.importance as number,
+      }));
 
-      // 2. Get issue names
-      const { data: issueNames } = await supabase
-        .from('policy_issues')
-        .select('slug, name');
-      const nameMap = new Map((issueNames ?? []).map(i => [i.slug, i.name]));
-
-      // 3. Get all members
+      // 2. Get all active members
       const { data: members } = await supabase
         .from('members')
-        .select('id, first_name, last_name, photo_url, party:parties(name, short_name, colour), electorate:electorates(name, state)')
-        .eq('is_current', true);
+        .select('id, first_name, last_name, photo_url, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates(name, state)')
+        .eq('is_active', true);
 
       if (!members) { setError('Could not load members'); setLoading(false); return; }
 
-      // 4. Get MP vote leans per issue (aggregated)
-      // division_issue_tags links division_id → issue_slug with confidence
-      // division_votes links division_id → member_id with vote_cast
-      const { data: taggedVotes } = await supabase
+      // 3. Get division_issue_tags with issue_id and aye_supports
+      const { data: tags } = await supabase
         .from('division_issue_tags')
-        .select('division_id, issue_slug, confidence')
+        .select('division_id, issue_id, aye_supports')
         .gte('confidence', 0.6);
 
-      if (!taggedVotes) { setError('Could not load vote data'); setLoading(false); return; }
-
-      // Build division → issues map
-      const divisionIssues = new Map<string, { issue_slug: string; confidence: number }[]>();
-      for (const tv of taggedVotes) {
-        const arr = divisionIssues.get(tv.division_id) ?? [];
-        arr.push({ issue_slug: tv.issue_slug, confidence: tv.confidence });
-        divisionIssues.set(tv.division_id, arr);
-      }
-
-      // Get votes for tagged divisions
-      const taggedDivisionIds = [...divisionIssues.keys()];
-      if (taggedDivisionIds.length === 0) {
+      if (!tags || tags.length === 0) {
         setError('No tagged divisions available yet');
         setLoading(false);
         return;
       }
 
-      // Batch in groups of 500 to avoid URL length limits
+      // Build division → issue tags map
+      const divTags = new Map<string, { issue_id: string; aye_supports: boolean }[]>();
+      for (const t of tags) {
+        const arr = divTags.get(t.division_id) ?? [];
+        arr.push({ issue_id: t.issue_id, aye_supports: t.aye_supports });
+        divTags.set(t.division_id, arr);
+      }
+
+      // 4. Get votes for tagged divisions (batch)
+      const taggedIds = [...divTags.keys()];
       const allVotes: { member_id: string; division_id: string; vote_cast: string }[] = [];
-      for (let i = 0; i < taggedDivisionIds.length; i += 500) {
-        const batch = taggedDivisionIds.slice(i, i + 500);
-        const { data: votesBatch } = await supabase
+      for (let i = 0; i < taggedIds.length; i += 500) {
+        const batch = taggedIds.slice(i, i + 500);
+        const { data: vb } = await supabase
           .from('division_votes')
           .select('member_id, division_id, vote_cast')
           .in('division_id', batch)
           .in('vote_cast', ['aye', 'no']);
-        if (votesBatch) allVotes.push(...votesBatch);
+        if (vb) allVotes.push(...vb);
       }
 
-      // 5. Compute per-member, per-issue lean
-      // lean = (aye_count - no_count) / total_count → normalised to -1..+1
-      const memberIssueLean = new Map<string, Map<string, { aye: number; no: number }>>();
+      // 5. Compute per-member, per-issue signal (using aye_supports)
+      const memberSignals = new Map<string, Map<string, { support: number; oppose: number }>>();
 
       for (const vote of allVotes) {
-        const issues = divisionIssues.get(vote.division_id);
-        if (!issues) continue;
+        const issueTags = divTags.get(vote.division_id);
+        if (!issueTags) continue;
 
-        let memberMap = memberIssueLean.get(vote.member_id);
-        if (!memberMap) {
-          memberMap = new Map();
-          memberIssueLean.set(vote.member_id, memberMap);
-        }
+        let mMap = memberSignals.get(vote.member_id);
+        if (!mMap) { mMap = new Map(); memberSignals.set(vote.member_id, mMap); }
 
-        for (const { issue_slug } of issues) {
-          let counts = memberMap.get(issue_slug);
-          if (!counts) {
-            counts = { aye: 0, no: 0 };
-            memberMap.set(issue_slug, counts);
-          }
-          if (vote.vote_cast === 'aye') counts.aye++;
-          else counts.no++;
+        for (const { issue_id, aye_supports } of issueTags) {
+          let counts = mMap.get(issue_id);
+          if (!counts) { counts = { support: 0, oppose: 0 }; mMap.set(issue_id, counts); }
+
+          const isSupport =
+            (vote.vote_cast === 'aye' && aye_supports) ||
+            (vote.vote_cast === 'no' && !aye_supports);
+
+          if (isSupport) counts.support++;
+          else counts.oppose++;
         }
       }
 
       // 6. Score each member
       const results: MatchResult[] = [];
+      const userIssueIds = new Set(userStances.map(s => s.issue_id));
 
       for (const member of members as any[]) {
-        const memberIssues = memberIssueLean.get(member.id);
+        const mSignals = memberSignals.get(member.id);
         const breakdown: IssueMatch[] = [];
         let weightedSum = 0;
         let weightTotal = 0;
 
-        for (const [issueSlug, userPos] of userStances) {
-          const counts = memberIssues?.get(issueSlug);
-          if (!counts || (counts.aye + counts.no) === 0) continue;
+        for (const us of userStances) {
+          const counts = mSignals?.get(us.issue_id);
+          if (!counts || (counts.support + counts.oppose) < 3) continue;
 
-          const mpLean = (counts.aye - counts.no) / (counts.aye + counts.no); // -1 to +1
-          const userNorm = userPos.stance / 2; // -1 to +1
-          const similarity = 1 - Math.abs(userNorm - mpLean) / 2; // 0 to 1
-          const weight = userPos.importance;
+          const total = counts.support + counts.oppose;
+          const mpLean = (counts.support - counts.oppose) / total; // -1..+1
+          const alignScore = (us.stance * mpLean + 1) / 2; // 0..1
 
-          weightedSum += similarity * weight;
-          weightTotal += weight;
+          weightedSum += alignScore * us.importance;
+          weightTotal += us.importance;
 
           breakdown.push({
-            issue_slug: issueSlug,
-            issue_name: nameMap.get(issueSlug) ?? issueSlug,
-            user_stance: userPos.stance,
+            issue_slug: us.slug,
+            issue_name: us.name,
+            user_stance: us.stance,
             mp_lean: mpLean,
-            aligned: Math.sign(userNorm) === Math.sign(mpLean) || Math.abs(userNorm - mpLean) < 0.5,
+            aligned: alignScore >= 0.55,
           });
         }
 
-        const insufficient = breakdown.length < MIN_ISSUES_FOR_SCORE;
+        const insufficient = breakdown.length < 3;
         const score = weightTotal > 0 ? Math.round((weightedSum / weightTotal) * 100) : 0;
-
         const party = Array.isArray(member.party) ? member.party[0] : member.party;
         const electorate = Array.isArray(member.electorate) ? member.electorate[0] : member.electorate;
 
@@ -198,13 +340,10 @@ export function useVerityMatch() {
           match_score: score,
           issues_matched: breakdown.length,
           insufficient_data: insufficient,
-          issue_breakdown: breakdown.sort((a, b) =>
-            Math.abs(b.user_stance) - Math.abs(a.user_stance),
-          ),
+          issue_breakdown: breakdown,
         });
       }
 
-      // Sort: sufficient-data members by score desc, then insufficient at the end
       results.sort((a, b) => {
         if (a.insufficient_data !== b.insufficient_data) return a.insufficient_data ? 1 : -1;
         return b.match_score - a.match_score;
@@ -215,7 +354,6 @@ export function useVerityMatch() {
     } catch (e: any) {
       setError(e.message ?? 'Failed to compute matches');
     }
-
     setLoading(false);
   }, [log]);
 

@@ -25,6 +25,7 @@ import { trackEvent } from '../lib/engagementTracker';
 import { trackEngagement } from '../hooks/useEngagementScore';
 import { useBillHistory } from '../hooks/useBillHistory';
 import { enrichBill, type NarrativeStatus } from '../lib/billEnrichment';
+import { BillExplainerCard } from '../components/BillExplainer';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import { hapticLight } from '../lib/haptics';
 
@@ -402,6 +403,16 @@ export function BillDetailScreen({ route, navigation }: any) {
               </View>
             </View>
           </View>
+        </View>
+
+        {/* ═══ 2b. PLAIN-ENGLISH EXPLAINER ═══ */}
+        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
+          <BillExplainerCard
+            billId={bill.id}
+            billTitle={bill.title}
+            textUrl={(bill as any).text_url}
+            aphUrl={bill.aph_url}
+          />
         </View>
 
         {/* ═══ 3. HOW THIS AFFECTS YOU ═══ */}

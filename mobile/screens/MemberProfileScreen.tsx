@@ -348,6 +348,28 @@ export function MemberProfileScreen({ route, navigation }: any) {
               Write to {member.first_name}
             </Text>
           </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('MatchResult', { memberId: member.id })}
+            accessibilityRole="button"
+            accessibilityLabel={`Match with ${member.first_name}`}
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: SPACING.sm,
+              backgroundColor: colors.background,
+              borderRadius: 100,
+              paddingVertical: SPACING.md,
+              borderWidth: 1.5,
+              borderColor: '#00843D',
+            }}
+          >
+            <Ionicons name="git-compare-outline" size={16} color="#00843D" />
+            <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '600', color: '#00843D' }}>
+              Match
+            </Text>
+          </Pressable>
         </View>
 
         {/* ───── 3. PARTICIPATION INDEX SECTION ───── */}

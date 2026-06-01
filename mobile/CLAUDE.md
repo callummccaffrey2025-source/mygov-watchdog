@@ -139,6 +139,14 @@
 - **`index_publish_ready` = false**. The leaderboard renders in-app with honest coverage labelling, but is NOT externally-citable/PR-ready until coverage is credible. Do not promote this feature externally until: (a) 30+ electorates have MIN_SAMPLE respondents, (b) manual audit confirms scoring makes sense for 10+ MPs. Gate lives here as a documented policy, not a code flag.
 - Methodology: electorate majority position (from `user_issue_stances` aggregated by electorate) vs MP lean (from `division_votes` + `division_issue_tags` where confidence >= 0.6). Weighted share of aligned issues = score.
 
+### Ballot Decoded (LEGAL-GATED — OFF by default)
+- Feature flag: `ballot_decoded` in `lib/featureFlags.ts` — default `false`, remote-only enable
+- Screen: `screens/BallotDecodedScreen.tsx` — per-electorate candidate guide with real voting records
+- Hook: `hooks/useBallotGuide.ts` — fetches candidates, party policies, voting record by topic
+- **DO NOT ENABLE** this flag without BOTH: (1) defamation legal sign-off on candidate comparisons, AND (2) AEC electoral-authorisation review (this is "electoral matter" under Commonwealth Electoral Act 1918, s.4). During election periods, it must carry an electoral authorisation statement.
+- When disabled: shows "Coming Soon — Legal review in progress" behind a lock icon
+- When enabled: factual only — uses real `division_votes` + `division_issue_tags`. Shows "No voting record" for non-incumbent candidates. Persistent "NOT VOTING ADVICE" disclaimer. No "vote for/against" language anywhere.
+
 ## Managed Agents (~/verity/agents/) — 7 total
 - `media-scraper.yaml` — scrapes pm.gov.au + Treasurer + Cabinet sites for real media releases (5am AEST)
 - `news-pipeline.yaml` — daily news ingestion + AI summary post-step (6am AEST)
