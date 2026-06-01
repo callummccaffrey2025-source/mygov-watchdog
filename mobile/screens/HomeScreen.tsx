@@ -750,6 +750,30 @@ export function HomeScreen({ navigation }: any) {
                   <Text style={{ fontSize: 10, color: '#DC2626', fontWeight: '600' }}>Right {story.right_count}</Text>
                   <Text style={{ fontSize: 10, color: colors.textMuted }}>{story.article_count} sources</Text>
                 </View>
+                {/* Public sentiment row — rendered when /last30days data exists */}
+                {story.public_sentiment_data && story.public_sentiment_data.divergence_score > 0 && (
+                  <View style={{
+                    marginTop: 8, paddingTop: 8, borderTopWidth: 0.5, borderTopColor: '#E5E2DB',
+                    flexDirection: 'row', alignItems: 'center', gap: 6,
+                  }}>
+                    <Ionicons name="chatbubble-ellipses-outline" size={12} color={
+                      story.public_sentiment_data.divergence_score > 70 ? '#DC3545' :
+                      story.public_sentiment_data.divergence_score > 40 ? '#F59E0B' : '#00843D'
+                    } />
+                    <Text style={{ fontSize: 11, fontWeight: '600', color:
+                      story.public_sentiment_data.divergence_score > 70 ? '#DC3545' :
+                      story.public_sentiment_data.divergence_score > 40 ? '#F59E0B' : '#00843D',
+                    }}>
+                      {story.public_sentiment_data.divergence_score > 70 ? 'High' :
+                       story.public_sentiment_data.divergence_score > 40 ? 'Medium' : 'Low'} divergence from public
+                    </Text>
+                    {story.public_sentiment_data.best_takes?.[0] && (
+                      <Text style={{ fontSize: 10, color: colors.textMuted, flex: 1 }} numberOfLines={1}>
+                        &ldquo;{story.public_sentiment_data.best_takes[0].slice(0, 50)}&rdquo;
+                      </Text>
+                    )}
+                  </View>
+                )}
               </Pressable>
             ))}
           </View>

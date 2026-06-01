@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+export interface PublicSentimentData {
+  sentiment_summary: string;
+  reddit_signal: string;
+  best_takes: string[];
+  ran_at: string;
+  divergence_score: number;
+}
+
 export interface BlindspotStory {
   id: number;
   headline: string;
@@ -11,6 +19,7 @@ export interface BlindspotStory {
   blindspot_side: 'left' | 'right';
   coverage_pct: number;
   missing_side_label: string;
+  public_sentiment_data: PublicSentimentData | null;
 }
 
 export function useBlindspots() {
@@ -23,7 +32,7 @@ export function useBlindspots() {
       try {
         const { data } = await supabase
           .from('news_stories')
-          .select('id,headline,article_count,left_count,center_count,right_count')
+          .select('id,headline,article_count,left_count,center_count,right_count,public_sentiment_data')
           .gte('article_count', 3)
           .order('article_count', { ascending: false })
           .limit(100);

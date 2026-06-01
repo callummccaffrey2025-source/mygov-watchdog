@@ -29,8 +29,8 @@ MAX_TOKENS = 200
 SYSTEM_PROMPT = "You are a neutral wire service editor for an Australian news app."
 
 
-def build_user_prompt(headline: str, articles: list[dict]) -> str:
-    """Build the user prompt from a story headline + its articles."""
+def build_user_prompt(headline: str, articles: list[dict], research_context: dict | None = None) -> str:
+    """Build the user prompt from a story headline + its articles + optional research context."""
     lines: list[str] = []
     for a in articles[:5]:
         title = (a.get("title") or "").strip()
@@ -45,12 +45,33 @@ def build_user_prompt(headline: str, articles: list[dict]) -> str:
         else:
             lines.append(f"- {title}")
     headlines_block = "\n".join(lines) if lines else f"- {headline}"
-    return (
+
+    # Base instruction
+    prompt = (
         "Summarize this news event in 2-3 factual sentences. "
         "No editorial language. Just what happened, who is involved, "
-        "and why it matters.\n\n"
-        f"Headlines:\n{headlines_block}"
+        "and why it matters."
     )
+
+    # Enrich with public sentiment research when available
+    if research_context:
+        sentiment = research_context.get("sentiment_summary") or research_context.get("public_sentiment_summary", "")
+        best_takes = research_context.get("best_takes", [])
+        reddit = research_context.get("reddit_signal", "")
+
+        if sentiment:
+            prompt += (
+                "\n\nIf public sentiment diverges from media framing, note it briefly. "
+                "Do NOT just repeat social media content — synthesise it into the civic narrative."
+            )
+            prompt += f"\n\n[PUBLIC SENTIMENT — sourced from Reddit, X, and social platforms]\n{sentiment}"
+            if best_takes:
+                prompt += "\n\nTop public reactions:\n" + "\n".join(f"- {t}" for t in best_takes[:3])
+            if reddit:
+                prompt += f"\n\nReddit signal: {reddit}"
+
+    prompt += f"\n\nHeadlines:\n{headlines_block}"
+    return prompt
 
 
 def fetch_story_articles(sb, story_id: int) -> list[dict]:
@@ -89,7 +110,7 @@ def main() -> None:
     log.info("Querying stories needing AI summaries…")
     stories = (
         sb.table("news_stories")
-        .select("id, headline, article_count")
+        .select("id, headline, article_count, public_sentiment_data")
         .gte("article_count", 3)
         .is_("ai_summary", "null")
         .order("article_count", desc=True)
@@ -116,7 +137,11 @@ def main() -> None:
             log.warning("Story %d (%s) has no articles, skipping", story_id, headline[:50])
             continue
 
-        prompt = build_user_prompt(headline, articles)
+        # Use public sentiment data if available (injected by /last30days research pipeline)
+        research_context = story.get("public_sentiment_data")
+        if research_context:
+            log.info("  → enriching with public sentiment data")
+        prompt = build_user_prompt(headline, articles, research_context=research_context)
 
         try:
             msg = client.messages.create(

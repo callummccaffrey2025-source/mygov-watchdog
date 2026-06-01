@@ -46,6 +46,7 @@ import { timeAgo } from '../lib/timeAgo';
 import { useVotePrediction } from '../hooks/useVotePrediction';
 import { GuessReveal } from '../components/GuessReveal';
 import { useCivicEvents } from '../hooks/useCivicEvents';
+import { useMPDiscourse } from '../hooks/usePublicSentiment';
 
 const PROCEDURAL_PREFIXES = ['Business —', 'Motions —', 'Procedure', 'Adjournment', 'Business of the Senate', 'Business of the House'];
 
@@ -90,6 +91,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const { summary: voteMoneyData, loading: voteMoneyLoading } = useVoteMoneySummary(member?.id);
   const { records: repGapRecords } = useRepresentationGap(member?.id);
   const { votes: decisiveVotes, winningCount: decisiveWinning } = useDecisiveVotes(member?.id);
+  const { data: discourseData, updatedAt: discourseUpdatedAt } = useMPDiscourse(member?.id);
 
   useEffect(() => {
     setVisibleCount(20);
@@ -748,6 +750,51 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   </Pressable>
                 </View>
               </View>
+
+              {/* ───── IN THE CONVERSATION (public discourse from /last30days) ───── */}
+              {discourseData && discourseData.sentiment_summary && discourseData.best_takes?.length > 0 && (
+                <View style={{ marginTop: SPACING.xl, marginBottom: SPACING.xl }}>
+                  <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>In the conversation</Text>
+                  <View style={{
+                    backgroundColor: '#FFFBF0',
+                    borderRadius: BORDER_RADIUS.lg,
+                    padding: SPACING.lg,
+                    ...SHADOWS.sm,
+                  }}>
+                    {/* Top public reaction */}
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.md, marginBottom: SPACING.md }}>
+                      <View style={{
+                        width: 32, height: 32, borderRadius: 16,
+                        backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center',
+                      }}>
+                        <Ionicons name="chatbubbles-outline" size={16} color="#00843D" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: FONT_SIZE.body, color: colors.text, fontStyle: 'italic', lineHeight: 21 }} numberOfLines={4}>
+                          &ldquo;{discourseData.best_takes[0]}&rdquo;
+                        </Text>
+                        {discourseData.sources_searched?.length > 0 && (
+                          <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginTop: SPACING.xs }}>
+                            {discourseData.sources_searched.slice(0, 3).join(', ')}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+
+                    {/* Summary line */}
+                    <Text style={{ fontSize: FONT_SIZE.small, color: colors.textBody, lineHeight: 19 }} numberOfLines={3}>
+                      {discourseData.sentiment_summary.slice(0, 200)}
+                    </Text>
+
+                    {/* Timestamp */}
+                    {discourseUpdatedAt && (
+                      <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: SPACING.sm }}>
+                        Updated {timeAgo(discourseUpdatedAt)}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              )}
 
             </>
           )}
