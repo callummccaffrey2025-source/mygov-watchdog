@@ -53,7 +53,7 @@ export function useBillDeltas(billId: string | undefined) {
           .eq('bill_id', billId)
           .order('created_at', { ascending: false });
 
-        if (!cancelled) setDeltas((data as BillDelta[]) || []);
+        if (!cancelled) setDeltas((data as unknown as BillDelta[]) || []);
       } catch {}
       if (!cancelled) setLoading(false);
     })();
