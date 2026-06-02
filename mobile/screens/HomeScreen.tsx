@@ -39,6 +39,7 @@ import { useMPPostReaction } from '../hooks/useMPPostReaction';
 import { MPPostCard } from '../components/MPPostCard';
 import { useAffectsYou } from '../hooks/useAffectsYou';
 import { useBlindspots } from '../hooks/useBlindspots';
+import { useElectorateConsensus } from '../hooks/useElectorateConsensus';
 import { useStatsMetrics, pickStatOfTheDay } from '../hooks/useStatsMetrics';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -129,6 +130,7 @@ export function HomeScreen({ navigation }: any) {
   const { votes: mpVotes } = useVotes(myMP?.id ?? null);
   const { items: affectsYouItems, loading: affectsYouLoading } = useAffectsYou(postcode, myMP?.id ?? null);
   const { stories: blindspotStories } = useBlindspots();
+  const { items: consensusItems } = useElectorateConsensus(electorateName, myMP?.id ?? null);
   const { isSittingToday, nextSitting } = useSittingCalendar();
 
   const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
@@ -697,6 +699,49 @@ export function HomeScreen({ navigation }: any) {
               {statOfTheDay.detail}
             </Text>
           </Pressable>
+        )}
+
+        {/* ═══ 3a2. ELECTORATE CONSENSUS ═══ */}
+        {consensusItems.length > 0 && myMP && (
+          <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+            <SectionHeader color="#7C3AED" label="YOUR ELECTORATE" />
+            <View style={{
+              backgroundColor: '#F5F0FF', borderRadius: BORDER_RADIUS.lg,
+              padding: SPACING.lg, ...SHADOWS.sm,
+            }}>
+              <Text style={{ fontSize: 15, fontWeight: FONT_WEIGHT.bold, color: colors.text, marginBottom: SPACING.sm }}>
+                How {electorateName} feels vs how {myMP.first_name} votes
+              </Text>
+              {consensusItems.slice(0, 3).map((item, idx) => (
+                <View key={item.issue_id} style={{
+                  flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                  paddingVertical: SPACING.sm,
+                  borderTopWidth: idx > 0 ? 0.5 : 0, borderTopColor: '#E5E0F0',
+                }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: colors.text }}>{item.issue_name}</Text>
+                    <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+                      {item.electorate_agree_pct}% agree · {item.respondent_count} locals
+                    </Text>
+                  </View>
+                  <View style={{
+                    backgroundColor: item.gap > 30 ? '#FDECEA' : item.gap > 15 ? '#FFF3CD' : '#E8F5EE',
+                    borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4,
+                  }}>
+                    <Text style={{
+                      fontSize: 12, fontWeight: FONT_WEIGHT.bold,
+                      color: item.gap > 30 ? '#DC3545' : item.gap > 15 ? '#856404' : '#00843D',
+                    }}>
+                      {item.gap > 30 ? 'Gap' : item.gap > 15 ? 'Mixed' : 'Aligned'}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+              <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: SPACING.sm }}>
+                Based on {consensusItems[0]?.respondent_count || 0}+ local responses. AEC disclosure threshold applies.
+              </Text>
+            </View>
+          </View>
         )}
 
         {/* ═══ 3b. THIS AFFECTS YOU ═══ */}
