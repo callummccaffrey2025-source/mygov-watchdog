@@ -67,6 +67,7 @@ import { WalletScreen } from './screens/WalletScreen';
 import { ConflictRadarScreen } from './screens/ConflictRadarScreen';
 import { BallotDecodedScreen } from './screens/BallotDecodedScreen';
 import { PollDetailScreen } from './screens/PollDetailScreen';
+import { MPWeeklyScreen } from './screens/MPWeeklyScreen';
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
 import { initFeatureFlags } from './lib/featureFlags';
@@ -421,6 +422,7 @@ function App() {
               <Stack.Screen name="RepresentationIndex" component={RepresentationIndexScreen} />
               <Stack.Screen name="Stats" component={StatsScreen} />
               <Stack.Screen name="Match" component={MatchScreen} />
+              <Stack.Screen name="MPWeekly" component={MPWeeklyScreen} />
               <Stack.Screen name="MatchResult" component={MatchResultScreen} />
               <Stack.Screen name="Daily90" component={Daily90Screen} />
               <Stack.Screen name="Wallet" component={WalletScreen} />
