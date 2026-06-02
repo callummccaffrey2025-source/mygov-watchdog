@@ -74,7 +74,7 @@ function DeltaRow({ delta, colors }: { delta: BillDelta; colors: any }) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.sm }}>
         <View style={{ backgroundColor: '#E8F5EE', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
           <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.bold, color: GREEN }}>
-            v{delta.from_version?.version_number || '?'} -> v{delta.to_version?.version_number || '?'}
+            v{delta.from_version?.version_number || '?'}{' \u2192 '}v{delta.to_version?.version_number || '?'}
           </Text>
         </View>
         <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
@@ -95,7 +95,7 @@ function DeltaRow({ delta, colors }: { delta: BillDelta; colors: any }) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.xs }}>
           <Ionicons name="swap-horizontal" size={14} color={colors.textMuted} />
           <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textBody }}>
-            {delta.from_version.status_snapshot} -> {delta.to_version.status_snapshot}
+            {delta.from_version.status_snapshot}{' \u2192 '}{delta.to_version.status_snapshot}
           </Text>
         </View>
       )}

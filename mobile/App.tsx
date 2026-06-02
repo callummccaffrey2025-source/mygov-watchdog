@@ -57,7 +57,7 @@ import { DADetailScreen } from './screens/DADetailScreen';
 import { WatchlistScreen } from './screens/WatchlistScreen';
 import { MyRepresentativesScreen } from './screens/MyRepresentativesScreen';
 import { CaseworkScreen } from './screens/CaseworkScreen';
-import { AudioBriefScreen } from './screens/AudioBriefScreen';
+import { DailyBriefScreen } from './screens/DailyBriefScreen';
 import { RepresentationIndexScreen } from './screens/RepresentationIndexScreen';
 import { StatsScreen } from './screens/StatsScreen';
 import { MatchScreen } from './screens/MatchScreen';
@@ -417,7 +417,7 @@ function App() {
               <Stack.Screen name="Watchlist" component={WatchlistScreen} />
               <Stack.Screen name="MyRepresentatives" component={MyRepresentativesScreen} />
               <Stack.Screen name="Casework" component={CaseworkScreen} />
-              <Stack.Screen name="AudioBrief" component={AudioBriefScreen} />
+              <Stack.Screen name="DailyBrief" component={DailyBriefScreen} />
               <Stack.Screen name="RepresentationIndex" component={RepresentationIndexScreen} />
               <Stack.Screen name="Stats" component={StatsScreen} />
               <Stack.Screen name="Match" component={MatchScreen} />

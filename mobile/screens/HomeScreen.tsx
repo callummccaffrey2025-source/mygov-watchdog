@@ -358,37 +358,32 @@ export function HomeScreen({ navigation }: any) {
           </View>
         </LinearGradient>
 
-        {/* ═══ 2b. DAILY AUDIO BRIEF ═══ */}
+        {/* ═══ 2b. DAILY BRIEF ═══ */}
         <View style={{ paddingHorizontal: 20, marginTop: SPACING.lg }}>
           <Pressable
-            onPress={() => navigation.navigate('AudioBrief')}
+            onPress={() => navigation.navigate('DailyBrief')}
             accessibilityRole="button"
-            accessibilityLabel="Listen to your daily brief"
+            accessibilityLabel="Read your daily brief"
             style={({ pressed }) => ({
-              backgroundColor: '#1E1B4B',
+              backgroundColor: colors.card,
               borderRadius: BORDER_RADIUS.lg,
               padding: SPACING.lg,
-              flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
               opacity: pressed ? 0.92 : 1,
               ...SHADOWS.md,
             })}
           >
-            <View style={{
-              width: 44, height: 44, borderRadius: 22,
-              backgroundColor: 'rgba(167,139,250,0.2)',
-              justifyContent: 'center', alignItems: 'center',
-            }}>
-              <Ionicons name="headset-outline" size={20} color="#A78BFA" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>
-                Your daily brief
-              </Text>
-              <Text style={{ fontSize: FONT_SIZE.small, color: 'rgba(255,255,255,0.6)' }}>
-                Listen · ~3 min
+            <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.semibold, letterSpacing: 0.8, color: '#00843D', textTransform: 'uppercase', marginBottom: SPACING.sm }}>
+              Your Daily Brief
+            </Text>
+            <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 22 }}>
+              What your MP did, what's happening in your electorate, and what you should know today.
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginTop: SPACING.md }}>
+              <Ionicons name="arrow-forward-circle" size={18} color={'#00843D'} />
+              <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>
+                Read your brief
               </Text>
             </View>
-            <Ionicons name="play-circle" size={28} color="#A78BFA" />
           </Pressable>
 
           {/* Daily 90 entry point */}
