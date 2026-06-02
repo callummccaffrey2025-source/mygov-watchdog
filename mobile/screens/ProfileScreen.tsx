@@ -520,12 +520,6 @@ export function ProfileScreen({ navigation }: any) {
           <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>Poll Admin</Text>
         </Pressable>
 
-        {/* DEV: Reset Onboarding (remove before App Store submission) */}
-        <Pressable style={styles.resetOnboardingBtn} onPress={handleResetOnboarding} accessibilityRole="button" accessibilityLabel="Reset Onboarding">
-          <Ionicons name="refresh-outline" size={16} color="#B45309" />
-          <Text style={styles.resetOnboardingText}>Reset Onboarding (Testing)</Text>
-        </Pressable>
-
         {/* Sign out */}
         <Pressable style={[styles.signOutBtn, { backgroundColor: colors.redBg }]} onPress={signOut} accessibilityRole="button" accessibilityLabel="Sign Out">
           <Text style={styles.signOutText}>Sign Out</Text>

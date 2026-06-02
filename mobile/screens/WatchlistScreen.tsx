@@ -169,7 +169,7 @@ export function WatchlistScreen({ navigation }: any) {
     } else if (item.entity_type === 'bill') {
       navigation.navigate('BillDetail', { billId: item.entity_id });
     } else {
-      navigation.navigate('TopicBills', { topic: item.entity_id });
+      navigation.navigate('TopicBills', { category: item.entity_id, label: item.label ?? item.entity_id });
     }
   }, [navigation, markSeen]);
 
