@@ -47,6 +47,8 @@ import { useVotePrediction } from '../hooks/useVotePrediction';
 import { GuessReveal } from '../components/GuessReveal';
 import { useCivicEvents } from '../hooks/useCivicEvents';
 import { useMPDiscourse } from '../hooks/usePublicSentiment';
+import { useStatsMetrics, findMetric } from '../hooks/useStatsMetrics';
+import { MPReceiptCard } from '../components/MPReceiptCard';
 
 const PROCEDURAL_PREFIXES = ['Business —', 'Motions —', 'Procedure', 'Adjournment', 'Business of the Senate', 'Business of the House'];
 
@@ -92,6 +94,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const { records: repGapRecords } = useRepresentationGap(member?.id);
   const { votes: decisiveVotes, winningCount: decisiveWinning } = useDecisiveVotes(member?.id);
   const { data: discourseData, updatedAt: discourseUpdatedAt } = useMPDiscourse(member?.id);
+  const { mpStats } = useStatsMetrics(member?.id, member?.electorate_id ?? undefined);
 
   useEffect(() => {
     setVisibleCount(20);
@@ -129,6 +132,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const hypocrisyCardRef = useRef<any>(null);
   const [shareVoteData, setShareVoteData] = useState<DivisionVote | null>(null);
   const [shareReport, setShareReport] = useState(false);
+  const [shareReceipt, setShareReceipt] = useState(false);
+  const receiptRef = useRef<any>(null);
   const [shareHypocrisy, setShareHypocrisy] = useState(false);
 
   useEffect(() => {
@@ -144,6 +149,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
         .finally(() => setShareReport(false));
     }
   }, [shareReport]);
+
+  useEffect(() => {
+    if (shareReceipt && member) {
+      captureAndShare(receiptRef, 'receipt', member.id, user?.id)
+        .finally(() => setShareReceipt(false));
+    }
+  }, [shareReceipt]);
 
   useEffect(() => {
     if (shareHypocrisy && member) {
@@ -256,13 +268,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={18} color={colors.text} />
               </Pressable>
               <Pressable
-                onPress={() => setShareReport(true)}
+                onPress={() => setShareReceipt(true)}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Share report card"
+                accessibilityLabel="Share MP receipt"
                 style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center' }}
               >
-                <Ionicons name="bookmark-outline" size={18} color={colors.text} />
+                <Ionicons name="receipt-outline" size={18} color={colors.text} />
               </Pressable>
             </View>
           </View>
@@ -1549,6 +1561,31 @@ export function MemberProfileScreen({ route, navigation }: any) {
               rank={hypocrisyData.rank_among_mps ?? 0}
               totalMps={hypocrisyData.total_mps_scored ?? 0}
               topTopic={hypocrisyData.top_topics?.[0] ?? null}
+            />
+          )}
+        </View>
+        <View ref={receiptRef}>
+          {shareReceipt && member && (
+            <MPReceiptCard
+              mpName={displayName}
+              partyName={party?.short_name || party?.name || ''}
+              partyColour={partyColour}
+              electorateName={member.electorate?.name ?? ''}
+              items={[
+                { label: 'Attendance', value: findMetric(mpStats, 'attendance_rate')?.display_value || `${Math.round((totalVotes / Math.max(totalVotes, 1)) * 100)}%` },
+                { label: 'Party loyalty', value: findMetric(mpStats, 'party_loyalty_rate')?.display_value || `${totalVotes > 0 ? Math.round(((totalVotes - votes.filter(v => v.rebelled).length) / totalVotes) * 100) : 0}%` },
+                { label: 'Floor crossings', value: findMetric(mpStats, 'floor_crossings')?.display_value || `${votes.filter(v => v.rebelled).length}`, highlight: votes.filter(v => v.rebelled).length > 0 },
+                { label: 'Votes this term', value: findMetric(mpStats, 'votes_cast')?.display_value || `${totalVotes}` },
+                { label: 'Speeches', value: `${hansardEntries.length}` },
+                ...(indDonations.length > 0 ? [{
+                  label: 'Top donor',
+                  value: `$${Math.round(Number(indDonations[0]?.amount) || 0).toLocaleString()}`,
+                  highlight: true,
+                }] : []),
+              ]}
+              publicTake={discourseData?.best_takes?.[0]?.replace(/\s*—\s*u\/.*$/, '') || undefined}
+              publicTakeSource={discourseData?.sources_searched?.slice(0, 2).join(', ') || undefined}
+              date={new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}
             />
           )}
         </View>
