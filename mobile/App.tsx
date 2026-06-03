@@ -341,8 +341,11 @@ function App() {
     };
   }, []);
 
+  const [navigateToMPWeekly, setNavigateToMPWeekly] = useState(false);
+
   const handleOnboardingComplete = async () => {
     await AsyncStorage.setItem('onboarding_complete', 'true');
+    setNavigateToMPWeekly(true);
     setOnboardingDone(true);
   };
 
@@ -370,6 +373,11 @@ function App() {
             onReady={() => {
               if (sentryRoutingInstrumentation) {
                 sentryRoutingInstrumentation.registerNavigationContainer(navigationRef);
+              }
+              // After first onboarding, go straight to MP weekly digest
+              if (navigateToMPWeekly) {
+                setNavigateToMPWeekly(false);
+                setTimeout(() => navigationRef.navigate('MPWeekly' as never), 100);
               }
             }}
             onStateChange={(state) => {
