@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, ScrollView, Pressable, Share, Platform, RefreshControl, Linking,
+  View, Text, ScrollView, Pressable, Share, Platform, RefreshControl, Linking, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +35,104 @@ interface Argument {
   id: string;
   side: 'for' | 'against';
   argument_text: string;
+}
+
+// ── Personal Impact Card ────────────────────────────────────────────────────
+
+const SITUATION_OPTIONS = [
+  { id: 'renter', label: 'Renter', icon: 'home-outline' },
+  { id: 'homeowner', label: 'Homeowner', icon: 'business-outline' },
+  { id: 'student', label: 'Student', icon: 'school-outline' },
+  { id: 'parent', label: 'Parent', icon: 'people-outline' },
+  { id: 'worker', label: 'Worker', icon: 'hammer-outline' },
+  { id: 'retiree', label: 'Retiree', icon: 'heart-outline' },
+  { id: 'small_biz', label: 'Small Business', icon: 'storefront-outline' },
+] as const;
+
+function PersonalImpactCard({ billTitle, billSummary, billId, colors }: {
+  billTitle: string; billSummary: string; billId: string; colors: any;
+}) {
+  const [selected, setSelected] = React.useState<string | null>(null);
+  const [impact, setImpact] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const handleSelect = async (situationId: string) => {
+    setSelected(situationId);
+    setLoading(true);
+    setImpact(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ask-verity', {
+        body: {
+          question: `How does the bill "${billTitle}" affect someone who is a ${situationId.replace('_', ' ')} in Australia? Be specific and practical in 2-3 sentences. Bill summary: ${billSummary.slice(0, 300)}`,
+        },
+      });
+      if (!error && data?.answer) {
+        setImpact(data.answer);
+      } else {
+        // Fallback: generate a basic response from the summary
+        const situationLabel = SITUATION_OPTIONS.find(s => s.id === situationId)?.label || situationId;
+        setImpact(`This bill may affect you as a ${situationLabel.toLowerCase()}. ${billSummary.slice(0, 200)}`);
+      }
+    } catch {
+      setImpact(`This bill relates to: ${billSummary.slice(0, 200)}`);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <View style={{
+      backgroundColor: '#FFF8E7', borderRadius: 14,
+      borderWidth: 2, borderColor: '#F59E0B', padding: 16,
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <Ionicons name="person-circle-outline" size={18} color="#F59E0B" />
+        <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>How does this affect me?</Text>
+      </View>
+
+      <Text style={{ fontSize: 13, color: colors.textMuted, marginBottom: 12 }}>
+        Select your situation to see a personalised explanation
+      </Text>
+
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: selected ? 12 : 0 }}>
+        {SITUATION_OPTIONS.map(opt => {
+          const isActive = selected === opt.id;
+          return (
+            <Pressable
+              key={opt.id}
+              onPress={() => handleSelect(opt.id)}
+              style={{
+                flexDirection: 'row', alignItems: 'center', gap: 6,
+                paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
+                backgroundColor: isActive ? '#00843D' : '#FFF0D6',
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={`I'm a ${opt.label}`}
+            >
+              <Ionicons name={opt.icon as any} size={14} color={isActive ? '#fff' : '#92400E'} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: isActive ? '#fff' : '#92400E' }}>{opt.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {loading && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 }}>
+          <ActivityIndicator size="small" color="#00843D" />
+          <Text style={{ fontSize: 13, color: colors.textMuted }}>Analysing impact...</Text>
+        </View>
+      )}
+
+      {impact && !loading && (
+        <View style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 14, marginTop: 4 }}>
+          <Text style={{ fontSize: 14, color: colors.text, lineHeight: 22 }}>{impact}</Text>
+          <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 8 }}>
+            AI-generated analysis. Verify with official bill text.
+          </Text>
+        </View>
+      )}
+    </View>
+  );
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -434,6 +532,16 @@ export function BillDetailScreen({ route, navigation }: any) {
             </View>
           </View>
         )}
+
+        {/* ═══ 3b. HOW DOES THIS AFFECT ME? ═══ */}
+        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
+          <PersonalImpactCard
+            billTitle={bill.title}
+            billSummary={bill.summary_plain || (bill as any).summary || bill.summary_full || ''}
+            billId={bill.id}
+            colors={colors}
+          />
+        </View>
 
         {/* ═══ 4. WHAT YOU CAN DO — prominent, never paywalled ═══ */}
         {myMP && (

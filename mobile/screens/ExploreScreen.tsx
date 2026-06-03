@@ -420,7 +420,7 @@ export function ExploreScreen({ navigation }: any) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeState, setActiveState] = useState('Federal');
-  const [verifyVisible, setVerifyVisible] = useState(false);
+  // verify a claim removed — Verity is not a fact-checker
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -491,25 +491,6 @@ export function ExploreScreen({ navigation }: any) {
       >
         <Text style={[styles.title, { color: colors.text }]}>Explore</Text>
 
-        {/* Verify a Claim card */}
-        <Pressable
-          style={{ backgroundColor: '#00843D', borderRadius: 14, padding: 16, marginBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-          onPress={() => setVerifyVisible(true)}
-          accessibilityRole="button"
-          accessibilityLabel="Verify a Claim"
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#ffffff25', justifyContent: 'center', alignItems: 'center' }}>
-              <Ionicons name="shield-checkmark" size={20} color="#ffffff" />
-            </View>
-            <View>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: '#ffffff' }}>Verify a Claim</Text>
-              <Text style={{ fontSize: 12, color: '#ffffffcc', marginTop: 2 }}>Search any MP's actual voting record</Text>
-            </View>
-          </View>
-          <Ionicons name="arrow-forward" size={18} color="#ffffff" />
-        </Pressable>
-
         {/* Ask Verity AI */}
         <Pressable
           style={{
@@ -533,7 +514,7 @@ export function ExploreScreen({ navigation }: any) {
           <Ionicons name="arrow-forward" size={18} color="#00843D" />
         </Pressable>
 
-        <VerifyModal visible={verifyVisible} onClose={() => setVerifyVisible(false)} />
+        {/* verify modal removed */}
 
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search MPs, bills, parties..." />
 

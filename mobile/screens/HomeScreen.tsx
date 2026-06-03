@@ -38,7 +38,6 @@ import { useMPPosts } from '../hooks/useMPPosts';
 import { useMPPostReaction } from '../hooks/useMPPostReaction';
 import { MPPostCard } from '../components/MPPostCard';
 import { useAffectsYou } from '../hooks/useAffectsYou';
-import { useBlindspots } from '../hooks/useBlindspots';
 import { useElectorateConsensus } from '../hooks/useElectorateConsensus';
 import { useStatsMetrics, pickStatOfTheDay } from '../hooks/useStatsMetrics';
 
@@ -129,7 +128,6 @@ export function HomeScreen({ navigation }: any) {
 
   const { votes: mpVotes } = useVotes(myMP?.id ?? null);
   const { items: affectsYouItems, loading: affectsYouLoading } = useAffectsYou(postcode, myMP?.id ?? null);
-  const { stories: blindspotStories } = useBlindspots();
   const { items: consensusItems } = useElectorateConsensus(electorateName, myMP?.id ?? null);
   const { isSittingToday, nextSitting } = useSittingCalendar();
 
@@ -781,72 +779,6 @@ export function HomeScreen({ navigation }: any) {
                 <Text style={{ fontSize: 13, color: colors.textMuted, lineHeight: 18 }} numberOfLines={2}>
                   {item.why_it_matters}
                 </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        {/* ═══ 3c. BLINDSPOT ═══ */}
-        {blindspotStories.length > 0 && (
-          <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
-            <SectionHeader color="#7C3AED" label="BLINDSPOT" />
-            {blindspotStories.slice(0, 2).map((story) => (
-              <Pressable
-                key={story.id}
-                onPress={() => navigation.navigate('Explore')}
-                accessibilityRole="button"
-                style={{
-                  backgroundColor: '#F5F0FF', borderRadius: BORDER_RADIUS.lg,
-                  padding: SPACING.lg, marginBottom: SPACING.sm,
-                  borderLeftWidth: 3, borderLeftColor: '#7C3AED',
-                  ...SHADOWS.sm,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <Ionicons name="eye-off-outline" size={14} color="#7C3AED" />
-                  <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: 0.5, flex: 1 }}>
-                    {story.missing_side_label}
-                  </Text>
-                </View>
-                <Text style={{ fontSize: 15, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 20, marginBottom: 8 }} numberOfLines={2}>
-                  {story.headline}
-                </Text>
-                {/* Coverage bar */}
-                <View style={{ height: 8, borderRadius: 4, flexDirection: 'row', overflow: 'hidden', marginBottom: 4 }}>
-                  {story.left_count > 0 && <View style={{ flex: story.left_count, backgroundColor: '#2563EB' }} />}
-                  {story.center_count > 0 && <View style={{ flex: story.center_count, backgroundColor: '#6B7280' }} />}
-                  {story.right_count > 0 && <View style={{ flex: story.right_count, backgroundColor: '#DC2626' }} />}
-                </View>
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <Text style={{ fontSize: 10, color: '#2563EB', fontWeight: '600' }}>Left {story.left_count}</Text>
-                  <Text style={{ fontSize: 10, color: '#6B7280', fontWeight: '600' }}>Centre {story.center_count}</Text>
-                  <Text style={{ fontSize: 10, color: '#DC2626', fontWeight: '600' }}>Right {story.right_count}</Text>
-                  <Text style={{ fontSize: 10, color: colors.textMuted }}>{story.article_count} sources</Text>
-                </View>
-                {/* Public sentiment row — rendered when /last30days data exists */}
-                {story.public_sentiment_data && story.public_sentiment_data.divergence_score > 0 && (
-                  <View style={{
-                    marginTop: 8, paddingTop: 8, borderTopWidth: 0.5, borderTopColor: '#E5E2DB',
-                    flexDirection: 'row', alignItems: 'center', gap: 6,
-                  }}>
-                    <Ionicons name="chatbubble-ellipses-outline" size={12} color={
-                      story.public_sentiment_data.divergence_score > 70 ? '#DC3545' :
-                      story.public_sentiment_data.divergence_score > 40 ? '#F59E0B' : '#00843D'
-                    } />
-                    <Text style={{ fontSize: 11, fontWeight: '600', color:
-                      story.public_sentiment_data.divergence_score > 70 ? '#DC3545' :
-                      story.public_sentiment_data.divergence_score > 40 ? '#F59E0B' : '#00843D',
-                    }}>
-                      {story.public_sentiment_data.divergence_score > 70 ? 'High' :
-                       story.public_sentiment_data.divergence_score > 40 ? 'Medium' : 'Low'} divergence from public
-                    </Text>
-                    {story.public_sentiment_data.best_takes?.[0] && (
-                      <Text style={{ fontSize: 10, color: colors.textMuted, flex: 1 }} numberOfLines={1}>
-                        &ldquo;{story.public_sentiment_data.best_takes[0].slice(0, 50)}&rdquo;
-                      </Text>
-                    )}
-                  </View>
-                )}
               </Pressable>
             ))}
           </View>

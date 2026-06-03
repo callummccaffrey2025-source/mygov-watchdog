@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,7 +6,90 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useLearnModules, LearnModule } from '../hooks/useLearnModules';
 import { LessonCard } from '../components/LessonCard';
+import { supabase } from '../lib/supabase';
+import { hapticLight } from '../lib/haptics';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
+
+function TodaysQuestion({ colors }: { colors: any }) {
+  const [poll, setPoll] = useState<any>(null);
+  const [voted, setVoted] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('daily_polls')
+        .select('*')
+        .eq('status', 'published')
+        .lte('publish_date', today)
+        .order('publish_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setPoll(data);
+    })();
+  }, []);
+
+  if (!poll) return null;
+
+  const handleVote = (option: 'a' | 'b') => {
+    hapticLight();
+    setVoted(option);
+    supabase.from('daily_poll_responses').insert({
+      poll_id: poll.id,
+      response: option,
+    }).then(() => {});
+  };
+
+  return (
+    <View style={{
+      backgroundColor: '#FFF8E7', borderRadius: BORDER_RADIUS.lg,
+      padding: SPACING.lg, marginBottom: SPACING.lg,
+      borderWidth: 2, borderColor: '#F59E0B',
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: SPACING.md }}>
+        <Ionicons name="help-circle" size={20} color="#F59E0B" />
+        <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#92400E', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+          Today's Question
+        </Text>
+      </View>
+      <Text style={{ fontSize: 17, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 24, marginBottom: SPACING.md }}>
+        {poll.question}
+      </Text>
+      {voted ? (
+        <View style={{ backgroundColor: '#E8F5EE', borderRadius: 10, padding: SPACING.md, alignItems: 'center' }}>
+          <Ionicons name="checkmark-circle" size={24} color="#00843D" />
+          <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: '#00843D', marginTop: 4 }}>Thanks for voting!</Text>
+          <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>Results shown when enough people respond</Text>
+        </View>
+      ) : (
+        <View style={{ gap: SPACING.sm }}>
+          <Pressable
+            onPress={() => handleVote('a')}
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? '#E8F5EE' : colors.card,
+              borderRadius: 10, padding: SPACING.md,
+              borderWidth: 1, borderColor: colors.border,
+            })}
+            accessibilityRole="button"
+          >
+            <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.medium, color: colors.text }}>{poll.option_a_text}</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => handleVote('b')}
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? '#FEF3F2' : colors.card,
+              borderRadius: 10, padding: SPACING.md,
+              borderWidth: 1, borderColor: colors.border,
+            })}
+            accessibilityRole="button"
+          >
+            <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.medium, color: colors.text }}>{poll.option_b_text}</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+}
 
 export function LearnScreen({ navigation }: any) {
   const { colors } = useTheme();
@@ -57,6 +140,9 @@ export function LearnScreen({ navigation }: any) {
             <Text style={[styles.subtitle, { color: colors.textMuted }]}>
               Understand how Australia is governed
             </Text>
+
+            {/* Today's Question */}
+            <TodaysQuestion colors={colors} />
 
             {/* Progress summary */}
             {totalLessons > 0 && (
