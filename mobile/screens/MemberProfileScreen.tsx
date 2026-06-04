@@ -600,28 +600,29 @@ export function MemberProfileScreen({ route, navigation }: any) {
               ) : hypocrisyData?.status === 'scored' ? (
                 <View style={{ marginBottom: SPACING.xl }}>
                   <View style={{
-                    backgroundColor: '#FFF8E7', borderRadius: 16, borderWidth: 2,
-                    borderColor: '#DC3545', overflow: 'hidden',
+                    backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
+                    overflow: 'hidden', ...SHADOWS.sm,
                   }}>
-                    {/* Pink header bar */}
-                    <View style={{ backgroundColor: '#E91E63', paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="scale-outline" size={18} color="#fff" />
-                      <Text style={{ flex: 1, fontSize: 15, fontWeight: '800', color: '#fff' }}>Hypocrisy Index</Text>
-                      <Pressable onPress={() => setShareHypocrisy(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share Hypocrisy Index">
-                        <Ionicons name="share-outline" size={18} color="#fff" />
+                    {/* Section header */}
+                    <View style={{ paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: SPACING.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8 }}>Consistency Index</Text>
+                      </View>
+                      <Pressable onPress={() => setShareHypocrisy(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share Consistency Index">
+                        <Ionicons name="share-outline" size={16} color={colors.textMuted} />
                       </Pressable>
                     </View>
 
                     <View style={{ padding: SPACING.lg, alignItems: 'center' }}>
-                      {/* Big score number */}
+                      {/* Score */}
                       <Text style={{
-                        fontSize: 56, fontWeight: '800',
+                        fontSize: 48, fontWeight: '800', lineHeight: 52,
                         color: (hypocrisyData.overall_score ?? 0) > 66 ? '#DC3545' : (hypocrisyData.overall_score ?? 0) > 33 ? '#F59E0B' : '#00843D',
                       }}>
                         {hypocrisyData.overall_score}
                       </Text>
-                      <Text style={{ fontSize: 13, color: '#4B5563', marginBottom: SPACING.lg }}>
-                        Ranks #{hypocrisyData.rank_among_mps} of {hypocrisyData.total_mps_scored} MPs scored
+                      <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: SPACING.md }}>
+                        #{hypocrisyData.rank_among_mps} of {hypocrisyData.total_mps_scored} MPs
                       </Text>
 
                       {/* Top 3 topics */}
@@ -715,12 +716,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
               ) : hypocrisyData?.status === 'insufficient_data' ? (
                 <View style={{ marginBottom: SPACING.xl }}>
                   <View style={{
-                    backgroundColor: '#FFF8E7', borderRadius: 16, borderWidth: 2, borderColor: '#DC3545',
+                    backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
                     padding: SPACING.lg, flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+                    ...SHADOWS.sm,
                   }}>
-                    <Ionicons name="scale-outline" size={24} color="#DC3545" />
+                    <Ionicons name="analytics-outline" size={20} color={colors.textMuted} />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>Hypocrisy Index</Text>
+                      <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>Consistency Index</Text>
                       <Text style={{ fontSize: 12, color: colors.textMuted, lineHeight: 18 }}>
                         Not enough data yet. {hypocrisyData.speeches_classified ?? 0} speeches classified, {hypocrisyData.votes_linked ?? 0} votes linked.
                       </Text>
@@ -1044,31 +1046,30 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 ) : null}
               </View>
 
-              {/* ── Follow the Money ── */}
+              {/* ── Donations & Voting ── */}
               {moneyVoteLinks.length > 0 && (
                 <View style={{ marginBottom: SPACING.xl }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: SPACING.md }}>
-                    <Ionicons name="cash-outline" size={18} color="#DC3545" />
-                    <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text }}>Follow the Money</Text>
-                  </View>
+                  <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm }}>
+                    Donations & Voting
+                  </Text>
                   <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginBottom: SPACING.md, lineHeight: 18 }}>
-                    Donors to this MP and how they voted on related legislation.
+                    Industry donors and related legislation votes. Correlation, not causation.
                   </Text>
                   {moneyVoteLinks.map((link, idx) => {
                     const isAye = link.vote_cast === 'aye';
                     const isNo = link.vote_cast === 'no';
                     return (
                       <View key={idx} style={{
-                        backgroundColor: '#FFF8F0', borderRadius: BORDER_RADIUS.lg,
-                        borderLeftWidth: 3, borderLeftColor: '#DC3545',
+                        backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
                         padding: SPACING.md, marginBottom: SPACING.sm,
+                        ...SHADOWS.sm,
                       }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                           <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: colors.text, flex: 1 }} numberOfLines={1}>
                             {link.donor_name}
                           </Text>
-                          <View style={{ backgroundColor: '#DC354518', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2 }}>
-                            <Text style={{ fontSize: 12, fontWeight: FONT_WEIGHT.bold, color: '#DC3545' }}>
+                          <View style={{ backgroundColor: colors.surface, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2 }}>
+                            <Text style={{ fontSize: 12, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
                               ${link.total_donated >= 1000 ? `${(link.total_donated / 1000).toFixed(0)}k` : link.total_donated.toLocaleString()}
                             </Text>
                           </View>
