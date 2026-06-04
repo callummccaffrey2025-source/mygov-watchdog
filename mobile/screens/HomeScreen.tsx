@@ -87,17 +87,15 @@ function SectionHeader({
   rightLabel?: string;
   onRightPress?: () => void;
 }) {
+  const { colors } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.lg }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
-        <View style={{ width: 3, height: 14, borderRadius: 1.5, backgroundColor: color }} />
-        <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, letterSpacing: 0.8, color: '#6B7280', textTransform: 'uppercase' }}>
-          {label}
-        </Text>
-      </View>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.md }}>
+      <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: colors.textMuted }}>
+        {label}
+      </Text>
       {rightLabel && onRightPress && (
         <Pressable onPress={onRightPress} hitSlop={8} accessibilityRole="button" accessibilityLabel={rightLabel}>
-          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>{rightLabel}</Text>
+          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: colors.green }}>{rightLabel}</Text>
         </Pressable>
       )}
     </View>

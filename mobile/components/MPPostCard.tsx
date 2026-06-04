@@ -29,7 +29,6 @@ export function MPPostCard({ post, myReaction, onReact, onPress, maxLines = 3 }:
       accessibilityRole="button"
       accessibilityLabel={`Post by ${member?.first_name} ${member?.last_name}: ${post.title || post.body.slice(0, 60)}`}
       style={({ pressed }) => ({
-        flexDirection: 'row',
         backgroundColor: colors.card,
         borderRadius: BORDER_RADIUS.lg,
         overflow: 'hidden',
@@ -37,10 +36,7 @@ export function MPPostCard({ post, myReaction, onReact, onPress, maxLines = 3 }:
         ...SHADOWS.md,
       })}
     >
-      {/* Party color accent */}
-      <View style={{ width: 4, backgroundColor: partyColor }} />
-
-      <View style={{ flex: 1, padding: SPACING.lg }}>
+      <View style={{ padding: SPACING.lg }}>
         {/* Header: photo + name + verified + party + time */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm }}>
           {member?.photo_url ? (
@@ -67,9 +63,12 @@ export function MPPostCard({ post, myReaction, onReact, onPress, maxLines = 3 }:
               </Text>
               <VerifiedBadge size={14} />
             </View>
-            <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
-              {member?.party?.short_name} · {timeAgo(post.created_at)}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: partyColor }} />
+              <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
+                {member?.party?.short_name} · {timeAgo(post.created_at)}
+              </Text>
+            </View>
           </View>
         </View>
 
