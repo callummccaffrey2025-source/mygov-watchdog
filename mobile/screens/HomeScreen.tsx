@@ -119,6 +119,11 @@ export function HomeScreen({ navigation }: any) {
   const { postcode, setPostcode, user } = useUser();
   const [postcodeInput, setPostcodeInput] = useState(postcode || '');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Sync postcodeInput when postcode loads from AsyncStorage after mount
+  useEffect(() => {
+    if (postcode && !postcodeInput) setPostcodeInput(postcode);
+  }, [postcode]);
   const { requireAuth, authSheetProps } = useAuthGate();
 
   // ── Data hooks ──
@@ -1118,13 +1123,17 @@ export function HomeScreen({ navigation }: any) {
                 const divName = vote.division ? cleanDivisionName(vote.division.name) : 'Unknown';
                 const isAye = vote.vote_cast === 'aye';
                 return (
-                  <View
+                  <Pressable
                     key={vote.id}
-                    style={{
+                    onPress={() => navigation.navigate('MemberProfile', { member: myMP })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${myMP.first_name} voted ${isAye ? 'aye' : 'no'} on ${divName}`}
+                    style={({ pressed }) => ({
                       paddingVertical: 12,
                       borderBottomWidth: i < mpRecentVotes.length - 1 ? 1 : 0,
                       borderBottomColor: 'rgba(26,26,23,0.08)',
-                    }}
+                      opacity: pressed ? 0.85 : 1,
+                    })}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <View style={{ flex: 1, marginRight: 10 }}>
@@ -1140,6 +1149,7 @@ export function HomeScreen({ navigation }: any) {
                         backgroundColor: isAye ? 'rgba(0,132,61,0.1)' : 'rgba(220,38,38,0.1)',
                         borderRadius: BORDER_RADIUS.sm,
                         paddingHorizontal: 10, paddingVertical: 4,
+                        marginRight: SPACING.sm,
                       }}>
                         <Text style={{
                           fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, letterSpacing: 0.5,
@@ -1148,8 +1158,26 @@ export function HomeScreen({ navigation }: any) {
                           {isAye ? 'AYE' : 'NO'}
                         </Text>
                       </View>
+                      {/* Share button — the viral loop */}
+                      <Pressable
+                        onPress={(e) => {
+                          e.stopPropagation?.();
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          navigation.navigate('MemberProfile', {
+                            member: myMP,
+                            shareVote: { divisionName: divName, voteCast: vote.vote_cast, date: vote.division?.date },
+                          });
+                        }}
+                        hitSlop={8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Share ${myMP.first_name}'s vote`}
+                        style={{ padding: 4 }}
+                        onStartShouldSetResponder={() => true}
+                      >
+                        <Ionicons name="share-outline" size={16} color="#6B7280" />
+                      </Pressable>
                     </View>
-                  </View>
+                  </Pressable>
                 );
               })}
             </View>
