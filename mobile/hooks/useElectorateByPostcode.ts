@@ -81,6 +81,14 @@ export function useElectorateByPostcode(postcode: string | null) {
         const freshResult = { electorate, member };
         setResult(freshResult);
         AsyncStorage.setItem(MP_CACHE_KEY, JSON.stringify({ postcode, data: freshResult, timestamp: Date.now() })).catch(() => {});
+        // Also store electorate details for DailyBriefScreen and other hooks
+        if (electorate) {
+          AsyncStorage.setItem('user_electorate_id', electorate.id).catch(() => {});
+          AsyncStorage.setItem('user_electorate', electorate.name).catch(() => {});
+        }
+        if (member) {
+          AsyncStorage.setItem('user_member_id', member.id).catch(() => {});
+        }
       } catch {
         // Network failure — cached result (if any) stays
       }
