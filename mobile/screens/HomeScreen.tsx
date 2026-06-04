@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
@@ -546,30 +547,49 @@ export function HomeScreen({ navigation }: any) {
               ...SHADOWS.sm,
             }}>
               {/* Avatar + info */}
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
-                {/* Initials avatar */}
-                <View style={{
-                  width: 54, height: 54, borderRadius: 27,
-                  backgroundColor: colors.green,
-                  justifyContent: 'center', alignItems: 'center',
-                }}>
-                  <Text style={{ fontSize: 16, fontWeight: FONT_WEIGHT.semibold, color: '#ffffff' }}>
-                    {myMP.first_name[0]}{myMP.last_name[0]}
-                  </Text>
-                </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                {/* MP photo or initials fallback */}
+                {myMP.photo_url ? (
+                  <Image
+                    source={{ uri: myMP.photo_url }}
+                    style={{
+                      width: 54, height: 54, borderRadius: 27,
+                      borderWidth: 2, borderColor: myMP.party?.colour || colors.green,
+                    }}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <View style={{
+                    width: 54, height: 54, borderRadius: 27,
+                    backgroundColor: (myMP.party?.colour || colors.green) + '20',
+                    justifyContent: 'center', alignItems: 'center',
+                    borderWidth: 2, borderColor: myMP.party?.colour || colors.green,
+                  }}>
+                    <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: myMP.party?.colour || colors.green }}>
+                      {myMP.first_name[0]}{myMP.last_name[0]}
+                    </Text>
+                  </View>
+                )}
 
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
                       {myMP.first_name} {myMP.last_name}
                     </Text>
-                    <Ionicons name="checkmark-circle" size={15} color="#2563EB" />
+                    <Ionicons name="checkmark-circle" size={14} color={colors.green} />
                   </View>
                   <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginTop: 2 }}>
                     {myMP.party?.short_name || myMP.party?.abbreviation || myMP.party?.name || ''}
                     {' \u00B7 MP for '}
                     {myMP.electorate?.name ?? ''}
                   </Text>
+                  {myMP.ministerial_role && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                      <View style={{ backgroundColor: colors.greenBg, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                        <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.semibold, color: colors.green }}>{myMP.ministerial_role}</Text>
+                      </View>
+                    </View>
+                  )}
                 </View>
               </View>
 
