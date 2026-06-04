@@ -60,7 +60,7 @@ export function useBallotGuide(electorateId: string | null) {
       const { data: members, error: membersErr } = await supabase
         .from('members')
         .select(
-          '*, party:parties!members_party_id_fkey(id,name,short_name,colour,abbreviation), electorate:electorates(name,state)'
+          '*, party:parties!members_party_id_fkey(id,name,short_name,colour,abbreviation), electorate:electorates!members_electorate_id_fkey(name,state)'
         )
         .eq('electorate_id', electorateId)
         .eq('is_active', true)

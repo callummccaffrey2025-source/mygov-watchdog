@@ -85,7 +85,7 @@ export function useElectorateLookup() {
       // Find House MP for this electorate
       const { data: houseMembers } = await supabase
         .from('members')
-        .select('id, first_name, last_name, chamber, photo_url, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates(name, state)')
+        .select('id, first_name, last_name, chamber, photo_url, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates!members_electorate_id_fkey(name, state)')
         .eq('electorate_id', electorate.id)
         .eq('chamber', 'house')
         .eq('is_active', true)
@@ -94,7 +94,7 @@ export function useElectorateLookup() {
       // Find Senators for this state
       const { data: senateMembers } = await supabase
         .from('members')
-        .select('id, first_name, last_name, chamber, photo_url, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates(name, state)')
+        .select('id, first_name, last_name, chamber, photo_url, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates!members_electorate_id_fkey(name, state)')
         .eq('chamber', 'senate')
         .eq('is_active', true);
 

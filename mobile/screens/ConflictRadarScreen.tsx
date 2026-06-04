@@ -123,7 +123,7 @@ function ConflictRadarContent({ navigation }: { navigation: any }) {
       // Get members info
       const { data: members } = await supabase
         .from('members')
-        .select('id, first_name, last_name, photo_url, party:parties(name, colour), electorate:electorates(name)')
+        .select('id, first_name, last_name, photo_url, party:parties(name, colour), electorate:electorates!members_electorate_id_fkey(name)')
         .in('id', memberIds)
         .eq('is_current', true);
 

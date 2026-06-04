@@ -64,7 +64,7 @@ export function useDailyBrief() {
         if (electorateId) {
           const { data: mp } = await supabase
             .from('members')
-            .select('id, first_name, last_name, photo_url, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates(name, state, margin_percent, holding_party)')
+            .select('id, first_name, last_name, photo_url, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates!members_electorate_id_fkey(name, state, margin_percent, holding_party)')
             .eq('electorate_id', electorateId)
             .eq('chamber', 'house')
             .eq('is_active', true)

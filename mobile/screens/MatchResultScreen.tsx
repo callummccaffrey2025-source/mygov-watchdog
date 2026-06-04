@@ -244,7 +244,7 @@ export function MatchResultScreen({ route, navigation }: { route: any; navigatio
   useEffect(() => {
     supabase
       .from('members')
-      .select('id, first_name, last_name, photo_url, party:parties!members_party_id_fkey(name, short_name, colour, abbreviation), electorate:electorates(name, state)')
+      .select('id, first_name, last_name, photo_url, party:parties!members_party_id_fkey(name, short_name, colour, abbreviation), electorate:electorates!members_electorate_id_fkey(name, state)')
       .eq('id', memberId)
       .single()
       .then(({ data: m }) => {

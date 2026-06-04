@@ -231,7 +231,7 @@ export function useVerityMatch() {
       // 2. Get all active members
       const { data: members } = await supabase
         .from('members')
-        .select('id, first_name, last_name, photo_url, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates(name, state)')
+        .select('id, first_name, last_name, photo_url, party:parties!members_party_id_fkey(name, short_name, colour), electorate:electorates!members_electorate_id_fkey(name, state)')
         .eq('is_active', true);
 
       if (!members) { setError('Could not load members'); setLoading(false); return; }

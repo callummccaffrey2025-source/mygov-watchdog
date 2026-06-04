@@ -61,7 +61,7 @@ export function useMyRepresentatives(postcode: string | null) {
           // House member
           const { data: houseMembers } = await supabase
             .from('members')
-            .select('*, party:parties!members_party_id_fkey(name,short_name,colour,abbreviation), electorate:electorates(name,state)')
+            .select('*, party:parties!members_party_id_fkey(name,short_name,colour,abbreviation), electorate:electorates!members_electorate_id_fkey(name,state)')
             .eq('electorate_id', federalElectorate.id)
             .eq('chamber', 'house')
             .eq('is_active', true)
@@ -90,7 +90,7 @@ export function useMyRepresentatives(postcode: string | null) {
           if (state) {
             const { data: senators } = await supabase
               .from('members')
-              .select('*, party:parties!members_party_id_fkey(name,short_name,colour,abbreviation), electorate:electorates(name,state)')
+              .select('*, party:parties!members_party_id_fkey(name,short_name,colour,abbreviation), electorate:electorates!members_electorate_id_fkey(name,state)')
               .eq('chamber', 'senate')
               .eq('is_active', true)
               .ilike('electorate.state', state);

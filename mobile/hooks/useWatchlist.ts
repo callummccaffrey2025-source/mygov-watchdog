@@ -62,7 +62,7 @@ export function useWatchlist() {
       // Fetch enrichment data in parallel
       const [members, bills, memberVotes, billStatuses, parties] = await Promise.all([
         memberIds.length > 0
-          ? supabase.from('members').select('id, first_name, last_name, party:parties!members_party_id_fkey(short_name,colour), electorate:electorates(name)').in('id', memberIds).then(r => r.data || [])
+          ? supabase.from('members').select('id, first_name, last_name, party:parties!members_party_id_fkey(short_name,colour), electorate:electorates!members_electorate_id_fkey(name)').in('id', memberIds).then(r => r.data || [])
           : Promise.resolve([]),
         billIds.length > 0
           ? supabase.from('bills').select('id, short_title, title, current_status, last_updated').in('id', billIds).then(r => r.data || [])

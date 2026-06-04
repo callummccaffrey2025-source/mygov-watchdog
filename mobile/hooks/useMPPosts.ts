@@ -34,7 +34,7 @@ export function useMPPosts(memberId?: string | null, limit = 20) {
       setLoading(true);
       let query = supabase
         .from('mp_posts')
-        .select('*, member:members(id, first_name, last_name, photo_url, party:parties(name, short_name, colour), electorate:electorates(name, state))')
+        .select('*, member:members(id, first_name, last_name, photo_url, party:parties(name, short_name, colour), electorate:electorates!members_electorate_id_fkey(name, state))')
         .eq('is_deleted', false)
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false })

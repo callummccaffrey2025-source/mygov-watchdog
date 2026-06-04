@@ -40,7 +40,7 @@ export function useMembers(filters: Filters = {}) {
       try {
         let query = supabase
           .from('members')
-          .select('*, party:parties!members_party_id_fkey(name,short_name,colour,abbreviation), electorate:electorates(name,state)')
+          .select('*, party:parties!members_party_id_fkey(name,short_name,colour,abbreviation), electorate:electorates!members_electorate_id_fkey(name,state)')
           .eq('is_active', true)
           .order('last_name');
 
