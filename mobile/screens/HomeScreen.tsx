@@ -240,127 +240,52 @@ export function HomeScreen({ navigation }: any) {
         keyboardShouldPersistTaps="handled"
       >
         {/* ═══ 1. GREEN HERO ═══ */}
-        <LinearGradient
-          colors={['#00843D', '#005C2B']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            paddingTop: SPACING.lg,
-            paddingHorizontal: SPACING.xl,
-            paddingBottom: SPACING.xxl,
-            overflow: 'hidden',
-          }}
-        >
-          {/* Decorative circles */}
-          <View
-            pointerEvents="none"
-            style={{
-              position: 'absolute', top: -40, right: -40,
-              width: 160, height: 160, borderRadius: 80,
-              backgroundColor: 'rgba(255,255,255,0.06)',
-            }}
-          />
-          <View
-            pointerEvents="none"
-            style={{
-              position: 'absolute', bottom: -30, left: -30,
-              width: 120, height: 120, borderRadius: 60,
-              backgroundColor: 'rgba(255,255,255,0.04)',
-            }}
-          />
-
-          {/* Top row: watchlist + bell + compass — right-aligned */}
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: SPACING.lg, gap: SPACING.sm }}>
-            <Pressable
-              onPress={() => navigation.navigate('Watchlist')}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="View watchlist"
-              style={({ pressed }) => ({
-                width: 36, height: 36, borderRadius: 18,
-                backgroundColor: pressed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
-                justifyContent: 'center', alignItems: 'center',
-              })}
-            >
-              <Ionicons name="eye-outline" size={18} color="#ffffff" />
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate('Activity')}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="View activity notifications"
-              style={({ pressed }) => ({
-                width: 36, height: 36, borderRadius: 18,
-                backgroundColor: pressed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
-                justifyContent: 'center', alignItems: 'center',
-              })}
-            >
-              <Ionicons name="notifications-outline" size={18} color="#ffffff" />
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate('Explore')}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Explore"
-              style={({ pressed }) => ({
-                width: 36, height: 36, borderRadius: 18,
-                backgroundColor: pressed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
-                justifyContent: 'center', alignItems: 'center',
-              })}
-            >
-              <Ionicons name="compass-outline" size={18} color="#ffffff" />
-            </Pressable>
+        <View style={{ backgroundColor: colors.background, paddingTop: SPACING.md, paddingHorizontal: SPACING.xl, paddingBottom: SPACING.xl }}>
+          {/* Top bar: Verity wordmark + icons */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.xl }}>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: colors.green, letterSpacing: 2 }}>
+              VERITY
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
+              <Pressable
+                onPress={() => navigation.navigate('Watchlist')}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="View watchlist"
+                style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+              >
+                <Ionicons name="eye-outline" size={22} color={colors.text} />
+              </Pressable>
+              <Pressable
+                onPress={() => navigation.navigate('Activity')}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="View activity notifications"
+                style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+              >
+                <Ionicons name="notifications-outline" size={22} color={colors.text} />
+              </Pressable>
+            </View>
           </View>
 
-          {/* Greeting */}
-          <Text style={{ fontSize: FONT_SIZE.heading + 4, fontWeight: FONT_WEIGHT.bold, color: '#ffffff', letterSpacing: -0.3 }}>
+          {/* Greeting — extreme scale jump (Impeccable: 3-5x difference) */}
+          <Text style={{ fontSize: 34, fontWeight: '800', color: colors.text, letterSpacing: -0.5, lineHeight: 38 }}>
             {greeting}
           </Text>
-
-          {/* Personal context line */}
-          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.medium, color: 'rgba(255,255,255,0.65)', marginTop: SPACING.xs, letterSpacing: 0.1 }}>
+          <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.regular, color: colors.textMuted, marginTop: SPACING.xs }}>
             {myMP
               ? `${dateStr} · ${electorateName ?? ''}`
               : dateStr}
           </Text>
 
-          {/* Parliament status pills */}
+          {/* Parliament status — inline, not pill (quieter, more confident) */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: SPACING.lg }}>
-            <View style={{
-              flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2,
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              borderRadius: BORDER_RADIUS.full,
-              paddingHorizontal: SPACING.md,
-              paddingVertical: SPACING.sm,
-              borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.08)',
-            }}>
-              <View style={{
-                width: 6, height: 6, borderRadius: 3,
-                backgroundColor: isSittingToday ? '#4ADE80' : '#FBBF24',
-              }} />
-              <Text style={{ fontSize: FONT_SIZE.caption + 1, fontWeight: FONT_WEIGHT.medium, color: 'rgba(255,255,255,0.9)' }}>
-                {isSittingToday ? 'Parliament is sitting' : 'In recess'}
-              </Text>
-            </View>
-            {!isSittingToday && nextSitting && (
-              <View style={{
-                flexDirection: 'row', alignItems: 'center', gap: SPACING.xs + 2,
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                borderRadius: BORDER_RADIUS.full,
-                paddingHorizontal: SPACING.md,
-                paddingVertical: SPACING.sm,
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.08)',
-              }}>
-                <Ionicons name="calendar-outline" size={12} color="rgba(255,255,255,0.9)" />
-                <Text style={{ fontSize: FONT_SIZE.caption + 1, fontWeight: FONT_WEIGHT.medium, color: 'rgba(255,255,255,0.9)' }}>
-                  Resumes {formatParliamentDate(nextSitting)}
-                </Text>
-              </View>
-            )}
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isSittingToday ? '#22C55E' : '#EAB308' }} />
+            <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+              {isSittingToday ? 'Parliament is sitting' : `In recess${nextSitting ? ` · resumes ${formatParliamentDate(nextSitting)}` : ''}`}
+            </Text>
           </View>
-        </LinearGradient>
+        </View>
 
         {/* ═══ 2b. DAILY BRIEF ═══ */}
         <View style={{ paddingHorizontal: 20, marginTop: SPACING.lg }}>
@@ -1120,22 +1045,20 @@ export function HomeScreen({ navigation }: any) {
         {/* ═══ 8. MP RECENT VOTES ═══ */}
         {myMP && mpRecentVotes.length > 0 && (
           <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
-            <SectionHeader
-              color={colors.green}
-              label={`${myMP.first_name.toUpperCase()}'S RECENT VOTES`}
-              rightLabel="View all \u2192"
-              onRightPress={() => navigation.navigate('MemberProfile', { member: myMP })}
-            />
-
-            <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: colors.text, marginBottom: SPACING.md, marginTop: -SPACING.sm }}>
-              How your MP decided
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: SPACING.md }}>
+              <Text style={{ fontSize: FONT_SIZE.title, fontWeight: '800', color: colors.text }}>
+                How {myMP.first_name} voted
+              </Text>
+              <Pressable onPress={() => navigation.navigate('MemberProfile', { member: myMP })} hitSlop={8} accessibilityRole="button" accessibilityLabel="View all votes">
+                <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: colors.green }}>All votes</Text>
+              </Pressable>
+            </View>
 
             <View style={{
-              backgroundColor: '#F5F3EE',
+              backgroundColor: colors.card,
               borderRadius: BORDER_RADIUS.lg,
-              padding: 14,
-              ...SHADOWS.sm,
+              padding: SPACING.lg,
+              ...SHADOWS.md,
             }}>
               {mpRecentVotes.map((vote, i) => {
                 const divName = vote.division ? cleanDivisionName(vote.division.name) : 'Unknown';
