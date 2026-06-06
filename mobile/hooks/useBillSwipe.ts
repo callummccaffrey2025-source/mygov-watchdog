@@ -32,8 +32,7 @@ export function useBillSwipe() {
         const { data } = await supabase
           .from('bills')
           .select('id, title, short_title, tldr, summary_plain, supporters_argument, critics_argument, current_status, origin_chamber, date_introduced')
-          .eq('current_status', 'Before Parliament')
-          .eq('parliament_no', 48)
+          .in('current_status', ['introduced', 'passed_house', 'passed_senate', 'Before Parliament', 'Before House', 'Before Senate', 'Before House of Representatives'])
           .not('tldr', 'is', null)
           .order('date_introduced', { ascending: false })
           .limit(20);
