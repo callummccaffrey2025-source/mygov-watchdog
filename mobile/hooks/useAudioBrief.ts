@@ -156,8 +156,9 @@ export function useAudioBrief() {
     if (!brief?.script) return;
 
     try {
-      // Dynamic import — expo-speech may not be installed yet
-      const Speech = await import('expo-speech');
+      // Audio brief TTS — stub until expo-speech is added to the build
+      const Speech: any = null;
+      if (!Speech) { setPlaying(false); return; }
 
       setPlaying(true);
       setProgress(0);
