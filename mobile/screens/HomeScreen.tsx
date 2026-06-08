@@ -22,6 +22,9 @@ import { SkeletonLoader } from '../components/SkeletonLoader';
 import { decodeHtml } from '../utils/decodeHtml';
 import { useVotes } from '../hooks/useVotes';
 import { timeAgo } from '../lib/timeAgo';
+import { spacing, typography, radius, elevation, colors as tokenColors, motion } from '../theme/tokens';
+import { PressableScale, AppText, Card } from '../components/ui';
+// Legacy tokens — migrating away from these
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import AsyncStorage from '../lib/storage';
 import { hapticLight } from '../lib/haptics';
@@ -87,16 +90,13 @@ function SectionHeader({
   rightLabel?: string;
   onRightPress?: () => void;
 }) {
-  const { colors } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.md }}>
-      <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: colors.textMuted }}>
-        {label}
-      </Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md }}>
+      <AppText variant="label" color="textMuted">{label}</AppText>
       {rightLabel && onRightPress && (
-        <Pressable onPress={onRightPress} hitSlop={8} accessibilityRole="button" accessibilityLabel={rightLabel}>
-          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: colors.green }}>{rightLabel}</Text>
-        </Pressable>
+        <PressableScale onPress={onRightPress} accessibilityRole="button" accessibilityLabel={rightLabel}>
+          <AppText variant="label" color="accent">{rightLabel}</AppText>
+        </PressableScale>
       )}
     </View>
   );
@@ -105,9 +105,8 @@ function SectionHeader({
 // ── Section Divider ─────────────────────────────────────────────────────
 
 function SectionDivider() {
-  const { colors } = useTheme();
   return (
-    <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: 20, marginTop: SPACING.xl, opacity: 0.5 }} />
+    <View style={{ height: 1, backgroundColor: tokenColors.border, marginHorizontal: spacing.lg, marginTop: spacing.xl, opacity: 0.5 }} />
   );
 }
 
@@ -240,128 +239,100 @@ export function HomeScreen({ navigation }: any) {
         keyboardShouldPersistTaps="handled"
       >
         {/* ═══ 1. GREEN HERO ═══ */}
-        <View style={{ backgroundColor: colors.background, paddingTop: SPACING.md, paddingHorizontal: SPACING.xl, paddingBottom: SPACING.xl }}>
+        <View style={{ backgroundColor: tokenColors.background, paddingTop: spacing.md, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl }}>
           {/* Top bar: Verity wordmark + icons */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.xl }}>
-            <Text style={{ fontSize: 20, fontWeight: '800', color: colors.green, letterSpacing: 2 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl }}>
+            <AppText variant="heading" style={{ letterSpacing: 2, color: tokenColors.accent }}>
               VERITY
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
-              <Pressable
-                onPress={() => navigation.navigate('Watchlist')}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel="View watchlist"
-                style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-              >
-                <Ionicons name="eye-outline" size={22} color={colors.text} />
-              </Pressable>
-              <Pressable
-                onPress={() => navigation.navigate('Activity')}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel="View activity notifications"
-                style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-              >
-                <Ionicons name="notifications-outline" size={22} color={colors.text} />
-              </Pressable>
+            </AppText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.lg }}>
+              <PressableScale onPress={() => navigation.navigate('Watchlist')} accessibilityRole="button" accessibilityLabel="View watchlist">
+                <Ionicons name="eye-outline" size={22} color={tokenColors.textPrimary} />
+              </PressableScale>
+              <PressableScale onPress={() => navigation.navigate('Activity')} accessibilityRole="button" accessibilityLabel="View activity notifications">
+                <Ionicons name="notifications-outline" size={22} color={tokenColors.textPrimary} />
+              </PressableScale>
             </View>
           </View>
 
-          {/* Greeting — extreme scale jump (Impeccable: 3-5x difference) */}
-          <Text style={{ fontSize: 34, fontWeight: '800', color: colors.text, letterSpacing: -0.5, lineHeight: 38 }}>
-            {greeting}
-          </Text>
-          <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.regular, color: colors.textMuted, marginTop: SPACING.xs }}>
+          {/* Greeting — display scale for typographic drama */}
+          <AppText variant="display">{greeting}</AppText>
+          <AppText variant="body" color="textMuted" style={{ marginTop: spacing.xs }}>
             {myMP
               ? `${dateStr} · ${electorateName ?? ''}`
               : dateStr}
-          </Text>
+          </AppText>
 
-          {/* Parliament status — inline, not pill (quieter, more confident) */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: SPACING.lg }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isSittingToday ? '#22C55E' : '#EAB308' }} />
-            <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+          {/* Parliament status */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.lg }}>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isSittingToday ? tokenColors.success : tokenColors.warning }} />
+            <AppText variant="caption" color="textSecondary">
               {isSittingToday ? 'Parliament is sitting' : `In recess${nextSitting ? ` · resumes ${formatParliamentDate(nextSitting)}` : ''}`}
-            </Text>
+            </AppText>
           </View>
         </View>
 
         {/* ═══ 2b. DAILY BRIEF ═══ */}
         <View style={{ paddingHorizontal: 20, marginTop: SPACING.lg }}>
-          <Pressable
-            onPress={() => navigation.navigate('DailyBrief')}
-            accessibilityRole="button"
-            accessibilityLabel="Read your daily brief"
-            style={({ pressed }) => ({
-              backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg,
-              opacity: pressed ? 0.92 : 1,
-              ...SHADOWS.md,
-            })}
-          >
-            <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.semibold, letterSpacing: 0.8, color: '#00843D', textTransform: 'uppercase', marginBottom: SPACING.sm }}>
+          {/* Daily Brief */}
+          <Card elevated onPress={() => navigation.navigate('DailyBrief')}>
+            <AppText variant="caption" color="accent" style={{ letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: spacing.sm }}>
               Your Daily Brief
-            </Text>
-            <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 22 }}>
+            </AppText>
+            <AppText variant="callout" color="textPrimary">
               What your MP did, what's happening in your electorate, and what you should know today.
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginTop: SPACING.md }}>
-              <Ionicons name="arrow-forward-circle" size={18} color={'#00843D'} />
-              <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>
-                Read your brief
-              </Text>
+            </AppText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.md }}>
+              <Ionicons name="arrow-forward-circle" size={18} color={tokenColors.accent} />
+              <AppText variant="label" color="accent">Read your brief</AppText>
             </View>
-          </Pressable>
+          </Card>
 
-          {/* What did your MP do this week? — primary entry point */}
-          <Pressable
+          {/* What did your MP do this week? */}
+          <PressableScale
             onPress={() => navigation.navigate('MPWeekly')}
             accessibilityRole="button"
             accessibilityLabel="See what your MP voted on this week"
-            style={({ pressed }) => ({
-              backgroundColor: '#1a2332',
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg,
-              flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-              opacity: pressed ? 0.92 : 1,
-              marginTop: SPACING.md,
-              ...SHADOWS.md,
-            })}
+            style={{
+              backgroundColor: tokenColors.textPrimary,
+              borderRadius: radius.md,
+              padding: spacing.lg,
+              flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+              marginTop: spacing.md,
+              ...elevation.md,
+            }}
           >
             <View style={{
               width: 44, height: 44, borderRadius: 22,
-              backgroundColor: 'rgba(0,132,61,0.2)',
+              backgroundColor: 'rgba(31,95,139,0.25)',
               justifyContent: 'center', alignItems: 'center',
             }}>
-              <Ionicons name="receipt-outline" size={20} color="#00843D" />
+              <Ionicons name="receipt-outline" size={20} color={tokenColors.accent} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>
+              <AppText variant="callout" color="textInverse" style={{ fontWeight: '700' }}>
                 What did your MP do?
-              </Text>
-              <Text style={{ fontSize: FONT_SIZE.small, color: 'rgba(255,255,255,0.6)' }}>
+              </AppText>
+              <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 Every vote. Plain English. The receipts.
-              </Text>
+              </AppText>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
-          </Pressable>
+            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.4)" />
+          </PressableScale>
 
-          {/* Daily 90 entry point */}
-          <Pressable
+          {/* Daily 90 */}
+          <PressableScale
             onPress={() => navigation.navigate('Daily90')}
             accessibilityRole="button"
             accessibilityLabel="Open your Daily 90"
-            style={({ pressed }) => ({
-              backgroundColor: '#00843D',
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg,
-              flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-              opacity: pressed ? 0.92 : 1,
-              marginTop: SPACING.md,
-              ...SHADOWS.md,
-            })}
+            style={{
+              backgroundColor: tokenColors.accent,
+              borderRadius: radius.md,
+              padding: spacing.lg,
+              flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+              marginTop: spacing.md,
+              ...elevation.md,
+            }}
           >
             <View style={{
               width: 44, height: 44, borderRadius: 22,
@@ -371,15 +342,15 @@ export function HomeScreen({ navigation }: any) {
               <Ionicons name="flash-outline" size={20} color="#fff" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>
+              <AppText variant="callout" color="textInverse" style={{ fontWeight: '700' }}>
                 Your Daily 90
-              </Text>
-              <Text style={{ fontSize: FONT_SIZE.small, color: 'rgba(255,255,255,0.7)' }}>
+              </AppText>
+              <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 Brief · Poll · Your MP · 90 seconds
-              </Text>
+              </AppText>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
-          </Pressable>
+            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
+          </PressableScale>
         </View>
 
         <SectionDivider />
