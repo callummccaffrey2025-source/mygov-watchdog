@@ -14,60 +14,30 @@ import Constants from 'expo-constants';
 import { UserProvider } from './context/UserContext';
 import { useUser } from './context/UserContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
-import { CommunityScreen } from './screens/CommunityScreen';
-import { PollsScreen } from './screens/PollsScreen';
-import { CommunityPostDetailScreen } from './screens/CommunityPostDetailScreen';
-import { CreateCommunityPostScreen } from './screens/CreateCommunityPostScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
 import { NotificationPermissionModal } from './components/NotificationPermissionModal';
 import { NotificationBanner, BannerNotification } from './components/NotificationBanner';
+// ─── Core screens (the 5 that matter) ─────────────────────────────────────
 import { HomeScreen } from './screens/HomeScreen';
 import { ExploreScreen } from './screens/ExploreScreen';
+import { LearnScreen } from './screens/LearnScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { MemberProfileScreen } from './screens/MemberProfileScreen';
 import { BillDetailScreen } from './screens/BillDetailScreen';
-import { HypocrisyDetailScreen } from './screens/HypocrisyDetailScreen';
-import { MethodologyScreen } from './screens/MethodologyScreen';
+// ─── Essential supporting screens ──────────────────────────────────────────
 import { PartyProfileScreen } from './screens/PartyProfileScreen';
-import { PrivacyPolicyScreen } from './screens/PrivacyPolicyScreen';
-import { TermsScreen } from './screens/TermsScreen';
 import { OnboardingScreen } from './screens/OnboardingScreen';
-import { NotificationPreferencesScreen } from './screens/NotificationPreferencesScreen';
-import { ManageTopicsScreen } from './screens/ManageTopicsScreen';
 import { TopicBillsScreen } from './screens/TopicBillsScreen';
 import { BillListScreen } from './screens/BillListScreen';
-import { SubscriptionScreen } from './screens/SubscriptionScreen';
-import { CouncilProfileScreen } from './screens/CouncilProfileScreen';
-import { WriteToMPScreen } from './screens/WriteToMPScreen';
-import { AboutScreen } from './screens/AboutScreen';
-import { AskScreen } from './screens/AskScreen';
-import { ActivityScreen } from './screens/ActivityScreen';
-import { SavedScreen } from './screens/SavedScreen';
-import { LocalAnnouncementsScreen } from './screens/LocalAnnouncementsScreen';
-import { ContradictionDetailScreen } from './screens/ContradictionDetailScreen';
-// Phone verification deferred — see docs/BACKLOG.md
-import { AdminPollsScreen } from './screens/AdminPollsScreen';
-import { LearnScreen } from './screens/LearnScreen';
 import { LearnModuleScreen } from './screens/LearnModuleScreen';
 import { LessonScreen } from './screens/LessonScreen';
-import { MPPostDetailScreen } from './screens/MPPostDetailScreen';
-import { DARadarScreen } from './screens/DARadarScreen';
-import { DADetailScreen } from './screens/DADetailScreen';
-import { WatchlistScreen } from './screens/WatchlistScreen';
-import { MyRepresentativesScreen } from './screens/MyRepresentativesScreen';
-import { CaseworkScreen } from './screens/CaseworkScreen';
-import { DailyBriefScreen } from './screens/DailyBriefScreen';
-import { RepresentationIndexScreen } from './screens/RepresentationIndexScreen';
-import { StatsScreen } from './screens/StatsScreen';
-import { MatchScreen } from './screens/MatchScreen';
-import { MatchResultScreen } from './screens/MatchResultScreen';
-import { Daily90Screen } from './screens/Daily90Screen';
-import { WalletScreen } from './screens/WalletScreen';
-import { ConflictRadarScreen } from './screens/ConflictRadarScreen';
-import { BallotDecodedScreen } from './screens/BallotDecodedScreen';
-import { PollDetailScreen } from './screens/PollDetailScreen';
-import { MPWeeklyScreen } from './screens/MPWeeklyScreen';
+import { WriteToMPScreen } from './screens/WriteToMPScreen';
+import { SubscriptionScreen } from './screens/SubscriptionScreen';
+import { AboutScreen } from './screens/AboutScreen';
+import { PrivacyPolicyScreen } from './screens/PrivacyPolicyScreen';
+import { TermsScreen } from './screens/TermsScreen';
+import { NotificationPreferencesScreen } from './screens/NotificationPreferencesScreen';
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
 import { initFeatureFlags } from './lib/featureFlags';
@@ -119,7 +89,6 @@ function HomeTabs() {
           const icons: Record<string, [string, string]> = {
             Home:      ['home',        'home-outline'],
             Explore:   ['search',      'search-outline'],
-            Polls:     ['bar-chart', 'bar-chart-outline'],
             Learn:     ['school',      'school-outline'],
             Profile:   ['person',      'person-outline'],
           };
@@ -136,7 +105,6 @@ function HomeTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarAccessibilityLabel: 'Home' }} />
       <Tab.Screen name="Explore" component={ExploreScreen} options={{ tabBarAccessibilityLabel: 'Explore' }} />
-      <Tab.Screen name="Polls" component={PollsScreen} options={{ tabBarAccessibilityLabel: 'Polls' }} />
       <Tab.Screen name="Learn" component={LearnScreen} options={{ tabBarAccessibilityLabel: 'Learn' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarAccessibilityLabel: 'Profile' }} />
     </Tab.Navigator>
@@ -293,7 +261,6 @@ function App() {
         if (type === 'mp') navigationRef.navigate('MemberProfile', { memberId: id });
         else if (type === 'bill') navigationRef.navigate('BillDetail', { billId: id });
         else if (type === 'party') navigationRef.navigate('PartyProfile', { partyId: id });
-        else if (type === 'poll') navigationRef.navigate('PollDetail', { pollId: id });
       }
     };
     Linking.getInitialURL().then(url => { if (url) handleUrl({ url }); });
@@ -323,10 +290,6 @@ function App() {
       navigationRef.navigate('BillDetail', { billId: data.billId });
     } else if (data?.screen === 'member' && data.memberId) {
       navigationRef.navigate('MemberProfile', { memberId: data.memberId });
-    } else if (data?.screen === 'ContradictionDetail' && data.contradictionId) {
-      navigationRef.navigate('ContradictionDetail', { contradictionId: data.contradictionId });
-    } else if (data?.screen === 'Daily90') {
-      navigationRef.navigate('Daily90');
     }
   };
 
@@ -341,11 +304,8 @@ function App() {
     };
   }, []);
 
-  const [navigateToMPWeekly, setNavigateToMPWeekly] = useState(false);
-
   const handleOnboardingComplete = async () => {
     await AsyncStorage.setItem('onboarding_complete', 'true');
-    setNavigateToMPWeekly(true);
     setOnboardingDone(true);
   };
 
@@ -374,11 +334,6 @@ function App() {
               if (sentryRoutingInstrumentation) {
                 sentryRoutingInstrumentation.registerNavigationContainer(navigationRef);
               }
-              // After first onboarding, go straight to MP weekly digest
-              if (navigateToMPWeekly) {
-                setNavigateToMPWeekly(false);
-                setTimeout(() => navigationRef.navigate('MPWeekly' as never), 100);
-              }
             }}
             onStateChange={(state) => {
               const route = state?.routes?.[state.index ?? 0];
@@ -394,49 +349,24 @@ function App() {
             />
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Main" component={HomeTabs} />
+              {/* Core drill-downs */}
               <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
               <Stack.Screen name="BillDetail" component={BillDetailScreen} />
-              <Stack.Screen name="HypocrisyDetail" component={HypocrisyDetailScreen} />
-              <Stack.Screen name="Methodology" component={MethodologyScreen} />
               <Stack.Screen name="PartyProfile" component={PartyProfileScreen} />
+              {/* Explore drill-downs */}
+              <Stack.Screen name="TopicBills" component={TopicBillsScreen} />
+              <Stack.Screen name="BillList" component={BillListScreen} />
+              {/* Learn flow */}
+              <Stack.Screen name="LearnModule" component={LearnModuleScreen} />
+              <Stack.Screen name="Lesson" component={LessonScreen} />
+              {/* Actions */}
+              <Stack.Screen name="WriteToMP" component={WriteToMPScreen} />
+              {/* Settings & legal */}
+              <Stack.Screen name="Subscription" component={SubscriptionScreen} />
+              <Stack.Screen name="About" component={AboutScreen} />
               <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
               <Stack.Screen name="Terms" component={TermsScreen} />
               <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
-              <Stack.Screen name="ManageTopics" component={ManageTopicsScreen} />
-              <Stack.Screen name="TopicBills" component={TopicBillsScreen} />
-              <Stack.Screen name="BillList" component={BillListScreen} />
-              <Stack.Screen name="Subscription" component={SubscriptionScreen} />
-              <Stack.Screen name="Council" component={CouncilProfileScreen} />
-              <Stack.Screen name="Community" component={CommunityScreen} />
-              <Stack.Screen name="CommunityPostDetail" component={CommunityPostDetailScreen} />
-              <Stack.Screen name="CreateCommunityPost" component={CreateCommunityPostScreen} />
-              <Stack.Screen name="WriteToMP" component={WriteToMPScreen} />
-              <Stack.Screen name="About" component={AboutScreen} />
-              <Stack.Screen name="Ask" component={AskScreen} />
-              <Stack.Screen name="Activity" component={ActivityScreen} />
-              <Stack.Screen name="Saved" component={SavedScreen} />
-              <Stack.Screen name="LocalAnnouncements" component={LocalAnnouncementsScreen} />
-              <Stack.Screen name="ContradictionDetail" component={ContradictionDetailScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="AdminPolls" component={AdminPollsScreen} />
-              <Stack.Screen name="LearnModule" component={LearnModuleScreen} />
-              <Stack.Screen name="Lesson" component={LessonScreen} />
-              <Stack.Screen name="MPPostDetail" component={MPPostDetailScreen} />
-              <Stack.Screen name="DARadar" component={DARadarScreen} />
-              <Stack.Screen name="DADetail" component={DADetailScreen} />
-              <Stack.Screen name="Watchlist" component={WatchlistScreen} />
-              <Stack.Screen name="MyRepresentatives" component={MyRepresentativesScreen} />
-              <Stack.Screen name="Casework" component={CaseworkScreen} />
-              <Stack.Screen name="DailyBrief" component={DailyBriefScreen} />
-              <Stack.Screen name="RepresentationIndex" component={RepresentationIndexScreen} />
-              <Stack.Screen name="Stats" component={StatsScreen} />
-              <Stack.Screen name="Match" component={MatchScreen} />
-              <Stack.Screen name="MPWeekly" component={MPWeeklyScreen} />
-              <Stack.Screen name="MatchResult" component={MatchResultScreen} />
-              <Stack.Screen name="Daily90" component={Daily90Screen} />
-              <Stack.Screen name="Wallet" component={WalletScreen} />
-              <Stack.Screen name="ConflictRadar" component={ConflictRadarScreen} />
-              <Stack.Screen name="BallotDecoded" component={BallotDecodedScreen} />
-              <Stack.Screen name="PollDetail" component={PollDetailScreen} />
             </Stack.Navigator>
             <AppNotificationGate />
           </NavigationContainer>

@@ -14,7 +14,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
 import { useTheme } from '../context/ThemeContext';
@@ -35,13 +34,6 @@ import * as Haptics from 'expo-haptics';
 import { track } from '../lib/analytics';
 import { trackEvent } from '../lib/engagementTracker';
 import { useLearnModules } from '../hooks/useLearnModules';
-import { usePollAggregate } from '../hooks/usePublishedPolls';
-import { useMPPosts } from '../hooks/useMPPosts';
-import { useMPPostReaction } from '../hooks/useMPPostReaction';
-import { MPPostCard } from '../components/MPPostCard';
-import { useAffectsYou } from '../hooks/useAffectsYou';
-import { useElectorateConsensus } from '../hooks/useElectorateConsensus';
-import { useStatsMetrics, pickStatOfTheDay } from '../hooks/useStatsMetrics';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -128,20 +120,8 @@ export function HomeScreen({ navigation }: any) {
   const electorateName = electorateResult.electorate?.name ?? null;
 
   const { votes: mpVotes } = useVotes(myMP?.id ?? null);
-  const { items: affectsYouItems, loading: affectsYouLoading } = useAffectsYou(postcode, myMP?.id ?? null);
-  const { items: consensusItems } = useElectorateConsensus(electorateName, myMP?.id ?? null);
   const { isSittingToday, nextSitting } = useSittingCalendar();
-
   const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
-  const { aggregate } = usePollAggregate(30);
-
-  // ── Stats metrics for stat-of-the-day ──
-  const { mpStats: homeStatsMp } = useStatsMetrics(myMP?.id, electorateResult.electorate?.id);
-  const mpFullName = myMP ? `${myMP.first_name} ${myMP.last_name}` : '';
-  const statOfTheDay = useMemo(
-    () => mpFullName ? pickStatOfTheDay(homeStatsMp, mpFullName) : null,
-    [homeStatsMp, mpFullName],
-  );
 
   // ── MP recent substantive votes ──
   const mpRecentVotes = useMemo(() => {
@@ -149,31 +129,6 @@ export function HomeScreen({ navigation }: any) {
       .filter(v => v.vote_cast === 'aye' || v.vote_cast === 'no')
       .slice(0, 3);
   }, [mpVotes]);
-
-  // ── Notification nudge ──
-  const [showNotifPrompt, setShowNotifPrompt] = useState(false);
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    AsyncStorage.getItem('notification_prompt_shown').then(val => {
-      if (!val) {
-        timer = setTimeout(() => setShowNotifPrompt(true), 60000);
-      }
-    });
-    return () => { if (timer) clearTimeout(timer); };
-  }, []);
-
-  const dismissNotifPrompt = () => {
-    setShowNotifPrompt(false);
-    AsyncStorage.setItem('notification_prompt_shown', 'true');
-  };
-
-  const enableNotifications = async () => {
-    try {
-      const Notifications = await import('expo-notifications');
-      await Notifications.requestPermissionsAsync();
-    } catch {}
-    dismissNotifPrompt();
-  };
 
   // ── Refresh ──
   const [refreshKey, setRefreshKey] = useState(0);
@@ -270,90 +225,7 @@ export function HomeScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* ═══ 2b. DAILY BRIEF ═══ */}
-        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.lg }}>
-          {/* Daily Brief */}
-          <Card elevated onPress={() => navigation.navigate('DailyBrief')}>
-            <AppText variant="caption" color="accent" style={{ letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: spacing.sm }}>
-              Your Daily Brief
-            </AppText>
-            <AppText variant="callout" color="textPrimary">
-              What your MP did, what's happening in your electorate, and what you should know today.
-            </AppText>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.md }}>
-              <Ionicons name="arrow-forward-circle" size={18} color={tokenColors.accent} />
-              <AppText variant="label" color="accent">Read your brief</AppText>
-            </View>
-          </Card>
-
-          {/* What did your MP do this week? */}
-          <PressableScale
-            onPress={() => navigation.navigate('MPWeekly')}
-            accessibilityRole="button"
-            accessibilityLabel="See what your MP voted on this week"
-            style={{
-              backgroundColor: tokenColors.textPrimary,
-              borderRadius: radius.md,
-              padding: spacing.lg,
-              flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-              marginTop: spacing.md,
-              ...elevation.md,
-            }}
-          >
-            <View style={{
-              width: 44, height: 44, borderRadius: 22,
-              backgroundColor: 'rgba(31,95,139,0.25)',
-              justifyContent: 'center', alignItems: 'center',
-            }}>
-              <Ionicons name="receipt-outline" size={20} color={tokenColors.accent} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText variant="callout" color="textInverse" style={{ fontWeight: '700' }}>
-                What did your MP do?
-              </AppText>
-              <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                Every vote. Plain English. The receipts.
-              </AppText>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.4)" />
-          </PressableScale>
-
-          {/* Daily 90 */}
-          <PressableScale
-            onPress={() => navigation.navigate('Daily90')}
-            accessibilityRole="button"
-            accessibilityLabel="Open your Daily 90"
-            style={{
-              backgroundColor: tokenColors.accent,
-              borderRadius: radius.md,
-              padding: spacing.lg,
-              flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-              marginTop: spacing.md,
-              ...elevation.md,
-            }}
-          >
-            <View style={{
-              width: 44, height: 44, borderRadius: 22,
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              justifyContent: 'center', alignItems: 'center',
-            }}>
-              <Ionicons name="flash-outline" size={20} color="#fff" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText variant="callout" color="textInverse" style={{ fontWeight: '700' }}>
-                Your Daily 90
-              </AppText>
-              <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                Brief · Poll · Your MP · 90 seconds
-              </AppText>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
-          </PressableScale>
-        </View>
-
-        <SectionDivider />
-
-        {/* ═══ 3. YOUR REPRESENTATIVE ═══ */}
+        {/* ═══ 2. YOUR REPRESENTATIVE ═══ */}
         <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
           <SectionHeader
             color={colors.green}
@@ -578,137 +450,9 @@ export function HomeScreen({ navigation }: any) {
           )}
         </View>
 
-        {/* ═══ STAT OF THE DAY ═══ */}
-        {statOfTheDay && (
-          <Pressable
-            onPress={() => navigation.navigate('Stats')}
-            style={({ pressed }) => ({
-              marginHorizontal: spacing.lg,
-              marginTop: spacing.xl,
-              backgroundColor: colors.card,
-              borderRadius: radius.md,
-              padding: spacing.lg,
-              borderLeftWidth: 3,
-              borderLeftColor: '#00843D',
-              ...elevation.sm,
-              opacity: pressed ? 0.92 : 1,
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-            accessibilityRole="button"
-            accessibilityLabel="View Verity Stats"
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
-              <View style={{ backgroundColor: '#E8F5EE', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: spacing.sm }}>
-                <Ionicons name="stats-chart" size={13} color="#00843D" />
-              </View>
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                Stat of the day
-              </Text>
-              <View style={{ flex: 1 }} />
-              <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
-            </View>
-            <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 2 }}>
-              {statOfTheDay.headline}
-            </Text>
-            <Text style={{ fontSize: 13, color: colors.textMuted }}>
-              {statOfTheDay.detail}
-            </Text>
-          </Pressable>
-        )}
-
-        {/* ═══ 3a2. ELECTORATE CONSENSUS ═══ */}
-        {consensusItems.length > 0 && myMP && (
-          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-            <SectionHeader color="#7C3AED" label="YOUR ELECTORATE" />
-            <View style={{
-              backgroundColor: '#F5F0FF', borderRadius: radius.md,
-              padding: spacing.lg, ...elevation.sm,
-            }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: spacing.sm }}>
-                How {electorateName} feels vs how {myMP.first_name} votes
-              </Text>
-              {consensusItems.slice(0, 3).map((item, idx) => (
-                <View key={item.issue_id} style={{
-                  flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                  paddingVertical: spacing.sm,
-                  borderTopWidth: idx > 0 ? 0.5 : 0, borderTopColor: '#E5E0F0',
-                }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text }}>{item.issue_name}</Text>
-                    <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
-                      {item.electorate_agree_pct}% agree · {item.respondent_count} locals
-                    </Text>
-                  </View>
-                  <View style={{
-                    backgroundColor: item.gap > 30 ? '#FDECEA' : item.gap > 15 ? '#FFF3CD' : '#E8F5EE',
-                    borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4,
-                  }}>
-                    <Text style={{
-                      fontSize: 12, fontWeight: '700',
-                      color: item.gap > 30 ? '#DC3545' : item.gap > 15 ? '#856404' : '#00843D',
-                    }}>
-                      {item.gap > 30 ? 'Gap' : item.gap > 15 ? 'Mixed' : 'Aligned'}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-              <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: spacing.sm }}>
-                Based on {consensusItems[0]?.respondent_count || 0}+ local responses. AEC disclosure threshold applies.
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* ═══ 3b. THIS AFFECTS YOU ═══ */}
-        {affectsYouItems.length > 0 && (
-          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-            <SectionHeader color="#DC3545" label="THIS AFFECTS YOU" />
-            {affectsYouItems.slice(0, 3).map((item, idx) => (
-              <Pressable
-                key={item.bill_id}
-                onPress={() => navigation.navigate('BillDetail', { billId: item.bill_id })}
-                accessibilityRole="button"
-                style={{
-                  backgroundColor: idx === 0 ? '#FFF8E7' : colors.card,
-                  borderRadius: radius.md,
-                  padding: spacing.lg,
-                  marginBottom: spacing.sm,
-                  borderLeftWidth: 3,
-                  borderLeftColor: idx === 0 ? '#DC3545' : '#F59E0B',
-                  ...elevation.sm,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <Ionicons name={item.impact_icon as any} size={16} color={idx === 0 ? '#DC3545' : '#F59E0B'} />
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: idx === 0 ? '#DC3545' : '#F59E0B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    {item.impact_group}
-                  </Text>
-                  <View style={{ flex: 1 }} />
-                  <View style={{ backgroundColor: item.current_status === 'introduced' ? '#E8F5EE' : '#FFF3CD', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                    <Text style={{ fontSize: 9, fontWeight: '700', color: item.current_status === 'introduced' ? '#00843D' : '#856404' }}>
-                      {item.current_status === 'introduced' ? 'NEW' : 'IN PROGRESS'}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, lineHeight: 20, marginBottom: 4 }} numberOfLines={2}>
-                  {item.bill_title}
-                </Text>
-                <Text style={{ fontSize: 13, color: colors.textMuted, lineHeight: 18 }} numberOfLines={2}>
-                  {item.why_it_matters}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
-
         <SectionDivider />
 
-        {/* ═══ 4a. YOUR MP'S LATEST POST ═══ */}
-        <MPPostFeedCard navigation={navigation} memberId={myMP?.id ?? null} colors={colors} />
-
-        <SectionDivider />
-
-        {/* ═══ 4b. HAVE YOUR SAY — Bill Swipe ═══ */}
+        {/* ═══ 3. HAVE YOUR SAY — Bill Swipe ═══ */}
         {currentBill && (
           <>
             <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
@@ -858,160 +602,12 @@ export function HomeScreen({ navigation }: any) {
           </>
         )}
 
-        {/* ═══ 4c. LATEST POLLING ═══ */}
-        {aggregate && aggregate.tpp_alp != null && aggregate.tpp_lnp != null && (
-          <Pressable
-            onPress={() => navigation.navigate('Polls')}
-            style={({ pressed }) => ({
-              marginHorizontal: spacing.lg,
-              marginTop: spacing.lg,
-              padding: spacing.lg,
-              backgroundColor: colors.card,
-              borderRadius: radius.md,
-              opacity: pressed ? 0.92 : 1,
-              ...elevation.sm,
-            })}
-            accessibilityLabel="View latest polling"
-            accessibilityRole="button"
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, letterSpacing: 0.5 }}>
-                LATEST FEDERAL POLLING
-              </Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 16 }}>
-              <View style={{ alignItems: 'center' }}>
-                <Text style={{ fontSize: 28, fontWeight: '700', color: '#E53935' }}>{Number(aggregate.tpp_alp).toFixed(1)}%</Text>
-                <Text style={{ fontSize: 11, color: colors.textMuted }}>ALP</Text>
-              </View>
-              <Text style={{ fontSize: 11, color: colors.textMuted }}>vs</Text>
-              <View style={{ alignItems: 'center' }}>
-                <Text style={{ fontSize: 28, fontWeight: '700', color: '#1565C0' }}>{Number(aggregate.tpp_lnp).toFixed(1)}%</Text>
-                <Text style={{ fontSize: 11, color: colors.textMuted }}>L/NP</Text>
-              </View>
-              <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                <Text style={{ fontSize: 11, color: colors.textMuted }}>
-                  {aggregate.poll_count} polls, 30-day avg
-                </Text>
-              </View>
-            </View>
-            <View style={{ flexDirection: 'row', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: spacing.sm }}>
-              <View style={{ flex: Number(aggregate.tpp_alp), backgroundColor: '#E53935' }} />
-              <View style={{ flex: Number(aggregate.tpp_lnp), backgroundColor: '#1565C0' }} />
-            </View>
-          </Pressable>
-        )}
-
-        {/* ═══ 5. CONTINUE LEARNING ═══ */}
+        {/* ═══ 4. CONTINUE LEARNING ═══ */}
         <ContinueLearningCard navigation={navigation} colors={colors} />
 
         <SectionDivider />
 
-        {/* ═══ 6. DA RADAR ═══ */}
-        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-          <Pressable
-            onPress={() => navigation.navigate('DARadar')}
-            accessibilityRole="button"
-            accessibilityLabel="View development applications near you"
-            style={({ pressed }) => ({
-              backgroundColor: colors.card,
-              borderRadius: radius.md,
-              padding: spacing.lg,
-              opacity: pressed ? 0.92 : 1,
-              ...elevation.md,
-            })}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-              <View style={{ width: 40, height: 40, borderRadius: radius.sm, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="construct" size={20} color="#1D4ED8" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>
-                  DA Radar
-                </Text>
-                <Text style={{ fontSize: 13, color: colors.textMuted }}>
-                  Development applications near you
-                </Text>
-              </View>
-              <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
-            </View>
-          </Pressable>
-        </View>
-
-        <SectionDivider />
-
-        {/* ═══ 6b. SERVICES — escape the niche ═══ */}
-        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.lg }}>
-            <View style={{ width: 3, height: 14, borderRadius: 1.5, backgroundColor: '#7C3AED' }} />
-            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 0.8, color: '#6B7280', textTransform: 'uppercase' }}>
-              SERVICES
-            </Text>
-          </View>
-
-          {/* Who Represents Me */}
-          <Pressable
-            onPress={() => navigation.navigate('MyRepresentatives')}
-            accessibilityRole="button"
-            accessibilityLabel="Find all your representatives"
-            style={({ pressed }) => ({
-              backgroundColor: colors.card,
-              borderRadius: radius.md,
-              padding: spacing.lg,
-              marginBottom: spacing.sm,
-              flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-              opacity: pressed ? 0.92 : 1,
-              ...elevation.sm,
-            })}
-          >
-            <View style={{ width: 40, height: 40, borderRadius: radius.sm, backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center' }}>
-              <Ionicons name="people" size={20} color="#00843D" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>
-                Who represents me?
-              </Text>
-              <Text style={{ fontSize: 13, color: colors.textMuted }}>
-                Federal, state & local — all from your postcode
-              </Text>
-            </View>
-            <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
-          </Pressable>
-
-          {/* Get Help — Casework */}
-          <Pressable
-            onPress={() => navigation.navigate('Casework')}
-            accessibilityRole="button"
-            accessibilityLabel="Get help from your MP"
-            style={({ pressed }) => ({
-              backgroundColor: colors.card,
-              borderRadius: radius.md,
-              padding: spacing.lg,
-              marginBottom: spacing.sm,
-              flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-              opacity: pressed ? 0.92 : 1,
-              ...elevation.sm,
-            })}
-          >
-            <View style={{ width: 40, height: 40, borderRadius: radius.sm, backgroundColor: '#FFF7ED', justifyContent: 'center', alignItems: 'center' }}>
-              <Ionicons name="hand-left" size={20} color="#EA580C" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>
-                Get help from your MP
-              </Text>
-              <Text style={{ fontSize: 13, color: colors.textMuted }}>
-                Centrelink, visas, NDIS, aged care & more
-              </Text>
-            </View>
-            <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
-          </Pressable>
-        </View>
-
-        <SectionDivider />
-
-        {/* ═══ 8. MP RECENT VOTES ═══ */}
+        {/* ═══ 5. MP RECENT VOTES ═══ */}
         {myMP && mpRecentVotes.length > 0 && (
           <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: spacing.md }}>
@@ -1096,124 +692,6 @@ export function HomeScreen({ navigation }: any) {
           </View>
         )}
 
-        {/* ═══ ASK VERITY ═══ */}
-        <Pressable
-          onPress={() => navigation.navigate('Ask')}
-          accessibilityRole="button"
-          accessibilityLabel="Ask Verity AI"
-          style={({ pressed }) => ({
-            marginHorizontal: spacing.lg, marginTop: spacing.xl,
-            backgroundColor: '#00843D', borderRadius: radius.md,
-            padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: 14,
-            opacity: pressed ? 0.92 : 1,
-            ...elevation.md,
-          })}
-        >
-          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-            <Ionicons name="sparkles" size={22} color="#fff" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Ask Verity</Text>
-            <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>Ask anything about Australian politics</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
-        </Pressable>
-
-        {/* ═══ 9. QUICK ACTIONS ═══ */}
-        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            {([
-              { icon: 'eye-outline' as const, label: 'Watchlist', screen: 'Watchlist' },
-              { icon: 'search-outline' as const, label: 'Search', screen: 'Explore' },
-              { icon: 'document-text-outline' as const, label: 'Bills', screen: 'BillList' },
-              { icon: 'hand-left-outline' as const, label: 'Get Help', screen: 'Casework' },
-            ] as const).map(item => (
-              <Pressable
-                key={item.label}
-                style={({ pressed }) => ({ alignItems: 'center', opacity: pressed ? 0.7 : 1 })}
-                onPress={() => navigation.navigate(item.screen)}
-                accessibilityRole="button"
-                accessibilityLabel={`Navigate to ${item.label}`}
-              >
-                <View style={{
-                  width: 52, height: 52, borderRadius: 16,
-                  backgroundColor: colors.surface,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  justifyContent: 'center', alignItems: 'center',
-                }}>
-                  <Ionicons name={item.icon} size={21} color={colors.text} />
-                </View>
-                <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textMuted, marginTop: spacing.sm }}>
-                  {item.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <SectionDivider />
-
-        {/* ═══ 10. NOTIFICATION NUDGE ═══ */}
-        {showNotifPrompt && (
-          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-            <LinearGradient
-              colors={['#ECFDF5', '#F0FDF4']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                borderRadius: radius.lg,
-                padding: 18,
-                flexDirection: 'row', alignItems: 'center', gap: 14,
-                borderWidth: 1, borderColor: '#A7F3D0',
-              }}
-            >
-              {/* Green circle with bell */}
-              <View style={{
-                width: 44, height: 44, borderRadius: 22,
-                backgroundColor: '#D1FAE5',
-                justifyContent: 'center', alignItems: 'center',
-              }}>
-                <Ionicons name="notifications-outline" size={22} color={colors.green} />
-              </View>
-
-              {/* Text content */}
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1A1A17', marginBottom: spacing.xs }}>
-                  {myMP
-                    ? `Get alerts when ${myMP.first_name} votes`
-                    : 'Get alerts on votes'}
-                </Text>
-                <Text style={{ fontSize: 12, color: '#374151', lineHeight: 17 }}>
-                  One push per division. No spam.
-                </Text>
-                <Pressable
-                  style={{
-                    backgroundColor: colors.green,
-                    borderRadius: radius.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm,
-                    alignSelf: 'flex-start', marginTop: spacing.md,
-                  }}
-                  onPress={enableNotifications}
-                  accessibilityRole="button"
-                  accessibilityLabel="Enable notifications"
-                >
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#ffffff' }}>Enable</Text>
-                </Pressable>
-              </View>
-
-              {/* X dismiss */}
-              <Pressable
-                onPress={dismissNotifPrompt}
-                hitSlop={10}
-                style={{ position: 'absolute', top: 10, right: 10 }}
-                accessibilityRole="button"
-                accessibilityLabel="Dismiss notification prompt"
-              >
-                <Ionicons name="close" size={18} color="#6B7280" />
-              </Pressable>
-            </LinearGradient>
-          </View>
-        )}
 
         {/* Bottom spacing */}
         <View style={{ height: 20 }} />
@@ -1284,34 +762,3 @@ function ContinueLearningCard({ navigation, colors }: { navigation: any; colors:
   );
 }
 
-const MPPostFeedCard = React.memo(function MPPostFeedCard({ navigation, memberId, colors }: { navigation: any; memberId: string | null; colors: any }) {
-  const { posts, loading } = useMPPosts(memberId, 1);
-  const post = posts[0] ?? null;
-  const { myReaction, react } = useMPPostReaction(post?.id ?? '');
-  const { user } = useUser();
-
-  if (!memberId || loading || !post) return null;
-
-  const handleReact = (type: 'agree' | 'disagree' | 'insightful') => {
-    if (!user) return; // AuthPromptSheet handled at higher level
-    react(type);
-  };
-
-  return (
-    <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-      <SectionHeader
-        color={colors.green}
-        label="FROM YOUR MP"
-        rightLabel="All posts →"
-        onRightPress={() => navigation.navigate('MemberProfile', { memberId })}
-      />
-      <MPPostCard
-        post={post}
-        myReaction={myReaction}
-        onReact={handleReact}
-        onPress={() => navigation.navigate('MPPostDetail', { post })}
-        maxLines={3}
-      />
-    </View>
-  );
-});
