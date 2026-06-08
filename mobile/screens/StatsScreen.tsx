@@ -487,17 +487,10 @@ export function StatsScreen({ navigation }: { navigation: any }) {
               </View>
             )}
 
-            {/* ── Section 4: Explore more ─────────────────── */}
+            {/* ── Section 4: Go deeper ─────────────────── */}
             <View style={{ marginBottom: SPACING.xxl }}>
-              <SectionHeader title="Explore" />
+              <SectionHeader title="Go Deeper" />
               <View style={{ gap: SPACING.md }}>
-                <HubLink
-                  icon="analytics-outline"
-                  label="Representation Index"
-                  subtitle="How well does your MP represent your electorate?"
-                  onPress={() => navigation.navigate('RepresentationIndex')}
-                  colors={colors}
-                />
                 <HubLink
                   icon="heart-outline"
                   label="Verity Match"
@@ -506,24 +499,10 @@ export function StatsScreen({ navigation }: { navigation: any }) {
                   colors={colors}
                 />
                 <HubLink
-                  icon="eye-outline"
-                  label="Watchlist"
-                  subtitle="Track MPs, bills, and topics you care about"
-                  onPress={() => navigation.navigate('Watchlist')}
-                  colors={colors}
-                />
-                <HubLink
                   icon="wallet-outline"
-                  label="Policy → Your Wallet"
+                  label="Policy Impact"
                   subtitle="How do recent bills affect your household?"
                   onPress={() => navigation.navigate('Wallet')}
-                  colors={colors}
-                />
-                <HubLink
-                  icon="flag-outline"
-                  label="The Mirror"
-                  subtitle="Predict how your MP will vote"
-                  onPress={() => navigation.navigate('MemberProfile', { memberId: myMP?.id })}
                   colors={colors}
                 />
               </View>

@@ -64,15 +64,11 @@ function StanceQuiz({
       }
 
       if (electorates.length === 1) {
-        // Single electorate — resolve MP directly
-        const { data: member } = await supabase
-          .from('members')
-          .select('id, electorate:electorates!inner(name)')
-          .eq('is_active', true)
-          .eq('chamber', 'representatives')
-          .eq('electorate.name', electorates[0])
-          .limit(1)
-          .single();
+        const { data: elec } = await supabase
+          .from('electorates').select('id').ilike('name', electorates[0]).eq('level', 'federal').limit(1).maybeSingle();
+        const { data: member } = elec ? await supabase
+          .from('members').select('id').eq('is_active', true).eq('chamber', 'house').eq('electorate_id', elec.id).limit(1).maybeSingle()
+          : { data: null };
         onComplete(member?.id ?? null);
       } else {
         setElectorateOptions(electorates);
@@ -82,14 +78,11 @@ function StanceQuiz({
 
     const selectElectorate = async (name: string) => {
       setResolving(true);
-      const { data: member } = await supabase
-        .from('members')
-        .select('id, electorate:electorates!inner(name)')
-        .eq('is_active', true)
-        .eq('chamber', 'representatives')
-        .eq('electorate.name', name)
-        .limit(1)
-        .single();
+      const { data: elec } = await supabase
+        .from('electorates').select('id').ilike('name', name).eq('level', 'federal').limit(1).maybeSingle();
+      const { data: member } = elec ? await supabase
+        .from('members').select('id').eq('is_active', true).eq('chamber', 'house').eq('electorate_id', elec.id).limit(1).maybeSingle()
+        : { data: null };
       onComplete(member?.id ?? null);
     };
 
@@ -210,14 +203,21 @@ function StanceQuiz({
         const pc = postcode.trim();
         const electorates = (postcodeMap as Record<string, string[]>)[pc];
         if (electorates?.length === 1) {
-          const { data: member } = await supabase
-            .from('members')
-            .select('id, electorate:electorates!inner(name)')
-            .eq('is_active', true)
-            .eq('chamber', 'representatives')
-            .eq('electorate.name', electorates[0])
+          const { data: elec } = await supabase
+            .from('electorates')
+            .select('id')
+            .ilike('name', electorates[0])
+            .eq('level', 'federal')
             .limit(1)
-            .single();
+            .maybeSingle();
+          const { data: member } = elec ? await supabase
+            .from('members')
+            .select('id')
+            .eq('is_active', true)
+            .eq('chamber', 'house')
+            .eq('electorate_id', elec.id)
+            .limit(1)
+            .maybeSingle() : { data: null };
           onComplete(member?.id ?? null);
         } else {
           setPhase('postcode');
