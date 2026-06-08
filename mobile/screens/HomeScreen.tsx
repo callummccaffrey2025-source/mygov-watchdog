@@ -24,8 +24,6 @@ import { useVotes } from '../hooks/useVotes';
 import { timeAgo } from '../lib/timeAgo';
 import { spacing, typography, radius, elevation, colors as tokenColors, motion } from '../theme/tokens';
 import { PressableScale, AppText, Card } from '../components/ui';
-// Legacy tokens — migrating away from these
-import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
 import AsyncStorage from '../lib/storage';
 import { hapticLight } from '../lib/haptics';
 import { HomeScreenSkeleton } from '../components/HomeScreenSkeleton';
@@ -231,7 +229,7 @@ export function HomeScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: SPACING.xl }}
+        contentContainerStyle={{ paddingBottom: spacing.xl }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00843D" colors={['#00843D']} />
         }
@@ -273,7 +271,7 @@ export function HomeScreen({ navigation }: any) {
         </View>
 
         {/* ═══ 2b. DAILY BRIEF ═══ */}
-        <View style={{ paddingHorizontal: 20, marginTop: SPACING.lg }}>
+        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.lg }}>
           {/* Daily Brief */}
           <Card elevated onPress={() => navigation.navigate('DailyBrief')}>
             <AppText variant="caption" color="accent" style={{ letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: spacing.sm }}>
@@ -356,7 +354,7 @@ export function HomeScreen({ navigation }: any) {
         <SectionDivider />
 
         {/* ═══ 3. YOUR REPRESENTATIVE ═══ */}
-        <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
           <SectionHeader
             color={colors.green}
             label="YOUR REPRESENTATIVE"
@@ -368,11 +366,11 @@ export function HomeScreen({ navigation }: any) {
             /* Empty state: set electorate */
             <View style={{
               backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
+              borderRadius: radius.md,
               padding: 18,
-              ...SHADOWS.sm,
+              ...elevation.sm,
             }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: 14 }}>
                 <View style={{
                   width: 44, height: 44, borderRadius: 22,
                   backgroundColor: '#E8F5EE',
@@ -381,19 +379,19 @@ export function HomeScreen({ navigation }: any) {
                   <Ionicons name="location-outline" size={22} color={colors.green} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>Set your electorate</Text>
-                  <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginTop: 2 }}>
+                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>Set your electorate</Text>
+                  <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>
                     Enter your postcode to find your MP
                   </Text>
                 </View>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                 <TextInput
                   style={{
-                    flex: 1, height: 44, borderRadius: BORDER_RADIUS.md,
+                    flex: 1, height: 44, borderRadius: radius.sm,
                     backgroundColor: colors.surface,
                     paddingHorizontal: 14,
-                    fontSize: FONT_SIZE.body, color: colors.text,
+                    fontSize: 15, color: colors.text,
                   }}
                   value={postcodeInput}
                   onChangeText={setPostcodeInput}
@@ -417,28 +415,28 @@ export function HomeScreen({ navigation }: any) {
                 )}
                 <Pressable
                   style={{
-                    height: 44, paddingHorizontal: 20,
+                    height: 44, paddingHorizontal: spacing.lg,
                     backgroundColor: colors.green,
-                    borderRadius: BORDER_RADIUS.md,
+                    borderRadius: radius.sm,
                     justifyContent: 'center', alignItems: 'center',
                   }}
                   onPress={handleSetPostcode}
                   accessibilityRole="button"
                   accessibilityLabel="Find MP"
                 >
-                  <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>Find MP</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#ffffff' }}>Find MP</Text>
                 </Pressable>
               </View>
             </View>
           ) : mpLoading ? (
-            <SkeletonLoader height={130} borderRadius={BORDER_RADIUS.lg} />
+            <SkeletonLoader height={130} borderRadius={radius.md} />
           ) : myMP ? (
             /* MP card */
             <View style={{
               backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg,
-              ...SHADOWS.sm,
+              borderRadius: radius.md,
+              padding: spacing.lg,
+              ...elevation.sm,
             }}>
               {/* Avatar + info */}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -459,7 +457,7 @@ export function HomeScreen({ navigation }: any) {
                     justifyContent: 'center', alignItems: 'center',
                     borderWidth: 2, borderColor: myMP.party?.colour || colors.green,
                   }}>
-                    <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: myMP.party?.colour || colors.green }}>
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: myMP.party?.colour || colors.green }}>
                       {myMP.first_name[0]}{myMP.last_name[0]}
                     </Text>
                   </View>
@@ -467,12 +465,12 @@ export function HomeScreen({ navigation }: any) {
 
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                    <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>
                       {myMP.first_name} {myMP.last_name}
                     </Text>
                     <Ionicons name="checkmark-circle" size={14} color={colors.green} />
                   </View>
-                  <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginTop: 2 }}>
+                  <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>
                     {myMP.party?.short_name || myMP.party?.abbreviation || myMP.party?.name || ''}
                     {' \u00B7 MP for '}
                     {myMP.electorate?.name ?? ''}
@@ -480,7 +478,7 @@ export function HomeScreen({ navigation }: any) {
                   {myMP.ministerial_role && (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
                       <View style={{ backgroundColor: colors.greenBg, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                        <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.semibold, color: colors.green }}>{myMP.ministerial_role}</Text>
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: colors.green }}>{myMP.ministerial_role}</Text>
                       </View>
                     </View>
                   )}
@@ -495,9 +493,9 @@ export function HomeScreen({ navigation }: any) {
                   accessibilityLabel={`View ${myMP.first_name} ${myMP.last_name}'s profile`}
                   style={{
                     flexDirection: 'row', alignItems: 'center',
-                    marginTop: SPACING.md,
+                    marginTop: spacing.md,
                     backgroundColor: lastVote.cast === 'aye' ? 'rgba(0,132,61,0.08)' : 'rgba(220,38,38,0.08)',
-                    borderRadius: BORDER_RADIUS.md,
+                    borderRadius: radius.sm,
                     paddingHorizontal: 12, paddingVertical: 10,
                   }}
                 >
@@ -508,13 +506,13 @@ export function HomeScreen({ navigation }: any) {
                   }} />
                   <View style={{ flex: 1 }}>
                     <Text style={{
-                      fontSize: 12.5, fontWeight: FONT_WEIGHT.semibold,
+                      fontSize: 12.5, fontWeight: '600',
                       color: lastVote.cast === 'aye' ? '#166534' : '#991B1B',
                     }} numberOfLines={1}>
                       Voted {lastVote.cast === 'aye' ? 'Aye' : 'No'} · {smartTruncate(lastVote.name, 30)}
                     </Text>
                     <Text style={{
-                      fontSize: FONT_SIZE.caption, marginTop: 2,
+                      fontSize: 11, marginTop: 2,
                       color: lastVote.cast === 'aye' ? 'rgba(22,101,52,0.65)' : 'rgba(153,27,27,0.65)',
                     }}>
                       Last session · {timeAgo(lastVote.date)}
@@ -535,7 +533,7 @@ export function HomeScreen({ navigation }: any) {
                 <Pressable
                   style={{
                     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                    gap: 6, height: 40, borderRadius: BORDER_RADIUS.full,
+                    gap: 6, height: 40, borderRadius: radius.pill,
                     backgroundColor: colors.green,
                   }}
                   onPress={() => requireAuth('write to your MP', () => navigation.navigate('WriteToMP', { member: myMP }))}
@@ -543,13 +541,13 @@ export function HomeScreen({ navigation }: any) {
                   accessibilityLabel="Write to MP"
                 >
                   <Ionicons name="mail-outline" size={14} color="#ffffff" />
-                  <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>Write to MP</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#ffffff' }}>Write to MP</Text>
                 </Pressable>
                 {/* View profile — outlined */}
                 <Pressable
                   style={{
                     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                    height: 40, borderRadius: BORDER_RADIUS.full,
+                    height: 40, borderRadius: radius.pill,
                     backgroundColor: colors.card,
                     borderWidth: 1, borderColor: colors.border,
                   }}
@@ -557,7 +555,7 @@ export function HomeScreen({ navigation }: any) {
                   accessibilityRole="button"
                   accessibilityLabel="View profile"
                 >
-                  <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text }}>
                     View profile {'\u2192'}
                   </Text>
                 </Pressable>
@@ -567,11 +565,11 @@ export function HomeScreen({ navigation }: any) {
             /* Fallback: electorate found but no MP */
             <View style={{
               backgroundColor: colors.surface,
-              borderRadius: BORDER_RADIUS.lg, padding: 14,
+              borderRadius: radius.md, padding: 14,
               flexDirection: 'row', alignItems: 'center', gap: 10,
             }}>
               <Ionicons name="information-circle-outline" size={18} color={colors.textMuted} />
-              <Text style={{ flex: 1, fontSize: FONT_SIZE.small, color: colors.textMuted, lineHeight: 18 }}>
+              <Text style={{ flex: 1, fontSize: 13, color: colors.textMuted, lineHeight: 18 }}>
                 {electorateResult.electorate
                   ? `${electorateResult.electorate.name} (${electorateResult.electorate.state}) \u2014 MP data loading soon.`
                   : `No electorate found for ${postcode}.`}
@@ -585,34 +583,34 @@ export function HomeScreen({ navigation }: any) {
           <Pressable
             onPress={() => navigation.navigate('Stats')}
             style={({ pressed }) => ({
-              marginHorizontal: 20,
-              marginTop: SPACING.xl,
+              marginHorizontal: spacing.lg,
+              marginTop: spacing.xl,
               backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg,
+              borderRadius: radius.md,
+              padding: spacing.lg,
               borderLeftWidth: 3,
               borderLeftColor: '#00843D',
-              ...SHADOWS.sm,
+              ...elevation.sm,
               opacity: pressed ? 0.92 : 1,
               transform: [{ scale: pressed ? 0.98 : 1 }],
             })}
             accessibilityRole="button"
             accessibilityLabel="View Verity Stats"
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm }}>
-              <View style={{ backgroundColor: '#E8F5EE', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: SPACING.sm }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
+              <View style={{ backgroundColor: '#E8F5EE', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: spacing.sm }}>
                 <Ionicons name="stats-chart" size={13} color="#00843D" />
               </View>
-              <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold, color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.6 }}>
                 Stat of the day
               </Text>
               <View style={{ flex: 1 }} />
               <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
             </View>
-            <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.bold, color: colors.text, marginBottom: 2 }}>
+            <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 2 }}>
               {statOfTheDay.headline}
             </Text>
-            <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+            <Text style={{ fontSize: 13, color: colors.textMuted }}>
               {statOfTheDay.detail}
             </Text>
           </Pressable>
@@ -620,23 +618,23 @@ export function HomeScreen({ navigation }: any) {
 
         {/* ═══ 3a2. ELECTORATE CONSENSUS ═══ */}
         {consensusItems.length > 0 && myMP && (
-          <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
             <SectionHeader color="#7C3AED" label="YOUR ELECTORATE" />
             <View style={{
-              backgroundColor: '#F5F0FF', borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg, ...SHADOWS.sm,
+              backgroundColor: '#F5F0FF', borderRadius: radius.md,
+              padding: spacing.lg, ...elevation.sm,
             }}>
-              <Text style={{ fontSize: 15, fontWeight: FONT_WEIGHT.bold, color: colors.text, marginBottom: SPACING.sm }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: spacing.sm }}>
                 How {electorateName} feels vs how {myMP.first_name} votes
               </Text>
               {consensusItems.slice(0, 3).map((item, idx) => (
                 <View key={item.issue_id} style={{
                   flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                  paddingVertical: SPACING.sm,
+                  paddingVertical: spacing.sm,
                   borderTopWidth: idx > 0 ? 0.5 : 0, borderTopColor: '#E5E0F0',
                 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: colors.text }}>{item.issue_name}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text }}>{item.issue_name}</Text>
                     <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
                       {item.electorate_agree_pct}% agree · {item.respondent_count} locals
                     </Text>
@@ -646,7 +644,7 @@ export function HomeScreen({ navigation }: any) {
                     borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4,
                   }}>
                     <Text style={{
-                      fontSize: 12, fontWeight: FONT_WEIGHT.bold,
+                      fontSize: 12, fontWeight: '700',
                       color: item.gap > 30 ? '#DC3545' : item.gap > 15 ? '#856404' : '#00843D',
                     }}>
                       {item.gap > 30 ? 'Gap' : item.gap > 15 ? 'Mixed' : 'Aligned'}
@@ -654,7 +652,7 @@ export function HomeScreen({ navigation }: any) {
                   </View>
                 </View>
               ))}
-              <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: SPACING.sm }}>
+              <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: spacing.sm }}>
                 Based on {consensusItems[0]?.respondent_count || 0}+ local responses. AEC disclosure threshold applies.
               </Text>
             </View>
@@ -663,7 +661,7 @@ export function HomeScreen({ navigation }: any) {
 
         {/* ═══ 3b. THIS AFFECTS YOU ═══ */}
         {affectsYouItems.length > 0 && (
-          <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
             <SectionHeader color="#DC3545" label="THIS AFFECTS YOU" />
             {affectsYouItems.slice(0, 3).map((item, idx) => (
               <Pressable
@@ -672,27 +670,27 @@ export function HomeScreen({ navigation }: any) {
                 accessibilityRole="button"
                 style={{
                   backgroundColor: idx === 0 ? '#FFF8E7' : colors.card,
-                  borderRadius: BORDER_RADIUS.lg,
-                  padding: SPACING.lg,
-                  marginBottom: SPACING.sm,
+                  borderRadius: radius.md,
+                  padding: spacing.lg,
+                  marginBottom: spacing.sm,
                   borderLeftWidth: 3,
                   borderLeftColor: idx === 0 ? '#DC3545' : '#F59E0B',
-                  ...SHADOWS.sm,
+                  ...elevation.sm,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <Ionicons name={item.impact_icon as any} size={16} color={idx === 0 ? '#DC3545' : '#F59E0B'} />
-                  <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: idx === 0 ? '#DC3545' : '#F59E0B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: idx === 0 ? '#DC3545' : '#F59E0B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     {item.impact_group}
                   </Text>
                   <View style={{ flex: 1 }} />
                   <View style={{ backgroundColor: item.current_status === 'introduced' ? '#E8F5EE' : '#FFF3CD', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                    <Text style={{ fontSize: 9, fontWeight: FONT_WEIGHT.bold, color: item.current_status === 'introduced' ? '#00843D' : '#856404' }}>
+                    <Text style={{ fontSize: 9, fontWeight: '700', color: item.current_status === 'introduced' ? '#00843D' : '#856404' }}>
                       {item.current_status === 'introduced' ? 'NEW' : 'IN PROGRESS'}
                     </Text>
                   </View>
                 </View>
-                <Text style={{ fontSize: 15, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 20, marginBottom: 4 }} numberOfLines={2}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, lineHeight: 20, marginBottom: 4 }} numberOfLines={2}>
                   {item.bill_title}
                 </Text>
                 <Text style={{ fontSize: 13, color: colors.textMuted, lineHeight: 18 }} numberOfLines={2}>
@@ -713,7 +711,7 @@ export function HomeScreen({ navigation }: any) {
         {/* ═══ 4b. HAVE YOUR SAY — Bill Swipe ═══ */}
         {currentBill && (
           <>
-            <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+            <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
               <SectionHeader color="#00843D" label="HAVE YOUR SAY" rightLabel={`${billsRemaining} bills`} />
               <Text style={{ fontSize: 13, color: colors.textMuted, marginBottom: 14 }}>
                 Swipe on bills currently before parliament
@@ -726,16 +724,16 @@ export function HomeScreen({ navigation }: any) {
                 accessibilityLabel={`View bill: ${currentBill.short_title ?? currentBill.title}`}
                 style={({ pressed }) => ({
                   backgroundColor: colors.card,
-                  borderRadius: BORDER_RADIUS.xl,
+                  borderRadius: radius.lg,
                   padding: 20,
-                  ...SHADOWS.md,
+                  ...elevation.md,
                   opacity: pressed ? 0.95 : 1,
                 })}
               >
                 {/* Status + chamber */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <View style={{ backgroundColor: '#E8F5EE', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-                    <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.bold, color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       {currentBill.current_status ?? 'Before Parliament'}
                     </Text>
                   </View>
@@ -747,7 +745,7 @@ export function HomeScreen({ navigation }: any) {
                 </View>
 
                 {/* Title */}
-                <Text style={{ fontSize: 18, fontWeight: FONT_WEIGHT.bold, color: colors.text, marginBottom: 8, lineHeight: 24 }}>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 8, lineHeight: 24 }}>
                   {currentBill.short_title ?? currentBill.title}
                 </Text>
 
@@ -767,7 +765,7 @@ export function HomeScreen({ navigation }: any) {
                           <Ionicons name="checkmark" size={12} color="#00843D" />
                         </View>
                         <Text style={{ flex: 1, fontSize: 12.5, color: colors.textBody, lineHeight: 17 }}>
-                          <Text style={{ fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>For: </Text>
+                          <Text style={{ fontWeight: '600', color: '#00843D' }}>For: </Text>
                           {currentBill.supporters_argument}
                         </Text>
                       </View>
@@ -778,7 +776,7 @@ export function HomeScreen({ navigation }: any) {
                           <Ionicons name="close" size={12} color="#DC2626" />
                         </View>
                         <Text style={{ flex: 1, fontSize: 12.5, color: colors.textBody, lineHeight: 17 }}>
-                          <Text style={{ fontWeight: FONT_WEIGHT.semibold, color: '#DC2626' }}>Against: </Text>
+                          <Text style={{ fontWeight: '600', color: '#DC2626' }}>Against: </Text>
                           {currentBill.critics_argument}
                         </Text>
                       </View>
@@ -811,12 +809,12 @@ export function HomeScreen({ navigation }: any) {
                     accessibilityLabel="Disagree with this bill"
                     style={{
                       flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      backgroundColor: 'rgba(220,38,38,0.08)', borderRadius: BORDER_RADIUS.full,
+                      backgroundColor: 'rgba(220,38,38,0.08)', borderRadius: radius.pill,
                       paddingVertical: 12,
                     }}
                   >
                     <Ionicons name="thumbs-down-outline" size={16} color="#DC2626" />
-                    <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: '#DC2626' }}>Disagree</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#DC2626' }}>Disagree</Text>
                   </Pressable>
 
                   <Pressable
@@ -840,18 +838,18 @@ export function HomeScreen({ navigation }: any) {
                     accessibilityLabel="Agree with this bill"
                     style={{
                       flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      backgroundColor: 'rgba(0,132,61,0.08)', borderRadius: BORDER_RADIUS.full,
+                      backgroundColor: 'rgba(0,132,61,0.08)', borderRadius: radius.pill,
                       paddingVertical: 12,
                     }}
                   >
                     <Ionicons name="thumbs-up-outline" size={16} color="#00843D" />
-                    <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>Agree</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#00843D' }}>Agree</Text>
                   </Pressable>
                 </View>
 
                 {/* Read more affordance */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14, gap: 4 }}>
-                  <Text style={{ fontSize: 13, fontWeight: FONT_WEIGHT.medium, color: colors.textMuted }}>Read more about this bill</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '500', color: colors.textMuted }}>Read more about this bill</Text>
                   <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
                 </View>
               </Pressable>
@@ -865,40 +863,40 @@ export function HomeScreen({ navigation }: any) {
           <Pressable
             onPress={() => navigation.navigate('Polls')}
             style={({ pressed }) => ({
-              marginHorizontal: 20,
-              marginTop: SPACING.lg,
-              padding: SPACING.lg,
+              marginHorizontal: spacing.lg,
+              marginTop: spacing.lg,
+              padding: spacing.lg,
               backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
+              borderRadius: radius.md,
               opacity: pressed ? 0.92 : 1,
-              ...SHADOWS.sm,
+              ...elevation.sm,
             })}
             accessibilityLabel="View latest polling"
             accessibilityRole="button"
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm }}>
-              <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold, color: colors.textMuted, letterSpacing: 0.5 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, letterSpacing: 0.5 }}>
                 LATEST FEDERAL POLLING
               </Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 16 }}>
               <View style={{ alignItems: 'center' }}>
-                <Text style={{ fontSize: 28, fontWeight: FONT_WEIGHT.bold, color: '#E53935' }}>{Number(aggregate.tpp_alp).toFixed(1)}%</Text>
-                <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>ALP</Text>
+                <Text style={{ fontSize: 28, fontWeight: '700', color: '#E53935' }}>{Number(aggregate.tpp_alp).toFixed(1)}%</Text>
+                <Text style={{ fontSize: 11, color: colors.textMuted }}>ALP</Text>
               </View>
-              <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>vs</Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted }}>vs</Text>
               <View style={{ alignItems: 'center' }}>
-                <Text style={{ fontSize: 28, fontWeight: FONT_WEIGHT.bold, color: '#1565C0' }}>{Number(aggregate.tpp_lnp).toFixed(1)}%</Text>
-                <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>L/NP</Text>
+                <Text style={{ fontSize: 28, fontWeight: '700', color: '#1565C0' }}>{Number(aggregate.tpp_lnp).toFixed(1)}%</Text>
+                <Text style={{ fontSize: 11, color: colors.textMuted }}>L/NP</Text>
               </View>
               <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
+                <Text style={{ fontSize: 11, color: colors.textMuted }}>
                   {aggregate.poll_count} polls, 30-day avg
                 </Text>
               </View>
             </View>
-            <View style={{ flexDirection: 'row', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: SPACING.sm }}>
+            <View style={{ flexDirection: 'row', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: spacing.sm }}>
               <View style={{ flex: Number(aggregate.tpp_alp), backgroundColor: '#E53935' }} />
               <View style={{ flex: Number(aggregate.tpp_lnp), backgroundColor: '#1565C0' }} />
             </View>
@@ -911,28 +909,28 @@ export function HomeScreen({ navigation }: any) {
         <SectionDivider />
 
         {/* ═══ 6. DA RADAR ═══ */}
-        <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
           <Pressable
             onPress={() => navigation.navigate('DARadar')}
             accessibilityRole="button"
             accessibilityLabel="View development applications near you"
             style={({ pressed }) => ({
               backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg,
+              borderRadius: radius.md,
+              padding: spacing.lg,
               opacity: pressed ? 0.92 : 1,
-              ...SHADOWS.md,
+              ...elevation.md,
             })}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
-              <View style={{ width: 40, height: 40, borderRadius: BORDER_RADIUS.md, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              <View style={{ width: 40, height: 40, borderRadius: radius.sm, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center' }}>
                 <Ionicons name="construct" size={20} color="#1D4ED8" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>
                   DA Radar
                 </Text>
-                <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+                <Text style={{ fontSize: 13, color: colors.textMuted }}>
                   Development applications near you
                 </Text>
               </View>
@@ -944,10 +942,10 @@ export function HomeScreen({ navigation }: any) {
         <SectionDivider />
 
         {/* ═══ 6b. SERVICES — escape the niche ═══ */}
-        <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.lg }}>
+        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.lg }}>
             <View style={{ width: 3, height: 14, borderRadius: 1.5, backgroundColor: '#7C3AED' }} />
-            <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, letterSpacing: 0.8, color: '#6B7280', textTransform: 'uppercase' }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 0.8, color: '#6B7280', textTransform: 'uppercase' }}>
               SERVICES
             </Text>
           </View>
@@ -959,22 +957,22 @@ export function HomeScreen({ navigation }: any) {
             accessibilityLabel="Find all your representatives"
             style={({ pressed }) => ({
               backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg,
-              marginBottom: SPACING.sm,
-              flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+              borderRadius: radius.md,
+              padding: spacing.lg,
+              marginBottom: spacing.sm,
+              flexDirection: 'row', alignItems: 'center', gap: spacing.md,
               opacity: pressed ? 0.92 : 1,
-              ...SHADOWS.sm,
+              ...elevation.sm,
             })}
           >
-            <View style={{ width: 40, height: 40, borderRadius: BORDER_RADIUS.md, backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ width: 40, height: 40, borderRadius: radius.sm, backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center' }}>
               <Ionicons name="people" size={20} color="#00843D" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>
                 Who represents me?
               </Text>
-              <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+              <Text style={{ fontSize: 13, color: colors.textMuted }}>
                 Federal, state & local — all from your postcode
               </Text>
             </View>
@@ -988,22 +986,22 @@ export function HomeScreen({ navigation }: any) {
             accessibilityLabel="Get help from your MP"
             style={({ pressed }) => ({
               backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg,
-              marginBottom: SPACING.sm,
-              flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+              borderRadius: radius.md,
+              padding: spacing.lg,
+              marginBottom: spacing.sm,
+              flexDirection: 'row', alignItems: 'center', gap: spacing.md,
               opacity: pressed ? 0.92 : 1,
-              ...SHADOWS.sm,
+              ...elevation.sm,
             })}
           >
-            <View style={{ width: 40, height: 40, borderRadius: BORDER_RADIUS.md, backgroundColor: '#FFF7ED', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ width: 40, height: 40, borderRadius: radius.sm, backgroundColor: '#FFF7ED', justifyContent: 'center', alignItems: 'center' }}>
               <Ionicons name="hand-left" size={20} color="#EA580C" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>
                 Get help from your MP
               </Text>
-              <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+              <Text style={{ fontSize: 13, color: colors.textMuted }}>
                 Centrelink, visas, NDIS, aged care & more
               </Text>
             </View>
@@ -1015,21 +1013,21 @@ export function HomeScreen({ navigation }: any) {
 
         {/* ═══ 8. MP RECENT VOTES ═══ */}
         {myMP && mpRecentVotes.length > 0 && (
-          <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: SPACING.md }}>
-              <Text style={{ fontSize: FONT_SIZE.title, fontWeight: '800', color: colors.text }}>
+          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: spacing.md }}>
+              <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text }}>
                 How {myMP.first_name} voted
               </Text>
               <Pressable onPress={() => navigation.navigate('MemberProfile', { member: myMP })} hitSlop={8} accessibilityRole="button" accessibilityLabel="View all votes">
-                <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold, color: colors.green }}>All votes</Text>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.green }}>All votes</Text>
               </Pressable>
             </View>
 
             <View style={{
               backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg,
-              ...SHADOWS.md,
+              borderRadius: radius.md,
+              padding: spacing.lg,
+              ...elevation.md,
             }}>
               {mpRecentVotes.map((vote, i) => {
                 const divName = vote.division ? cleanDivisionName(vote.division.name) : 'Unknown';
@@ -1049,22 +1047,22 @@ export function HomeScreen({ navigation }: any) {
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <View style={{ flex: 1, marginRight: 10 }}>
-                        <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.medium, color: '#1A1A17', lineHeight: 18 }} numberOfLines={2}>
+                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#1A1A17', lineHeight: 18 }} numberOfLines={2}>
                           {divName}
                         </Text>
-                        <Text style={{ fontSize: FONT_SIZE.caption, color: '#6B7280', marginTop: 3 }}>
+                        <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 3 }}>
                           {vote.division?.chamber === 'senate' ? 'Senate' : 'House'} · {vote.division?.date ? timeAgo(vote.division.date) : ''}
                         </Text>
                       </View>
                       {/* Aye/No pill */}
                       <View style={{
                         backgroundColor: isAye ? 'rgba(0,132,61,0.1)' : 'rgba(220,38,38,0.1)',
-                        borderRadius: BORDER_RADIUS.sm,
+                        borderRadius: radius.sm,
                         paddingHorizontal: 10, paddingVertical: 4,
-                        marginRight: SPACING.sm,
+                        marginRight: spacing.sm,
                       }}>
                         <Text style={{
-                          fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.bold, letterSpacing: 0.5,
+                          fontSize: 11, fontWeight: '700', letterSpacing: 0.5,
                           color: isAye ? '#00843D' : '#DC2626',
                         }}>
                           {isAye ? 'AYE' : 'NO'}
@@ -1104,25 +1102,25 @@ export function HomeScreen({ navigation }: any) {
           accessibilityRole="button"
           accessibilityLabel="Ask Verity AI"
           style={({ pressed }) => ({
-            marginHorizontal: 20, marginTop: SPACING.xl,
-            backgroundColor: '#00843D', borderRadius: BORDER_RADIUS.lg,
-            padding: SPACING.lg, flexDirection: 'row', alignItems: 'center', gap: 14,
+            marginHorizontal: spacing.lg, marginTop: spacing.xl,
+            backgroundColor: '#00843D', borderRadius: radius.md,
+            padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: 14,
             opacity: pressed ? 0.92 : 1,
-            ...SHADOWS.md,
+            ...elevation.md,
           })}
         >
           <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
             <Ionicons name="sparkles" size={22} color="#fff" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 16, fontWeight: FONT_WEIGHT.bold, color: '#fff' }}>Ask Verity</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Ask Verity</Text>
             <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>Ask anything about Australian politics</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.6)" />
         </Pressable>
 
         {/* ═══ 9. QUICK ACTIONS ═══ */}
-        <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             {([
               { icon: 'eye-outline' as const, label: 'Watchlist', screen: 'Watchlist' },
@@ -1146,7 +1144,7 @@ export function HomeScreen({ navigation }: any) {
                 }}>
                   <Ionicons name={item.icon} size={21} color={colors.text} />
                 </View>
-                <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.medium, color: colors.textMuted, marginTop: SPACING.sm }}>
+                <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textMuted, marginTop: spacing.sm }}>
                   {item.label}
                 </Text>
               </Pressable>
@@ -1158,13 +1156,13 @@ export function HomeScreen({ navigation }: any) {
 
         {/* ═══ 10. NOTIFICATION NUDGE ═══ */}
         {showNotifPrompt && (
-          <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
             <LinearGradient
               colors={['#ECFDF5', '#F0FDF4']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
-                borderRadius: BORDER_RADIUS.xl,
+                borderRadius: radius.lg,
                 padding: 18,
                 flexDirection: 'row', alignItems: 'center', gap: 14,
                 borderWidth: 1, borderColor: '#A7F3D0',
@@ -1181,7 +1179,7 @@ export function HomeScreen({ navigation }: any) {
 
               {/* Text content */}
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: '#1A1A17', marginBottom: SPACING.xs }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1A1A17', marginBottom: spacing.xs }}>
                   {myMP
                     ? `Get alerts when ${myMP.first_name} votes`
                     : 'Get alerts on votes'}
@@ -1192,14 +1190,14 @@ export function HomeScreen({ navigation }: any) {
                 <Pressable
                   style={{
                     backgroundColor: colors.green,
-                    borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
-                    alignSelf: 'flex-start', marginTop: SPACING.md,
+                    borderRadius: radius.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm,
+                    alignSelf: 'flex-start', marginTop: spacing.md,
                   }}
                   onPress={enableNotifications}
                   accessibilityRole="button"
                   accessibilityLabel="Enable notifications"
                 >
-                  <Text style={{ fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.bold, color: '#ffffff' }}>Enable</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#ffffff' }}>Enable</Text>
                 </Pressable>
               </View>
 
@@ -1241,31 +1239,31 @@ function ContinueLearningCard({ navigation, colors }: { navigation: any; colors:
   const progress = totalLessons > 0 ? completedLessons / totalLessons : 0;
 
   return (
-    <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+    <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
       <Pressable
         onPress={() => navigation.navigate('Learn')}
         style={({ pressed }) => ({
           backgroundColor: colors.card,
-          borderRadius: BORDER_RADIUS.lg,
-          padding: SPACING.lg,
+          borderRadius: radius.md,
+          padding: spacing.lg,
           borderWidth: 1,
           borderColor: colors.border,
           opacity: pressed ? 0.92 : 1,
-          ...SHADOWS.sm,
+          ...elevation.sm,
         })}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
           <View style={{
-            width: 40, height: 40, borderRadius: BORDER_RADIUS.md,
+            width: 40, height: 40, borderRadius: radius.sm,
             backgroundColor: colors.greenBg, alignItems: 'center', justifyContent: 'center',
           }}>
             <Ionicons name="school" size={20} color={colors.green} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: FONT_WEIGHT.semibold, color: colors.green, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: colors.green, textTransform: 'uppercase', letterSpacing: 0.6 }}>
               Continue Learning
             </Text>
-            <Text style={{ fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.bold, color: colors.text, marginTop: 1 }}>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 1 }}>
               {nextModule.title}
             </Text>
           </View>
@@ -1273,11 +1271,11 @@ function ContinueLearningCard({ navigation, colors }: { navigation: any; colors:
         </View>
 
         {/* Progress bar */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden' }}>
             <View style={{ height: '100%', width: `${progress * 100}%`, backgroundColor: colors.green, borderRadius: 2 }} />
           </View>
-          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, fontWeight: FONT_WEIGHT.medium }}>
+          <Text style={{ fontSize: 11, color: colors.textMuted, fontWeight: '500' }}>
             {completedLessons}/{totalLessons}
           </Text>
         </View>
@@ -1300,7 +1298,7 @@ const MPPostFeedCard = React.memo(function MPPostFeedCard({ navigation, memberId
   };
 
   return (
-    <View style={{ paddingHorizontal: 20, marginTop: SPACING.xl }}>
+    <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
       <SectionHeader
         color={colors.green}
         label="FROM YOUR MP"
