@@ -1,14 +1,6 @@
-import React from 'react';
-import { Pressable, PressableProps, ViewStyle, StyleProp } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
+import React, { useRef } from 'react';
+import { Pressable, PressableProps, ViewStyle, StyleProp, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { motion } from '../../theme/tokens';
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface PressableScaleProps extends Omit<PressableProps, 'style'> {
   scaleTo?: number;
@@ -17,7 +9,7 @@ interface PressableScaleProps extends Omit<PressableProps, 'style'> {
 }
 
 export function PressableScale({
-  scaleTo = motion.pressScale,
+  scaleTo = 0.97,
   haptic = true,
   onPressIn,
   onPressOut,
@@ -25,30 +17,25 @@ export function PressableScale({
   children,
   ...rest
 }: PressableScaleProps) {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  const scale = useRef(new Animated.Value(1)).current;
 
   return (
-    <AnimatedPressable
-      hitSlop={8}
-      {...rest}
-      style={[style, animatedStyle]}
-      onPressIn={(e) => {
-        scale.value = withSpring(scaleTo, motion.spring.snappy);
-        if (haptic) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-        }
-        onPressIn?.(e);
-      }}
-      onPressOut={(e) => {
-        scale.value = withSpring(1, motion.spring.snappy);
-        onPressOut?.(e);
-      }}
-    >
-      {children}
-    </AnimatedPressable>
+    <Animated.View style={[{ transform: [{ scale }] }, style as any]}>
+      <Pressable
+        hitSlop={8}
+        {...rest}
+        onPressIn={(e) => {
+          Animated.spring(scale, { toValue: scaleTo, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+          if (haptic) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+          onPressIn?.(e);
+        }}
+        onPressOut={(e) => {
+          Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+          onPressOut?.(e);
+        }}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
   );
 }
