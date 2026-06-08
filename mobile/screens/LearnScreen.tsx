@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, RefreshControl } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../context/ThemeContext';
 import { useLearnModules, LearnModule } from '../hooks/useLearnModules';
 import { LessonCard } from '../components/LessonCard';
 import { supabase } from '../lib/supabase';
 import { hapticLight } from '../lib/haptics';
-import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
+import { spacing, radius, colors as tokenColors } from '../theme/tokens';
+import { AppText } from '../components/ui/AppText';
+import { Card } from '../components/ui/Card';
+import { PressableScale } from '../components/ui/PressableScale';
+import { Skeleton } from '../components/ui/Skeleton';
 
-function TodaysQuestion({ colors }: { colors: any }) {
+function TodaysQuestion() {
   const [poll, setPoll] = useState<any>(null);
   const [voted, setVoted] = useState<string | null>(null);
 
@@ -42,49 +45,65 @@ function TodaysQuestion({ colors }: { colors: any }) {
 
   return (
     <View style={{
-      backgroundColor: '#FFF8E7', borderRadius: BORDER_RADIUS.lg,
-      padding: SPACING.lg, marginBottom: SPACING.lg,
-      borderWidth: 2, borderColor: '#F59E0B',
+      backgroundColor: tokenColors.accentMuted,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      marginBottom: spacing.lg,
+      borderWidth: 2,
+      borderColor: tokenColors.warning,
     }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: SPACING.md }}>
-        <Ionicons name="help-circle" size={20} color="#F59E0B" />
-        <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#92400E', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md }}>
+        <Ionicons name="help-circle" size={20} color={tokenColors.warning} />
+        <AppText variant="caption" style={{ fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, color: tokenColors.warning }}>
           Today's Question
-        </Text>
+        </AppText>
       </View>
-      <Text style={{ fontSize: 17, fontWeight: FONT_WEIGHT.bold, color: colors.text, lineHeight: 24, marginBottom: SPACING.md }}>
+      <AppText variant="callout" style={{ fontWeight: '700', lineHeight: 24, marginBottom: spacing.md }}>
         {poll.question}
-      </Text>
+      </AppText>
       {voted ? (
-        <View style={{ backgroundColor: '#E8F5EE', borderRadius: 10, padding: SPACING.md, alignItems: 'center' }}>
-          <Ionicons name="checkmark-circle" size={24} color="#00843D" />
-          <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.semibold, color: '#00843D', marginTop: 4 }}>Thanks for voting!</Text>
-          <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>Results shown when enough people respond</Text>
+        <View style={{
+          backgroundColor: tokenColors.accentMuted,
+          borderRadius: radius.sm,
+          padding: spacing.md,
+          alignItems: 'center',
+        }}>
+          <Ionicons name="checkmark-circle" size={24} color={tokenColors.success} />
+          <AppText variant="callout" color="success" style={{ marginTop: 4 }}>
+            Thanks for voting!
+          </AppText>
+          <AppText variant="caption" color="textMuted" style={{ marginTop: 2 }}>
+            Results shown when enough people respond
+          </AppText>
         </View>
       ) : (
-        <View style={{ gap: SPACING.sm }}>
-          <Pressable
+        <View style={{ gap: spacing.sm }}>
+          <PressableScale
             onPress={() => handleVote('a')}
-            style={({ pressed }) => ({
-              backgroundColor: pressed ? '#E8F5EE' : colors.card,
-              borderRadius: 10, padding: SPACING.md,
-              borderWidth: 1, borderColor: colors.border,
-            })}
+            style={{
+              backgroundColor: tokenColors.surface,
+              borderRadius: radius.sm,
+              padding: spacing.md,
+              borderWidth: 1,
+              borderColor: tokenColors.border,
+            }}
             accessibilityRole="button"
           >
-            <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.medium, color: colors.text }}>{poll.option_a_text}</Text>
-          </Pressable>
-          <Pressable
+            <AppText variant="callout">{poll.option_a_text}</AppText>
+          </PressableScale>
+          <PressableScale
             onPress={() => handleVote('b')}
-            style={({ pressed }) => ({
-              backgroundColor: pressed ? '#FEF3F2' : colors.card,
-              borderRadius: 10, padding: SPACING.md,
-              borderWidth: 1, borderColor: colors.border,
-            })}
+            style={{
+              backgroundColor: tokenColors.surface,
+              borderRadius: radius.sm,
+              padding: spacing.md,
+              borderWidth: 1,
+              borderColor: tokenColors.border,
+            }}
             accessibilityRole="button"
           >
-            <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.medium, color: colors.text }}>{poll.option_b_text}</Text>
-          </Pressable>
+            <AppText variant="callout">{poll.option_b_text}</AppText>
+          </PressableScale>
         </View>
       )}
     </View>
@@ -92,7 +111,6 @@ function TodaysQuestion({ colors }: { colors: any }) {
 }
 
 export function LearnScreen({ navigation }: any) {
-  const { colors } = useTheme();
   const { modules, loading, refresh } = useLearnModules();
 
   const coreModules = modules.filter(m => !m.is_current_events);
@@ -118,43 +136,64 @@ export function LearnScreen({ navigation }: any) {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.green} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.background }} edges={['top']}>
+        <View style={{ flex: 1, padding: spacing.lg, gap: spacing.lg }}>
+          <Skeleton width="50%" height={32} borderRadius={radius.sm} />
+          <Skeleton width="80%" height={18} />
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <Skeleton width="48%" height={160} borderRadius={radius.md} />
+            <Skeleton width="48%" height={160} borderRadius={radius.md} />
+          </View>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <Skeleton width="48%" height={160} borderRadius={radius.md} />
+            <Skeleton width="48%" height={160} borderRadius={radius.md} />
+          </View>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.background }} edges={['top']}>
       <FlashList
         data={coreModules}
         keyExtractor={item => item.id}
         numColumns={2}
-        contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={refresh} tintColor={colors.green} />}
+        contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxxl }}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refresh} tintColor={tokenColors.accent} />}
         ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Learn</Text>
-            <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          <View style={{ marginBottom: spacing.lg, paddingHorizontal: spacing.xs }}>
+            <AppText variant="title" style={{ letterSpacing: -0.3 }}>Learn</AppText>
+            <AppText variant="body" color="textSecondary" style={{ marginTop: spacing.xs, lineHeight: 22 }}>
               Understand how Australia is governed
-            </Text>
+            </AppText>
 
             {/* Today's Question */}
-            <TodaysQuestion colors={colors} />
+            <TodaysQuestion />
 
             {/* Progress summary */}
             {totalLessons > 0 && (
-              <View style={[styles.progressCard, { backgroundColor: colors.greenBg, borderColor: colors.border }]}>
-                <View style={styles.progressRow}>
-                  <Ionicons name="trophy-outline" size={16} color={colors.green} />
-                  <Text style={[styles.progressText, { color: colors.text }]}>
+              <View style={{
+                marginTop: spacing.lg,
+                padding: spacing.md,
+                borderRadius: radius.md,
+                borderWidth: 1,
+                backgroundColor: tokenColors.accentMuted,
+                borderColor: tokenColors.border,
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
+                  <Ionicons name="trophy-outline" size={16} color={tokenColors.accent} />
+                  <AppText variant="callout" color="textSecondary">
                     {completedLessons} of {totalLessons} lessons completed
-                  </Text>
+                  </AppText>
                 </View>
-                <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
-                  <View style={[styles.progressBarFill, { width: `${(completedLessons / totalLessons) * 100}%`, backgroundColor: colors.green }]} />
+                <View style={{ height: 4, borderRadius: 2, overflow: 'hidden', backgroundColor: tokenColors.border }}>
+                  <View style={{
+                    height: '100%',
+                    borderRadius: 2,
+                    width: `${(completedLessons / totalLessons) * 100}%`,
+                    backgroundColor: tokenColors.accent,
+                  }} />
                 </View>
               </View>
             )}
@@ -162,25 +201,26 @@ export function LearnScreen({ navigation }: any) {
         }
         renderItem={renderModulePair}
         ListEmptyComponent={
-          <View style={{ alignItems: 'center', paddingTop: SPACING.xxxl }}>
-            <Ionicons name="school-outline" size={48} color={colors.textMuted} />
-            <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.semibold, color: colors.text, marginTop: SPACING.md }}>
+          <View style={{ alignItems: 'center', paddingTop: spacing.xxxl }}>
+            <Ionicons name="school-outline" size={48} color={tokenColors.textMuted} />
+            <AppText variant="heading" style={{ marginTop: spacing.md }}>
               Lessons loading
-            </Text>
-            <Text style={{ fontSize: FONT_SIZE.body, color: colors.textMuted, marginTop: SPACING.xs, textAlign: 'center' }}>
+            </AppText>
+            <AppText variant="body" color="textMuted" center style={{ marginTop: spacing.xs }}>
               Pull to refresh if content doesn't appear.
-            </Text>
+            </AppText>
           </View>
         }
         ListFooterComponent={
           currentEvents.length > 0 ? (
-            <View style={styles.currentEventsSection}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>This Week in Parliament</Text>
+            <View style={{ paddingHorizontal: spacing.xs, marginTop: spacing.md }}>
+              <AppText variant="heading" style={{ marginBottom: spacing.md, marginTop: spacing.xl }}>
+                This Week in Parliament
+              </AppText>
               {currentEvents.map(m => (
                 <CurrentEventCard
                   key={m.id}
                   module={m}
-                  colors={colors}
                   onPress={() => handleModulePress(m)}
                 />
               ))}
@@ -192,67 +232,30 @@ export function LearnScreen({ navigation }: any) {
   );
 }
 
-function CurrentEventCard({ module, colors, onPress }: { module: LearnModule; colors: any; onPress: () => void }) {
+function CurrentEventCard({ module, onPress }: { module: LearnModule; onPress: () => void }) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.eventCard,
-        { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.92 : 1 },
-      ]}
-    >
-      <View style={styles.eventHeader}>
-        <View style={[styles.eventIcon, { backgroundColor: colors.greenBg }]}>
-          <Ionicons name="flash" size={14} color={colors.green} />
+    <Card onPress={onPress} elevated style={{ marginBottom: spacing.md }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <View style={{
+          width: 32,
+          height: 32,
+          borderRadius: radius.sm,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: tokenColors.accentMuted,
+        }}>
+          <Ionicons name="flash" size={14} color={tokenColors.accent} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.eventTitle, { color: colors.text }]}>{module.title}</Text>
+          <AppText variant="body" style={{ fontWeight: '600' }}>{module.title}</AppText>
           {module.description && (
-            <Text style={[styles.eventDesc, { color: colors.textMuted }]} numberOfLines={2}>{module.description}</Text>
+            <AppText variant="caption" color="textMuted" numberOfLines={2} style={{ marginTop: 2 }}>
+              {module.description}
+            </AppText>
           )}
         </View>
-        <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
+        <Ionicons name="arrow-forward" size={16} color={tokenColors.textMuted} />
       </View>
-    </Pressable>
+    </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  content: { padding: SPACING.lg, paddingBottom: SPACING.xxxl },
-  header: { marginBottom: SPACING.lg, paddingHorizontal: SPACING.xs },
-  title: { fontSize: FONT_SIZE.heading + 4, fontWeight: FONT_WEIGHT.bold, letterSpacing: -0.3 },
-  subtitle: { fontSize: FONT_SIZE.body, marginTop: SPACING.xs, lineHeight: 22 },
-  progressCard: {
-    marginTop: SPACING.lg,
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-    borderWidth: 1,
-  },
-  progressRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.sm },
-  progressText: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.medium },
-  progressBarBg: { height: 4, borderRadius: 2, overflow: 'hidden' },
-  progressBarFill: { height: '100%', borderRadius: 2 },
-  sectionTitle: {
-    fontSize: FONT_SIZE.subtitle,
-    fontWeight: FONT_WEIGHT.bold,
-    marginBottom: SPACING.md,
-    marginTop: SPACING.xl,
-  },
-  currentEventsSection: { paddingHorizontal: SPACING.xs, marginTop: SPACING.md },
-  eventCard: {
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    padding: SPACING.lg,
-    marginBottom: SPACING.md,
-    ...SHADOWS.sm,
-  },
-  eventHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
-  eventIcon: {
-    width: 32, height: 32, borderRadius: BORDER_RADIUS.sm,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  eventTitle: { fontSize: FONT_SIZE.body, fontWeight: FONT_WEIGHT.semibold },
-  eventDesc: { fontSize: FONT_SIZE.small, lineHeight: 18, marginTop: 2 },
-});

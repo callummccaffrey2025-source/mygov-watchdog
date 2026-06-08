@@ -39,7 +39,8 @@ import { ContradictionCard } from '../components/ContradictionCard';
 import { RebellionCard } from '../components/RebellionCard';
 import { useElectorateDemographics } from '../hooks/useElectorateDemographics';
 import { useGovernmentContracts } from '../hooks/useGovernmentContracts';
-import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
+import { spacing, radius, elevation } from '../theme/tokens';
+import { PressableScale, AppText } from '../components/ui';
 import { supabase } from '../lib/supabase';
 import { decodeHtml } from '../utils/decodeHtml';
 import { timeAgo } from '../lib/timeAgo';
@@ -246,9 +247,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
         }
       >
         {/* ───── 1. PINK HEADER ───── */}
-        <View style={{ backgroundColor: partyColour + '18', paddingBottom: SPACING.xl }}>
+        <View style={{ backgroundColor: partyColour + '18', paddingBottom: spacing.xl }}>
           {/* Nav: back + share/bookmark */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.lg }}>
             <Pressable
               onPress={() => navigation.goBack()}
               accessibilityRole="button"
@@ -257,7 +258,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
             >
               <Ionicons name="arrow-back" size={20} color={colors.text} />
             </Pressable>
-            <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <Pressable
                 onPress={handleShare}
                 hitSlop={8}
@@ -280,7 +281,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
           </View>
 
           {/* Avatar */}
-          <View style={{ alignItems: 'center', marginTop: SPACING.lg }}>
+          <View style={{ alignItems: 'center', marginTop: spacing.lg }}>
             <View style={{ borderRadius: 48, borderWidth: 3, borderColor: partyColour, overflow: 'hidden' }}>
               {member.photo_url ? (
                 <Image source={{ uri: member.photo_url }} style={{ width: 96, height: 96 }} accessibilityLabel={`Photo of ${displayName}`} />
@@ -294,7 +295,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
             </View>
 
             {/* Name + verified */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: SPACING.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.md }}>
               <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>{displayName}</Text>
               <Ionicons name="checkmark-circle" size={20} color="#1D9BF0" />
             </View>
@@ -307,11 +308,11 @@ export function MemberProfileScreen({ route, navigation }: any) {
             )}
 
             {/* Party badge */}
-            {party && <View style={{ marginTop: SPACING.sm }}><PartyBadge name={party.name} colour={party.colour} /></View>}
+            {party && <View style={{ marginTop: spacing.sm }}><PartyBadge name={party.name} colour={party.colour} /></View>}
 
             {/* Meta */}
             {member.electorate && (
-              <Text style={{ fontSize: FONT_SIZE.small, color: colors.textBody, marginTop: SPACING.xs }}>
+              <Text style={{ fontSize: 13, color: colors.textBody, marginTop: spacing.xs }}>
                 {member.electorate.name} · {member.chamber === 'senate' ? 'Senator' : 'MP'} · {member.electorate.state}
               </Text>
             )}
@@ -319,7 +320,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
         </View>
 
         {/* ───── 2. PRIMARY CTA ROW ───── */}
-        <View style={{ flexDirection: 'row', paddingHorizontal: SPACING.lg + 4, paddingVertical: SPACING.lg, gap: SPACING.md, backgroundColor: colors.background }}>
+        <View style={{ flexDirection: 'row', paddingHorizontal: spacing.lg + 4, paddingVertical: spacing.lg, gap: spacing.md, backgroundColor: colors.background }}>
           <Pressable
             onPress={() => requireAuth('follow this MP', toggleFollow)}
             accessibilityRole="button"
@@ -329,14 +330,14 @@ export function MemberProfileScreen({ route, navigation }: any) {
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: SPACING.sm,
+              gap: spacing.sm,
               backgroundColor: followingMP ? '#006B31' : '#00843D',
               borderRadius: 100,
-              paddingVertical: SPACING.md,
+              paddingVertical: spacing.md,
             }}
           >
             <Ionicons name={followingMP ? 'eye' : 'eye-outline'} size={16} color="#ffffff" />
-            <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '600', color: '#ffffff' }}>
+            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: '#ffffff' }}>
               {followingMP ? 'Watching' : 'Watch'}
             </Text>
           </Pressable>
@@ -349,16 +350,16 @@ export function MemberProfileScreen({ route, navigation }: any) {
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: SPACING.sm,
+              gap: spacing.sm,
               backgroundColor: colors.background,
               borderRadius: 100,
-              paddingVertical: SPACING.md,
+              paddingVertical: spacing.md,
               borderWidth: 1.5,
               borderColor: '#00843D',
             }}
           >
             <Ionicons name="mail-outline" size={16} color="#00843D" />
-            <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '600', color: '#00843D' }}>
+            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: '#00843D' }}>
               Write to {member.first_name}
             </Text>
           </Pressable>
@@ -371,16 +372,16 @@ export function MemberProfileScreen({ route, navigation }: any) {
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: SPACING.sm,
+              gap: spacing.sm,
               backgroundColor: colors.background,
               borderRadius: 100,
-              paddingVertical: SPACING.md,
+              paddingVertical: spacing.md,
               borderWidth: 1.5,
               borderColor: '#00843D',
             }}
           >
             <Ionicons name="git-compare-outline" size={16} color="#00843D" />
-            <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '600', color: '#00843D' }}>
+            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: '#00843D' }}>
               Match
             </Text>
           </Pressable>
@@ -388,22 +389,22 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
         {/* ───── 3. PARTICIPATION INDEX SECTION ───── */}
         {!votesLoading && (
-          <View style={{ paddingHorizontal: SPACING.lg + 4, marginBottom: SPACING.lg }}>
+          <View style={{ paddingHorizontal: spacing.lg + 4, marginBottom: spacing.lg }}>
             {/* Header */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.xs }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs }}>
               <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>Participation Index</Text>
               <Pressable onPress={handleShareParticipation} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share participation index" style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Ionicons name="share-outline" size={16} color="#00843D" />
                 <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>Share</Text>
               </Pressable>
             </View>
-            <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: SPACING.lg, lineHeight: 17 }}>
+            <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: spacing.lg, lineHeight: 17 }}>
               Parliamentary participation from public APH records. Not a judgment of effectiveness or virtue.
             </Text>
 
             {/* ───── 4. CONTEXT CARD ───── */}
             {isMinisterOrChair && (
-              <View style={{ backgroundColor: '#E7EEFF', borderRadius: 16, padding: SPACING.lg, marginBottom: SPACING.lg, flexDirection: 'row', gap: SPACING.sm }}>
+              <View style={{ backgroundColor: '#E7EEFF', borderRadius: 16, padding: spacing.lg, marginBottom: spacing.lg, flexDirection: 'row', gap: spacing.sm }}>
                 <Ionicons name="briefcase-outline" size={16} color="#4338CA" style={{ marginTop: 2 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 13, fontWeight: '700', color: '#4338CA', marginBottom: 2 }}>
@@ -421,7 +422,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
             {/* Low sample warning */}
             {participationIndex.isLowSample && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FEF3C7', borderRadius: 8, padding: 10, marginBottom: SPACING.md }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FEF3C7', borderRadius: 8, padding: 10, marginBottom: spacing.md }}>
                 <Ionicons name="information-circle" size={14} color="#D97706" />
                 <Text style={{ flex: 1, fontSize: 12, color: '#92400E' }}>
                   Small sample ({participationIndex.totalVotes} votes) — these numbers will change as more data is recorded.
@@ -448,7 +449,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{participationIndex.speechesCount} speeches · {participationIndex.questionsCount} questions</Text>
               </View>
             </View>
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: SPACING.md }}>
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: spacing.md }}>
               <View style={{ flex: 1, backgroundColor: '#F5F3EE', borderRadius: 16, padding: 14 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
                   <Ionicons name="git-branch-outline" size={12} color="#6B7280" />
@@ -498,7 +499,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
         {/* ───── 7. TAB BAR ───── */}
         <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SPACING.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.sm }}>
             {TABS.map(tab => (
               <Pressable
                 key={tab.id}
@@ -506,13 +507,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 accessibilityRole="button"
                 accessibilityLabel={`${tab.label} tab`}
                 style={{
-                  paddingVertical: SPACING.md + 2,
-                  paddingHorizontal: SPACING.lg,
+                  paddingVertical: spacing.md + 2,
+                  paddingHorizontal: spacing.lg,
                   borderBottomWidth: activeTab === tab.id ? 2 : 0,
                   borderBottomColor: activeTab === tab.id ? '#00843D' : 'transparent',
                 }}
               >
-                <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '500', color: activeTab === tab.id ? '#00843D' : colors.textMuted }}>
+                <Text style={{ fontSize: 13 + 1, fontWeight: '500', color: activeTab === tab.id ? '#00843D' : colors.textMuted }}>
                   {tab.label}
                 </Text>
               </Pressable>
@@ -521,24 +522,24 @@ export function MemberProfileScreen({ route, navigation }: any) {
         </View>
 
         {/* ───── TAB CONTENT ───── */}
-        <View style={{ padding: SPACING.lg + 4 }}>
+        <View style={{ padding: spacing.lg + 4 }}>
 
           {/* ═══════ OVERVIEW TAB ═══════ */}
           {activeTab === 'overview' && (
             <>
               {/* ───── 8. RECENT VOTES SECTION ───── */}
-              <View style={{ marginBottom: SPACING.xl }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md }}>
-                  <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text }}>Recent votes</Text>
+              <View style={{ marginBottom: spacing.xl }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
+                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>Recent votes</Text>
                   <Pressable onPress={() => setActiveTab('votes')} hitSlop={8} accessibilityRole="button" accessibilityLabel={`View all ${totalVotes} votes`}>
-                    <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: '#00843D' }}>All {totalVotes} →</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>All {totalVotes} →</Text>
                   </Pressable>
                 </View>
 
                 {votesLoading ? (
                   [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={16} style={{ marginBottom: 8 }} />)
                 ) : recentVotes.length === 0 ? (
-                  <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, textAlign: 'center', paddingVertical: SPACING.xl }}>No recent votes recorded.</Text>
+                  <Text style={{ fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingVertical: spacing.xl }}>No recent votes recorded.</Text>
                 ) : (
                   <View style={{ backgroundColor: '#F5F3EE', borderRadius: 16, overflow: 'hidden' }}>
                     {recentVotes.map((v, idx) => {
@@ -553,15 +554,15 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            paddingHorizontal: SPACING.lg,
-                            paddingVertical: SPACING.md + 2,
+                            paddingHorizontal: spacing.lg,
+                            paddingVertical: spacing.md + 2,
                             borderBottomWidth: idx < recentVotes.length - 1 ? 0.5 : 0,
                             borderBottomColor: '#E5E2DB',
                           }}
                         >
-                          <View style={{ flex: 1, marginRight: SPACING.md }}>
+                          <View style={{ flex: 1, marginRight: spacing.md }}>
                             <Text style={{ fontSize: 14.5, fontWeight: '500', color: colors.text }} numberOfLines={2}>{title}</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: 3 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 3 }}>
                               <Text style={{ fontSize: 12, color: '#9CA3AF' }}>
                                 {v.division?.date ? timeAgo(v.division.date) : ''}
                               </Text>
@@ -594,26 +595,26 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
               {/* ───── HYPOCRISY INDEX ───── */}
               {hypocrisyLoading ? (
-                <View style={{ marginBottom: SPACING.xl }}>
+                <View style={{ marginBottom: spacing.xl }}>
                   <SkeletonLoader height={200} borderRadius={16} />
                 </View>
               ) : hypocrisyData?.status === 'scored' ? (
-                <View style={{ marginBottom: SPACING.xl }}>
+                <View style={{ marginBottom: spacing.xl }}>
                   <View style={{
-                    backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
-                    overflow: 'hidden', ...SHADOWS.sm,
+                    backgroundColor: colors.card, borderRadius: radius.md,
+                    overflow: 'hidden', ...elevation.sm,
                   }}>
                     {/* Section header */}
-                    <View style={{ paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: SPACING.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8 }}>Consistency Index</Text>
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8 }}>Consistency Index</Text>
                       </View>
                       <Pressable onPress={() => setShareHypocrisy(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share Consistency Index">
                         <Ionicons name="share-outline" size={16} color={colors.textMuted} />
                       </Pressable>
                     </View>
 
-                    <View style={{ padding: SPACING.lg, alignItems: 'center' }}>
+                    <View style={{ padding: spacing.lg, alignItems: 'center' }}>
                       {/* Score */}
                       <Text style={{
                         fontSize: 48, fontWeight: '800', lineHeight: 52,
@@ -621,17 +622,17 @@ export function MemberProfileScreen({ route, navigation }: any) {
                       }}>
                         {hypocrisyData.overall_score}
                       </Text>
-                      <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: SPACING.md }}>
+                      <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: spacing.md }}>
                         #{hypocrisyData.rank_among_mps} of {hypocrisyData.total_mps_scored} MPs
                       </Text>
 
                       {/* Top 3 topics */}
                       {(hypocrisyData.top_topics ?? []).slice(0, 3).map((topic, i) => (
-                        <View key={topic.policy_id ?? i} style={{ width: '100%', marginBottom: SPACING.md }}>
+                        <View key={topic.policy_id ?? i} style={{ width: '100%', marginBottom: spacing.md }}>
                           {/* Topic pill */}
                           <View style={{ flexDirection: 'row', marginBottom: 6 }}>
                             <View style={{ backgroundColor: '#FCE4EC', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
-                              <Text style={{ fontSize: 13, fontWeight: FONT_WEIGHT.semibold, color: '#C2185B' }}>{topic.policy_name}</Text>
+                              <Text style={{ fontSize: 13, fontWeight: '600', color: '#C2185B' }}>{topic.policy_name}</Text>
                             </View>
                           </View>
 
@@ -650,7 +651,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                                 backgroundColor: '#DC3545', borderWidth: 2, borderColor: '#fff', marginLeft: -6,
                               }} />
                             </View>
-                            <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: 6 }}>
+                            <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: 6 }}>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                                 <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#2563EB' }} />
                                 <Text style={{ fontSize: 9, color: '#9CA3AF' }}>Said</Text>
@@ -665,7 +666,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                           {/* They said */}
                           {topic.speech_excerpt && (
                             <View style={{ backgroundColor: '#FFF0D6', borderRadius: 8, padding: 10, marginTop: 4 }}>
-                              <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.bold, color: '#92400E', marginBottom: 2 }}>They said:</Text>
+                              <Text style={{ fontSize: 10, fontWeight: '700', color: '#92400E', marginBottom: 2 }}>They said:</Text>
                               <Text style={{ fontSize: 12, fontStyle: 'italic', color: '#1F2937', lineHeight: 18 }} numberOfLines={2}>
                                 "{topic.speech_excerpt}"
                               </Text>
@@ -675,7 +676,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                           {/* They voted */}
                           {topic.example_vote && (
                             <View style={{ backgroundColor: '#F3F4F6', borderRadius: 8, padding: 10, marginTop: 4 }}>
-                              <Text style={{ fontSize: 10, fontWeight: FONT_WEIGHT.bold, color: '#6B7280', marginBottom: 2 }}>They voted:</Text>
+                              <Text style={{ fontSize: 10, fontWeight: '700', color: '#6B7280', marginBottom: 2 }}>They voted:</Text>
                               <Text style={{ fontSize: 12, color: '#1F2937', lineHeight: 18 }} numberOfLines={2}>
                                 {topic.example_vote.division_name}
                               </Text>
@@ -685,7 +686,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                                   borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2,
                                 }}>
                                   <Text style={{
-                                    fontSize: 11, fontWeight: FONT_WEIGHT.bold,
+                                    fontSize: 11, fontWeight: '700',
                                     color: topic.example_vote.vote === 'aye' ? '#00843D' : topic.example_vote.vote === 'no' ? '#DC3545' : '#6B7280',
                                   }}>
                                     {topic.example_vote.vote === 'aye' ? 'Aye' : topic.example_vote.vote === 'no' ? 'No' : topic.example_vote.vote}
@@ -703,26 +704,26 @@ export function MemberProfileScreen({ route, navigation }: any) {
                         onPress={() => navigation.navigate('HypocrisyDetail', { memberId: member!.id, memberName: `${member!.first_name} ${member!.last_name}` })}
                         style={{
                           backgroundColor: '#00843D', borderRadius: 20, paddingHorizontal: 20,
-                          paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: SPACING.sm,
+                          paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm,
                         }}
                         accessibilityRole="button"
                       >
-                        <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: '#fff' }}>See full breakdown</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>See full breakdown</Text>
                         <Ionicons name="arrow-forward" size={16} color="#fff" />
                       </Pressable>
                     </View>
                   </View>
                 </View>
               ) : hypocrisyData?.status === 'insufficient_data' ? (
-                <View style={{ marginBottom: SPACING.xl }}>
+                <View style={{ marginBottom: spacing.xl }}>
                   <View style={{
-                    backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
-                    padding: SPACING.lg, flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-                    ...SHADOWS.sm,
+                    backgroundColor: colors.card, borderRadius: radius.md,
+                    padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+                    ...elevation.sm,
                   }}>
                     <Ionicons name="analytics-outline" size={20} color={colors.textMuted} />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>Consistency Index</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>Consistency Index</Text>
                       <Text style={{ fontSize: 12, color: colors.textMuted, lineHeight: 18 }}>
                         Not enough data yet. {hypocrisyData.speeches_classified ?? 0} speeches classified, {hypocrisyData.votes_linked ?? 0} votes linked.
                       </Text>
@@ -739,20 +740,20 @@ export function MemberProfileScreen({ route, navigation }: any) {
               />
 
               {/* ───── 9. SECONDARY CHIPS ROW ───── */}
-              <View style={{ flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.xl }}>
+              <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.xl }}>
                 <Pressable
                   onPress={() => setShowMethodology(true)}
                   accessibilityRole="button"
                   accessibilityLabel="Read methodology"
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#E7EEFF', borderRadius: 10, paddingVertical: SPACING.md }}
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#E7EEFF', borderRadius: 10, paddingVertical: spacing.md }}
                 >
                   <Ionicons name="book-outline" size={15} color="#4F46E5" />
-                  <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: '#4F46E5' }}>Read methodology</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: '#4F46E5' }}>Read methodology</Text>
                 </Pressable>
               </View>
 
               {/* ───── 10. SOURCES FOOTER ───── */}
-              <View style={{ backgroundColor: '#F5F3EE', borderRadius: 16, padding: SPACING.lg, marginBottom: SPACING.lg }}>
+              <View style={{ backgroundColor: '#F5F3EE', borderRadius: 16, padding: spacing.lg, marginBottom: spacing.lg }}>
                 <Text style={{ fontSize: 12, color: '#6B7280', lineHeight: 18 }}>
                   Sources — Parliament of Australia · OpenAustralia · AEC
                 </Text>
@@ -767,16 +768,16 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
               {/* ───── IN THE CONVERSATION (public discourse from /last30days) ───── */}
               {discourseData && discourseData.sentiment_summary && discourseData.best_takes?.length > 0 && (
-                <View style={{ marginTop: SPACING.xl, marginBottom: SPACING.xl }}>
-                  <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>In the conversation</Text>
+                <View style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}>
+                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>In the conversation</Text>
                   <View style={{
                     backgroundColor: '#FFFBF0',
-                    borderRadius: BORDER_RADIUS.lg,
-                    padding: SPACING.lg,
-                    ...SHADOWS.sm,
+                    borderRadius: radius.md,
+                    padding: spacing.lg,
+                    ...elevation.sm,
                   }}>
                     {/* Top public reaction */}
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.md, marginBottom: SPACING.md }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.md }}>
                       <View style={{
                         width: 32, height: 32, borderRadius: 16,
                         backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center',
@@ -784,11 +785,11 @@ export function MemberProfileScreen({ route, navigation }: any) {
                         <Ionicons name="chatbubbles-outline" size={16} color="#00843D" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: FONT_SIZE.body, color: colors.text, fontStyle: 'italic', lineHeight: 21 }} numberOfLines={4}>
+                        <Text style={{ fontSize: 15, color: colors.text, fontStyle: 'italic', lineHeight: 21 }} numberOfLines={4}>
                           &ldquo;{discourseData.best_takes[0]}&rdquo;
                         </Text>
                         {discourseData.sources_searched?.length > 0 && (
-                          <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginTop: SPACING.xs }}>
+                          <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: spacing.xs }}>
                             {discourseData.sources_searched.slice(0, 3).join(', ')}
                           </Text>
                         )}
@@ -796,13 +797,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     </View>
 
                     {/* Summary line */}
-                    <Text style={{ fontSize: FONT_SIZE.small, color: colors.textBody, lineHeight: 19 }} numberOfLines={3}>
+                    <Text style={{ fontSize: 13, color: colors.textBody, lineHeight: 19 }} numberOfLines={3}>
                       {discourseData.sentiment_summary.slice(0, 200)}
                     </Text>
 
                     {/* Timestamp */}
                     {discourseUpdatedAt && (
-                      <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: SPACING.sm }}>
+                      <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: spacing.sm }}>
                         Updated {timeAgo(discourseUpdatedAt)}
                       </Text>
                     )}
@@ -819,16 +820,16 @@ export function MemberProfileScreen({ route, navigation }: any) {
               {votesLoading ? (
                 [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={8} style={{ marginBottom: 8 }} />)
               ) : votes.length === 0 ? (
-                <View style={{ alignItems: 'center', paddingVertical: SPACING.xxxl, gap: SPACING.md }}>
+                <View style={{ alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md }}>
                   <Ionicons name="document-text-outline" size={48} color={colors.textMuted} />
                   <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text }}>No voting records yet</Text>
                   <Text style={{ fontSize: 15, color: colors.textBody, textAlign: 'center' }}>Votes will appear as division data is recorded.</Text>
                 </View>
               ) : (
                 <>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, backgroundColor: colors.greenBg, borderRadius: BORDER_RADIUS.md, padding: SPACING.md, marginBottom: SPACING.md }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.greenBg, borderRadius: radius.sm, padding: spacing.md, marginBottom: spacing.md }}>
                     <Ionicons name="stats-chart" size={16} color="#00843D" />
-                    <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: colors.text }}>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text }}>
                       Voted in {totalVotes} division{totalVotes !== 1 ? 's' : ''}{totalVotes > 0 ? ` · ${Math.round((ayeCount / totalVotes) * 100)}% aye rate` : ''}
                     </Text>
                   </View>
@@ -848,9 +849,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
                   {/* Prediction accuracy banner */}
                   {predictionAccuracy.total > 0 && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md, paddingHorizontal: SPACING.sm }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md, paddingHorizontal: spacing.sm }}>
                       <Ionicons name="bulb-outline" size={14} color={colors.green} />
-                      <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted }}>
+                      <Text style={{ fontSize: 13, color: colors.textMuted }}>
                         You've predicted {predictionAccuracy.correct} of {predictionAccuracy.total} votes correctly ({predictionAccuracy.rate}%)
                       </Text>
                     </View>
@@ -867,8 +868,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     const existingPrediction = divId ? hasGuessed(divId) : null;
                     const showGuessPrompt = divId && !procedural && !existingPrediction?.was_correct;
                     return (
-                      <View key={v.id} style={{ marginBottom: SPACING.sm + 2 }}>
-                        <View style={{ borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.md, flexDirection: 'row', alignItems: 'center', gap: SPACING.md, backgroundColor: colors.card, ...SHADOWS.sm }}>
+                      <View key={v.id} style={{ marginBottom: spacing.sm + 2 }}>
+                        <View style={{ borderRadius: radius.sm + 2, padding: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.card, ...elevation.sm }}>
                           <View style={{ width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center', flexShrink: 0, backgroundColor: isAye ? colors.greenBg : isNo ? colors.redBg : colors.cardAlt }}>
                             <Ionicons
                               name={isAye ? 'checkmark' : isNo ? 'close' : 'remove'}
@@ -877,13 +878,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             />
                           </View>
                           <Pressable style={{ flex: 1 }} onPress={() => showGuessPrompt ? setGuessExpandedId(isGuessExpanded ? null : v.id) : undefined}>
-                            <Text style={procedural ? { fontSize: FONT_SIZE.small - 1, lineHeight: 17, color: colors.textMuted } : { fontSize: FONT_SIZE.small, lineHeight: 18, color: colors.text }} numberOfLines={2}>{title}</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: 2 }}>
-                              <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>
+                            <Text style={procedural ? { fontSize: 13 - 1, lineHeight: 17, color: colors.textMuted } : { fontSize: 13, lineHeight: 18, color: colors.text }} numberOfLines={2}>{title}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 2 }}>
+                              <Text style={{ fontSize: 11, color: colors.textMuted }}>
                                 {v.division?.date ? timeAgo(v.division.date) : ''}
                               </Text>
                               {v.rebelled && (
-                                <Text style={{ fontSize: 10, color: '#b45309', backgroundColor: '#fef3c7', borderRadius: BORDER_RADIUS.sm - 2, paddingHorizontal: 6, paddingVertical: 1, fontWeight: '700' }}>Crossed floor</Text>
+                                <Text style={{ fontSize: 10, color: '#b45309', backgroundColor: '#fef3c7', borderRadius: radius.sm - 2, paddingHorizontal: 6, paddingVertical: 1, fontWeight: '700' }}>Crossed floor</Text>
                               )}
                               {showGuessPrompt && !isGuessExpanded && !existingPrediction && (
                                 <Text style={{ fontSize: 10, color: '#00843D', fontWeight: '600' }}>Guess</Text>
@@ -896,13 +897,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
                               )}
                             </View>
                           </Pressable>
-                          <Pressable onPress={() => setShareVoteData(v)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share this vote" style={{ padding: SPACING.xs, marginLeft: SPACING.xs }}>
+                          <Pressable onPress={() => setShareVoteData(v)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share this vote" style={{ padding: spacing.xs, marginLeft: spacing.xs }}>
                             <Ionicons name={Platform.OS === 'ios' ? 'share-outline' : 'share-social-outline'} size={15} color="#9aabb8" />
                           </Pressable>
                         </View>
                         {/* GuessReveal expanded below the vote row */}
                         {isGuessExpanded && divId && (
-                          <View style={{ marginTop: SPACING.xs }}>
+                          <View style={{ marginTop: spacing.xs }}>
                             <GuessReveal
                               divisionId={divId}
                               divisionName={title}
@@ -928,8 +929,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     );
                   })}
                   {votes.length > visibleCount && (
-                    <Pressable onPress={() => setVisibleCount(c => c + 20)} accessibilityRole="button" accessibilityLabel={`Show ${Math.min(20, votes.length - visibleCount)} more votes`} style={{ alignItems: 'center', paddingVertical: SPACING.md, marginTop: SPACING.xs }}>
-                      <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: colors.green }}>
+                    <Pressable onPress={() => setVisibleCount(c => c + 20)} accessibilityRole="button" accessibilityLabel={`Show ${Math.min(20, votes.length - visibleCount)} more votes`} style={{ alignItems: 'center', paddingVertical: spacing.md, marginTop: spacing.xs }}>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: colors.green }}>
                         Show {Math.min(20, votes.length - visibleCount)} more votes
                       </Text>
                     </Pressable>
@@ -945,37 +946,37 @@ export function MemberProfileScreen({ route, navigation }: any) {
               {hansardLoading ? (
                 [1, 2, 3].map(i => <SkeletonLoader key={i} height={80} borderRadius={10} style={{ marginBottom: 10 }} />)
               ) : hansardEntries.length === 0 ? (
-                <View style={{ alignItems: 'center', paddingVertical: SPACING.xxxl, gap: SPACING.md }}>
+                <View style={{ alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md }}>
                   <Ionicons name="mic-outline" size={48} color={colors.textMuted} />
                   <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text }}>No recent speeches</Text>
                   <Text style={{ fontSize: 15, color: colors.textBody, textAlign: 'center' }}>Speeches appear once Hansard data is loaded for this MP.</Text>
                 </View>
               ) : (
                 <>
-                  <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '700', textTransform: 'uppercase', color: colors.textMuted, marginBottom: SPACING.md }}>Recent Speeches</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', color: colors.textMuted, marginBottom: spacing.md }}>Recent Speeches</Text>
                   {hansardEntries.map(entry => (
                     <Pressable
                       key={entry.id}
                       onPress={() => entry.source_url && Linking.openURL(entry.source_url)}
                       accessibilityRole="button"
                       accessibilityLabel={`View speech${entry.debate_topic ? `: ${entry.debate_topic}` : ''}`}
-                      style={{ borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.md + 2, marginBottom: SPACING.sm + 2, backgroundColor: colors.card, ...SHADOWS.sm }}
+                      style={{ borderRadius: radius.sm + 2, padding: spacing.md + 2, marginBottom: spacing.sm + 2, backgroundColor: colors.card, ...elevation.sm }}
                     >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.xs }}>
-                        <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: '600', color: colors.textMuted }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted }}>
                           {timeAgo(entry.date)}
                         </Text>
                         {entry.source_url && <Ionicons name="open-outline" size={13} color={colors.textMuted} />}
                       </View>
                       {entry.debate_topic ? (
-                        <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '700', color: colors.text, marginBottom: SPACING.xs }} numberOfLines={1}>{entry.debate_topic}</Text>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: spacing.xs }} numberOfLines={1}>{entry.debate_topic}</Text>
                       ) : null}
                       {entry.excerpt ? (
-                        <Text style={{ fontSize: FONT_SIZE.small - 1, lineHeight: 18, color: colors.textBody }} numberOfLines={3}>{decodeHtml(entry.excerpt)}</Text>
+                        <Text style={{ fontSize: 13 - 1, lineHeight: 18, color: colors.textBody }} numberOfLines={3}>{decodeHtml(entry.excerpt)}</Text>
                       ) : null}
                     </Pressable>
                   ))}
-                  <Text style={{ fontSize: FONT_SIZE.caption, marginTop: SPACING.lg, textAlign: 'center', color: colors.textMuted }}>Source: OpenAustralia / APH Hansard</Text>
+                  <Text style={{ fontSize: 11, marginTop: spacing.lg, textAlign: 'center', color: colors.textMuted }}>Source: OpenAustralia / APH Hansard</Text>
                 </>
               )}
             </>
@@ -986,33 +987,33 @@ export function MemberProfileScreen({ route, navigation }: any) {
           {activeTab === 'more' && (
             <>
               {/* ── About ── */}
-              <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>About</Text>
-              <View style={{ marginBottom: SPACING.xl }}>
-                <View style={{ gap: SPACING.xs }}>
-                  <Text style={{ fontSize: FONT_SIZE.small - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: SPACING.md }}>Chamber</Text>
-                  <Text style={{ fontSize: FONT_SIZE.body, color: colors.text }}>{member.chamber === 'senate' ? 'Senate' : 'House of Representatives'}</Text>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>About</Text>
+              <View style={{ marginBottom: spacing.xl }}>
+                <View style={{ gap: spacing.xs }}>
+                  <Text style={{ fontSize: 13 - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: spacing.md }}>Chamber</Text>
+                  <Text style={{ fontSize: 15, color: colors.text }}>{member.chamber === 'senate' ? 'Senate' : 'House of Representatives'}</Text>
                   {member.electorate && (
                     <>
-                      <Text style={{ fontSize: FONT_SIZE.small - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: SPACING.md }}>Electorate</Text>
-                      <Text style={{ fontSize: FONT_SIZE.body, color: colors.text }}>{member.electorate.name}, {member.electorate.state}</Text>
+                      <Text style={{ fontSize: 13 - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: spacing.md }}>Electorate</Text>
+                      <Text style={{ fontSize: 15, color: colors.text }}>{member.electorate.name}, {member.electorate.state}</Text>
                     </>
                   )}
                   {member.ministerial_role && (
                     <>
-                      <Text style={{ fontSize: FONT_SIZE.small - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: SPACING.md }}>Current Role</Text>
-                      <Text style={{ fontSize: FONT_SIZE.body, color: colors.text }}>{member.ministerial_role}</Text>
+                      <Text style={{ fontSize: 13 - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: spacing.md }}>Current Role</Text>
+                      <Text style={{ fontSize: 15, color: colors.text }}>{member.ministerial_role}</Text>
                     </>
                   )}
                   {member.email && (
                     <>
-                      <Text style={{ fontSize: FONT_SIZE.small - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: SPACING.md }}>Email</Text>
-                      <Text style={{ fontSize: FONT_SIZE.body, color: colors.green }} onPress={() => Linking.openURL(`mailto:${member.email}`)}>{member.email}</Text>
+                      <Text style={{ fontSize: 13 - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: spacing.md }}>Email</Text>
+                      <Text style={{ fontSize: 15, color: colors.green }} onPress={() => Linking.openURL(`mailto:${member.email}`)}>{member.email}</Text>
                     </>
                   )}
                   {member.phone && (
                     <>
-                      <Text style={{ fontSize: FONT_SIZE.small - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: SPACING.md }}>Phone</Text>
-                      <Text style={{ fontSize: FONT_SIZE.body, color: colors.text }}>{member.phone}</Text>
+                      <Text style={{ fontSize: 13 - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: spacing.md }}>Phone</Text>
+                      <Text style={{ fontSize: 15, color: colors.text }}>{member.phone}</Text>
                     </>
                   )}
                 </View>
@@ -1022,19 +1023,19 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   <SkeletonLoader height={20} borderRadius={4} style={{ marginTop: 16 }} />
                 ) : committees.length > 0 ? (
                   <>
-                    <Text style={{ fontSize: FONT_SIZE.small - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: SPACING.lg }}>Current Committees</Text>
+                    <Text style={{ fontSize: 13 - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: spacing.lg }}>Current Committees</Text>
                     {committees.map(c => (
-                      <View key={c.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: SPACING.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-                        <View style={{ flex: 1, marginRight: SPACING.sm }}>
-                          <Text style={{ fontSize: FONT_SIZE.small, lineHeight: 18, color: colors.text }}>{c.committee_name}</Text>
+                      <View key={c.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                        <View style={{ flex: 1, marginRight: spacing.sm }}>
+                          <Text style={{ fontSize: 13, lineHeight: 18, color: colors.text }}>{c.committee_name}</Text>
                           {c.committee_type && (
-                            <Text style={{ fontSize: FONT_SIZE.caption, marginTop: 1, color: colors.textMuted }}>
+                            <Text style={{ fontSize: 11, marginTop: 1, color: colors.textMuted }}>
                               {c.committee_type.charAt(0).toUpperCase() + c.committee_type.slice(1)}
                             </Text>
                           )}
                         </View>
                         {c.role !== 'member' && (
-                          <View style={{ backgroundColor: '#e8f5ee', borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 3 }}>
+                          <View style={{ backgroundColor: '#e8f5ee', borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 3 }}>
                             <Text style={{ fontSize: 10, fontWeight: '700', color: '#00843D' }}>
                               {c.role.charAt(0).toUpperCase() + c.role.slice(1)}
                             </Text>
@@ -1048,11 +1049,11 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
               {/* ── Donations & Voting ── */}
               {moneyVoteLinks.length > 0 && (
-                <View style={{ marginBottom: SPACING.xl }}>
-                  <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm }}>
+                <View style={{ marginBottom: spacing.xl }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: spacing.sm }}>
                     Donations & Voting
                   </Text>
-                  <Text style={{ fontSize: FONT_SIZE.small, color: colors.textMuted, marginBottom: SPACING.md, lineHeight: 18 }}>
+                  <Text style={{ fontSize: 13, color: colors.textMuted, marginBottom: spacing.md, lineHeight: 18 }}>
                     Industry donors and related legislation votes. Correlation, not causation.
                   </Text>
                   {moneyVoteLinks.map((link, idx) => {
@@ -1060,16 +1061,16 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     const isNo = link.vote_cast === 'no';
                     return (
                       <View key={idx} style={{
-                        backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
-                        padding: SPACING.md, marginBottom: SPACING.sm,
-                        ...SHADOWS.sm,
+                        backgroundColor: colors.card, borderRadius: radius.md,
+                        padding: spacing.md, marginBottom: spacing.sm,
+                        ...elevation.sm,
                       }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <Text style={{ fontSize: 14, fontWeight: FONT_WEIGHT.bold, color: colors.text, flex: 1 }} numberOfLines={1}>
+                          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text, flex: 1 }} numberOfLines={1}>
                             {link.donor_name}
                           </Text>
                           <View style={{ backgroundColor: colors.surface, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2 }}>
-                            <Text style={{ fontSize: 12, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text }}>
                               ${link.total_donated >= 1000 ? `${(link.total_donated / 1000).toFixed(0)}k` : link.total_donated.toLocaleString()}
                             </Text>
                           </View>
@@ -1077,7 +1078,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                         <Text style={{ fontSize: 11, color: colors.textMuted, marginBottom: 6 }}>
                           {link.donor_industry} donor
                         </Text>
-                        <View style={{ backgroundColor: colors.card, borderRadius: 8, padding: SPACING.sm }}>
+                        <View style={{ backgroundColor: colors.card, borderRadius: 8, padding: spacing.sm }}>
                           <Text style={{ fontSize: 12, color: colors.text, lineHeight: 18 }} numberOfLines={2}>
                             {link.related_bill_title}
                           </Text>
@@ -1087,7 +1088,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                               borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2,
                             }}>
                               <Text style={{
-                                fontSize: 11, fontWeight: FONT_WEIGHT.bold,
+                                fontSize: 11, fontWeight: '700',
                                 color: isAye ? '#00843D' : isNo ? '#DC3545' : '#6B7280',
                               }}>
                                 Voted {isAye ? 'Aye' : isNo ? 'No' : link.vote_cast}
@@ -1103,25 +1104,25 @@ export function MemberProfileScreen({ route, navigation }: any) {
               )}
 
               {/* ── Funding ── */}
-              <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>Funding</Text>
-              <View style={{ marginBottom: SPACING.xl }}>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>Funding</Text>
+              <View style={{ marginBottom: spacing.xl }}>
                 {/* Funding sub-toggle */}
-                <View style={{ flexDirection: 'row', borderRadius: BORDER_RADIUS.md, padding: 3, marginBottom: SPACING.lg, backgroundColor: colors.cardAlt }}>
+                <View style={{ flexDirection: 'row', borderRadius: radius.sm, padding: 3, marginBottom: spacing.lg, backgroundColor: colors.cardAlt }}>
                   <Pressable
                     onPress={() => setFundingView('party')}
                     accessibilityRole="button"
                     accessibilityLabel="Show party funding"
-                    style={{ flex: 1, paddingVertical: SPACING.sm, alignItems: 'center', borderRadius: BORDER_RADIUS.sm + 2, ...(fundingView === 'party' ? { backgroundColor: colors.card, ...SHADOWS.sm } : {}) }}
+                    style={{ flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderRadius: radius.sm + 2, ...(fundingView === 'party' ? { backgroundColor: colors.card, ...elevation.sm } : {}) }}
                   >
-                    <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: fundingView === 'party' ? colors.text : colors.textMuted }}>Party Funding</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: fundingView === 'party' ? colors.text : colors.textMuted }}>Party Funding</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => setFundingView('personal')}
                     accessibilityRole="button"
                     accessibilityLabel="Show personal donations"
-                    style={{ flex: 1, paddingVertical: SPACING.sm, alignItems: 'center', borderRadius: BORDER_RADIUS.sm + 2, ...(fundingView === 'personal' ? { backgroundColor: colors.card, ...SHADOWS.sm } : {}) }}
+                    style={{ flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderRadius: radius.sm + 2, ...(fundingView === 'personal' ? { backgroundColor: colors.card, ...elevation.sm } : {}) }}
                   >
-                    <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: fundingView === 'personal' ? colors.text : colors.textMuted }}>Personal Donations</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: fundingView === 'personal' ? colors.text : colors.textMuted }}>Personal Donations</Text>
                   </Pressable>
                 </View>
 
@@ -1130,30 +1131,30 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={8} style={{ marginBottom: 8 }} />)
                   ) : (
                     <View>
-                      <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '700', textTransform: 'uppercase', color: colors.textMuted, marginBottom: SPACING.md }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', color: colors.textMuted, marginBottom: spacing.md }}>
                         Party donations — {member.party?.short_name || member.party?.name || ''}
                       </Text>
                       {donations.length === 0 ? (
-                        <Text style={{ textAlign: 'center', fontSize: FONT_SIZE.small + 1, marginTop: SPACING.lg + 4, color: colors.textMuted }}>No donation data available.</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13 + 1, marginTop: spacing.lg + 4, color: colors.textMuted }}>No donation data available.</Text>
                       ) : (
                         <>
                           {donations.map(d => (
-                            <View key={d.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: SPACING.sm + 2, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-                              <View style={{ flex: 1, marginRight: SPACING.sm + 2 }}>
-                                <Text style={{ fontSize: FONT_SIZE.small, lineHeight: 18, color: colors.text }} numberOfLines={2}>{d.donor_name}</Text>
-                                <Text style={{ fontSize: FONT_SIZE.caption, marginTop: 2, color: colors.textMuted }}>{d.financial_year}</Text>
+                            <View key={d.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm + 2, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                              <View style={{ flex: 1, marginRight: spacing.sm + 2 }}>
+                                <Text style={{ fontSize: 13, lineHeight: 18, color: colors.text }} numberOfLines={2}>{d.donor_name}</Text>
+                                <Text style={{ fontSize: 11, marginTop: 2, color: colors.textMuted }}>{d.financial_year}</Text>
                               </View>
-                              <View style={{ alignItems: 'flex-end', gap: SPACING.xs }}>
-                                <View style={{ borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 3, backgroundColor: d.donor_type === 'union' ? '#e8f0fe' : d.donor_type === 'corporation' ? colors.cardAlt : colors.greenBg }}>
+                              <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
+                                <View style={{ borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: d.donor_type === 'union' ? '#e8f0fe' : d.donor_type === 'corporation' ? colors.cardAlt : colors.greenBg }}>
                                   <Text style={{ fontSize: 10, fontWeight: '700', color: d.donor_type === 'union' ? '#0066CC' : d.donor_type === 'corporation' ? colors.textBody : '#00843D' }}>
                                     {DONOR_TYPE_LABELS[d.donor_type]}
                                   </Text>
                                 </View>
-                                <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '700', color: colors.text }}>${Number(d.amount).toLocaleString('en-AU')}</Text>
+                                <Text style={{ fontSize: 13 + 1, fontWeight: '700', color: colors.text }}>${Number(d.amount).toLocaleString('en-AU')}</Text>
                               </View>
                             </View>
                           ))}
-                          <Text style={{ fontSize: FONT_SIZE.caption, marginTop: SPACING.lg, textAlign: 'center', color: colors.textMuted }}>
+                          <Text style={{ fontSize: 11, marginTop: spacing.lg, textAlign: 'center', color: colors.textMuted }}>
                             Total declared: ${totalAmount.toLocaleString('en-AU')} · Source: AEC
                           </Text>
                         </>
@@ -1165,36 +1166,36 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={8} style={{ marginBottom: 8 }} />)
                   ) : (
                     <View>
-                      <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '700', textTransform: 'uppercase', color: colors.textMuted, marginBottom: SPACING.md }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', color: colors.textMuted, marginBottom: spacing.md }}>
                         Donations to {member.first_name} {member.last_name}
                       </Text>
                       {indDonations.length === 0 ? (
-                        <View style={{ alignItems: 'center', paddingVertical: SPACING.xl, gap: SPACING.sm }}>
+                        <View style={{ alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.sm }}>
                           <Ionicons name="receipt-outline" size={24} color={colors.borderStrong} />
-                          <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '600', color: colors.textMuted }}>No personal donation records found.</Text>
-                          <Text style={{ fontSize: FONT_SIZE.small - 1, textAlign: 'center', lineHeight: 17, paddingHorizontal: SPACING.sm, color: colors.textMuted }}>
+                          <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: colors.textMuted }}>No personal donation records found.</Text>
+                          <Text style={{ fontSize: 13 - 1, textAlign: 'center', lineHeight: 17, paddingHorizontal: spacing.sm, color: colors.textMuted }}>
                             Most donations are made directly to parties. Individual disclosures appear when donors report donations to a specific candidate or MP.
                           </Text>
                         </View>
                       ) : (
                         <>
                           {indDonations.map(d => (
-                            <View key={d.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: SPACING.sm + 2, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-                              <View style={{ flex: 1, marginRight: SPACING.sm + 2 }}>
-                                <Text style={{ fontSize: FONT_SIZE.small, lineHeight: 18, color: colors.text }} numberOfLines={2}>{d.donor_name}</Text>
-                                <Text style={{ fontSize: FONT_SIZE.caption, marginTop: 2, color: colors.textMuted }}>{d.financial_year}</Text>
+                            <View key={d.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm + 2, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                              <View style={{ flex: 1, marginRight: spacing.sm + 2 }}>
+                                <Text style={{ fontSize: 13, lineHeight: 18, color: colors.text }} numberOfLines={2}>{d.donor_name}</Text>
+                                <Text style={{ fontSize: 11, marginTop: 2, color: colors.textMuted }}>{d.financial_year}</Text>
                               </View>
-                              <View style={{ alignItems: 'flex-end', gap: SPACING.xs }}>
-                                <View style={{ borderRadius: BORDER_RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 3, backgroundColor: d.donor_type === 'union' ? '#e8f0fe' : d.donor_type === 'corporation' ? colors.cardAlt : colors.greenBg }}>
+                              <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
+                                <View style={{ borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: d.donor_type === 'union' ? '#e8f0fe' : d.donor_type === 'corporation' ? colors.cardAlt : colors.greenBg }}>
                                   <Text style={{ fontSize: 10, fontWeight: '700', color: d.donor_type === 'union' ? '#0066CC' : d.donor_type === 'corporation' ? colors.textBody : '#00843D' }}>
                                     {DONOR_TYPE_LABELS[d.donor_type ?? ''] ?? (d.donor_type || 'Other')}
                                   </Text>
                                 </View>
-                                <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '700', color: colors.text }}>${Number(d.amount).toLocaleString('en-AU')}</Text>
+                                <Text style={{ fontSize: 13 + 1, fontWeight: '700', color: colors.text }}>${Number(d.amount).toLocaleString('en-AU')}</Text>
                               </View>
                             </View>
                           ))}
-                          <Text style={{ fontSize: FONT_SIZE.caption, marginTop: SPACING.lg, textAlign: 'center', color: colors.textMuted }}>
+                          <Text style={{ fontSize: 11, marginTop: spacing.lg, textAlign: 'center', color: colors.textMuted }}>
                             Total declared: ${indTotal.toLocaleString('en-AU')} · Source: AEC
                           </Text>
                         </>
@@ -1259,12 +1260,12 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   }
 
                   return (
-                    <View style={{ marginTop: SPACING.xl }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: SPACING.lg }}>
+                    <View style={{ marginTop: spacing.xl }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.lg }}>
                         <Ionicons name="git-compare-outline" size={18} color="#4338CA" />
                         <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>Donations vs Voting</Text>
                       </View>
-                      <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 19, marginBottom: SPACING.lg }}>
+                      <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 19, marginBottom: spacing.lg }}>
                         Showing how {member.first_name} {member.last_name} voted on bills related to their donors' industries.
                       </Text>
 
@@ -1325,15 +1326,15 @@ export function MemberProfileScreen({ route, navigation }: any) {
               </View>
 
               {/* ── Registered Interests ── */}
-              <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>Registered Interests</Text>
-              <View style={{ marginBottom: SPACING.xl }}>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>Registered Interests</Text>
+              <View style={{ marginBottom: spacing.xl }}>
                 {interestsLoading ? (
                   [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={10} style={{ marginBottom: 10 }} />)
                 ) : allInterests.length === 0 ? (
-                  <View style={{ alignItems: 'center', paddingVertical: SPACING.xl, gap: SPACING.sm }}>
+                  <View style={{ alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.sm }}>
                     <Ionicons name="document-text-outline" size={28} color={colors.borderStrong} />
-                    <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '600', color: colors.textMuted }}>No registered interests on file.</Text>
-                    <Text style={{ fontSize: FONT_SIZE.small - 1, textAlign: 'center', lineHeight: 17, paddingHorizontal: SPACING.sm, color: colors.textMuted }}>
+                    <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: colors.textMuted }}>No registered interests on file.</Text>
+                    <Text style={{ fontSize: 13 - 1, textAlign: 'center', lineHeight: 17, paddingHorizontal: spacing.sm, color: colors.textMuted }}>
                       {member.chamber === 'house'
                         ? 'House of Representatives interest data is sourced from PDF registers and is not yet available for this member.'
                         : 'Interest declarations will appear once filed with the Senate.'}
@@ -1341,11 +1342,11 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   </View>
                 ) : (
                   <>
-                    <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '700', textTransform: 'uppercase', color: colors.textMuted, marginBottom: SPACING.md }}>
+                    <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', color: colors.textMuted, marginBottom: spacing.md }}>
                       Declared Financial Interests ({allInterests.length})
                     </Text>
                     {Object.entries(interestsGrouped).map(([category, items]) => (
-                      <View key={category} style={{ marginBottom: SPACING.md }}>
+                      <View key={category} style={{ marginBottom: spacing.md }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                           <Ionicons
                             name={
@@ -1362,13 +1363,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             size={15}
                             color={colors.green}
                           />
-                          <Text style={{ fontSize: FONT_SIZE.small, fontWeight: '600', color: colors.text }}>
+                          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text }}>
                             {category} ({items.length})
                           </Text>
                         </View>
                         {items.map(item => (
-                          <View key={item.id} style={{ borderRadius: BORDER_RADIUS.md + 2, padding: SPACING.md + 2, marginBottom: 6, backgroundColor: colors.card, ...SHADOWS.sm }}>
-                            <Text style={{ fontSize: FONT_SIZE.small, color: colors.textBody, lineHeight: 18 }}>
+                          <View key={item.id} style={{ borderRadius: radius.sm + 2, padding: spacing.md + 2, marginBottom: 6, backgroundColor: colors.card, ...elevation.sm }}>
+                            <Text style={{ fontSize: 13, color: colors.textBody, lineHeight: 18 }}>
                               {decodeHtml(item.description)}
                             </Text>
                           </View>
@@ -1377,13 +1378,13 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     ))}
                     {allInterests[0]?.source_url && (
                       <Pressable onPress={() => Linking.openURL(allInterests[0].source_url!)} accessibilityRole="button" accessibilityLabel="View Senate Register of Interests source">
-                        <Text style={{ fontSize: FONT_SIZE.caption, marginTop: SPACING.lg, textAlign: 'center', color: colors.green }}>
+                        <Text style={{ fontSize: 11, marginTop: spacing.lg, textAlign: 'center', color: colors.green }}>
                           Source: Senate Register of Interests
                         </Text>
                       </Pressable>
                     )}
                     {allInterests[0]?.date_registered && (
-                      <Text style={{ fontSize: FONT_SIZE.caption, textAlign: 'center', color: colors.textMuted, marginTop: 4 }}>
+                      <Text style={{ fontSize: 11, textAlign: 'center', color: colors.textMuted, marginTop: 4 }}>
                         Last updated: {allInterests[0].date_registered}
                       </Text>
                     )}
@@ -1394,47 +1395,47 @@ export function MemberProfileScreen({ route, navigation }: any) {
               {/* ── Demographics ── */}
               {demographics && member.electorate && (
                 <>
-                  <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>
+                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>
                     {member.electorate.name} Demographics
                   </Text>
-                  <View style={{ marginBottom: SPACING.xl }}>
-                    <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginBottom: SPACING.sm }}>Census 2021</Text>
+                  <View style={{ marginBottom: spacing.xl }}>
+                    <Text style={{ fontSize: 11, color: colors.textMuted, marginBottom: spacing.sm }}>Census 2021</Text>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                       {demographics.median_household_income_weekly != null && (
                         <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, minWidth: '45%', flex: 1 }}>
-                          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Median Household Income</Text>
-                          <Text style={{ fontSize: FONT_SIZE.body, fontWeight: '700', color: colors.text }}>${Math.round(demographics.median_household_income_weekly * 52).toLocaleString()}/yr</Text>
+                          <Text style={{ fontSize: 11, color: colors.textMuted }}>Median Household Income</Text>
+                          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>${Math.round(demographics.median_household_income_weekly * 52).toLocaleString()}/yr</Text>
                         </View>
                       )}
                       {demographics.median_age != null && (
                         <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, minWidth: '45%', flex: 1 }}>
-                          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Median Age</Text>
-                          <Text style={{ fontSize: FONT_SIZE.body, fontWeight: '700', color: colors.text }}>{demographics.median_age}</Text>
+                          <Text style={{ fontSize: 11, color: colors.textMuted }}>Median Age</Text>
+                          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>{demographics.median_age}</Text>
                         </View>
                       )}
                       {demographics.median_rent_weekly != null && (
                         <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, minWidth: '45%', flex: 1 }}>
-                          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Median Rent</Text>
-                          <Text style={{ fontSize: FONT_SIZE.body, fontWeight: '700', color: colors.text }}>${demographics.median_rent_weekly}/wk</Text>
+                          <Text style={{ fontSize: 11, color: colors.textMuted }}>Median Rent</Text>
+                          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>${demographics.median_rent_weekly}/wk</Text>
                         </View>
                       )}
                       {demographics.pct_renting != null && (
                         <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, minWidth: '45%', flex: 1 }}>
-                          <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Renters</Text>
-                          <Text style={{ fontSize: FONT_SIZE.body, fontWeight: '700', color: colors.text }}>{demographics.pct_renting}%</Text>
+                          <Text style={{ fontSize: 11, color: colors.textMuted }}>Renters</Text>
+                          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>{demographics.pct_renting}%</Text>
                         </View>
                       )}
                     </View>
                     {demographics.top_industries && demographics.top_industries.length > 0 && (
                       <View style={{ marginTop: 10 }}>
-                        <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginBottom: 4 }}>Top Industries</Text>
+                        <Text style={{ fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Top Industries</Text>
                         {demographics.top_industries.slice(0, 3).map((ind: any, idx: number) => (
                           <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
                             <View style={{ flex: 1 }}>
-                              <Text style={{ fontSize: FONT_SIZE.caption, color: colors.text }}>{ind.name}</Text>
+                              <Text style={{ fontSize: 11, color: colors.text }}>{ind.name}</Text>
                             </View>
                             <View style={{ backgroundColor: colors.green + '22', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1 }}>
-                              <Text style={{ fontSize: FONT_SIZE.caption, fontWeight: '600', color: colors.green }}>{ind.pct}%</Text>
+                              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.green }}>{ind.pct}%</Text>
                             </View>
                           </View>
                         ))}
@@ -1447,14 +1448,14 @@ export function MemberProfileScreen({ route, navigation }: any) {
               {/* ── Government Contracts ── */}
               {contractSummary.contract_count > 0 && member.electorate && (
                 <>
-                  <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>
+                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>
                     Federal Contracts in {member.electorate.name}
                   </Text>
-                  <View style={{ marginBottom: SPACING.xl }}>
+                  <View style={{ marginBottom: spacing.xl }}>
                     <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
                       <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, flex: 1 }}>
-                        <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Total Value (30d)</Text>
-                        <Text style={{ fontSize: FONT_SIZE.body, fontWeight: '700', color: colors.text }}>
+                        <Text style={{ fontSize: 11, color: colors.textMuted }}>Total Value (30d)</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>
                           ${contractSummary.total_value >= 1000000
                             ? `${(contractSummary.total_value / 1000000).toFixed(1)}M`
                             : contractSummary.total_value >= 1000
@@ -1463,21 +1464,21 @@ export function MemberProfileScreen({ route, navigation }: any) {
                         </Text>
                       </View>
                       <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, flex: 1 }}>
-                        <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted }}>Contracts</Text>
-                        <Text style={{ fontSize: FONT_SIZE.body, fontWeight: '700', color: colors.text }}>{contractSummary.contract_count}</Text>
+                        <Text style={{ fontSize: 11, color: colors.textMuted }}>Contracts</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>{contractSummary.contract_count}</Text>
                       </View>
                     </View>
                     {contractSummary.top_agencies.length > 0 && (
                       <>
-                        <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginBottom: 4 }}>Top Agencies</Text>
+                        <Text style={{ fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Top Agencies</Text>
                         {contractSummary.top_agencies.slice(0, 3).map((a: any, idx: number) => (
-                          <Text key={idx} style={{ fontSize: FONT_SIZE.caption, color: colors.textBody, marginBottom: 2 }}>
+                          <Text key={idx} style={{ fontSize: 11, color: colors.textBody, marginBottom: 2 }}>
                             {a.agency} ({a.count})
                           </Text>
                         ))}
                       </>
                     )}
-                    <Text style={{ fontSize: FONT_SIZE.caption, color: colors.textMuted, marginTop: 6, fontStyle: 'italic' }}>
+                    <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 6, fontStyle: 'italic' }}>
                       Source: AusTender. Contracts linked by supplier postcode.
                     </Text>
                   </View>
@@ -1485,15 +1486,15 @@ export function MemberProfileScreen({ route, navigation }: any) {
               )}
 
               {/* ── Watchlist / Contradictions ── */}
-              <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginBottom: SPACING.md }}>Watchlist</Text>
-              <View style={{ marginBottom: SPACING.xl }}>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>Watchlist</Text>
+              <View style={{ marginBottom: spacing.xl }}>
                 {contradictionsLoading ? (
                   [1, 2, 3].map(i => <SkeletonLoader key={i} height={100} borderRadius={14} style={{ marginBottom: 10 }} />)
                 ) : contradictions.length === 0 ? (
-                  <View style={{ alignItems: 'center', paddingVertical: SPACING.xl, gap: SPACING.sm }}>
+                  <View style={{ alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.sm }}>
                     <Ionicons name="shield-checkmark-outline" size={28} color={colors.borderStrong} />
-                    <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: '600', color: colors.textMuted }}>No contradictions found</Text>
-                    <Text style={{ fontSize: FONT_SIZE.small - 1, textAlign: 'center', lineHeight: 17, paddingHorizontal: SPACING.sm, color: colors.textMuted }}>
+                    <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: colors.textMuted }}>No contradictions found</Text>
+                    <Text style={{ fontSize: 13 - 1, textAlign: 'center', lineHeight: 17, paddingHorizontal: spacing.sm, color: colors.textMuted }}>
                       Verity monitors this MP's statements against their parliamentary record.
                     </Text>
                   </View>

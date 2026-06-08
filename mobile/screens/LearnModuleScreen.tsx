@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../context/ThemeContext';
 import { useUser } from '../context/UserContext';
 import { supabase } from '../lib/supabase';
 import AsyncStorage from '../lib/storage';
-import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS } from '../constants/design';
+import { spacing, radius, colors as tokenColors } from '../theme/tokens';
+import { AppText } from '../components/ui/AppText';
+import { PressableScale } from '../components/ui/PressableScale';
+import { Skeleton } from '../components/ui/Skeleton';
 
 interface LessonItem {
   id: string;
@@ -19,7 +21,6 @@ interface LessonItem {
 
 export function LearnModuleScreen({ navigation, route }: any) {
   const { moduleId, title } = route.params;
-  const { colors } = useTheme();
   const { user } = useUser();
   const [lessons, setLessons] = useState<LessonItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,56 +69,89 @@ export function LearnModuleScreen({ navigation, route }: any) {
   }, [moduleId, user?.id]);
 
   const renderLesson = ({ item, index }: { item: LessonItem; index: number }) => (
-    <Pressable
+    <PressableScale
       onPress={() => {
         if (!item.locked) {
           navigation.navigate('Lesson', { lessonId: item.id, title: item.title });
         }
       }}
-      style={[styles.lessonRow, { borderColor: colors.border }, item.locked && { opacity: 0.45 }]}
+      disabled={item.locked}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: spacing.lg,
+        borderBottomWidth: 1,
+        borderColor: tokenColors.border,
+        gap: spacing.md,
+        opacity: item.locked ? 0.45 : 1,
+      }}
     >
-      <View style={[styles.lessonNumber, {
-        backgroundColor: item.completed ? '#00843D' : item.locked ? colors.border : colors.surface,
-      }]}>
+      <View style={{
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: item.completed ? tokenColors.success : item.locked ? tokenColors.border : tokenColors.surface,
+      }}>
         {item.completed ? (
-          <Ionicons name="checkmark" size={16} color="#fff" />
+          <Ionicons name="checkmark" size={16} color={tokenColors.textInverse} />
         ) : item.locked ? (
-          <Ionicons name="lock-closed" size={14} color={colors.textMuted} />
+          <Ionicons name="lock-closed" size={14} color={tokenColors.textMuted} />
         ) : (
-          <Text style={[styles.lessonNumberText, { color: colors.textMuted }]}>{index + 1}</Text>
+          <AppText variant="label" color="textMuted">{index + 1}</AppText>
         )}
       </View>
-      <Text style={[styles.lessonTitle, { color: item.locked ? colors.textMuted : colors.text }]}>{item.title}</Text>
-      {!item.locked && <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />}
-    </Pressable>
+      <AppText
+        variant="body"
+        color={item.locked ? 'textMuted' : 'textPrimary'}
+        style={{ flex: 1 }}
+      >
+        {item.title}
+      </AppText>
+      {!item.locked && <Ionicons name="chevron-forward" size={18} color={tokenColors.textMuted} />}
+    </PressableScale>
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <View style={styles.headerBar}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>{title}</Text>
-        <View style={styles.backButton} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.background }} edges={['top']}>
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+      }}>
+        <PressableScale onPress={() => navigation.goBack()} style={{ width: 40 }}>
+          <Ionicons name="arrow-back" size={24} color={tokenColors.textPrimary} />
+        </PressableScale>
+        <AppText variant="heading" center style={{ flex: 1 }} numberOfLines={1}>
+          {title}
+        </AppText>
+        <View style={{ width: 40 }} />
       </View>
 
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#00843D" />
+        <View style={{ flex: 1, padding: spacing.lg, gap: spacing.lg }}>
+          {[...Array(6)].map((_, i) => (
+            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              <Skeleton width={32} height={32} borderRadius={16} />
+              <Skeleton width="70%" height={20} />
+            </View>
+          ))}
         </View>
       ) : (
         <FlashList
           data={lessons}
           keyExtractor={item => item.id}
           renderItem={renderLesson}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={{ padding: spacing.lg }}
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="book-outline" size={48} color={colors.textMuted} />
-              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+            <View style={{ alignItems: 'center', paddingTop: spacing.xxxl, gap: spacing.md }}>
+              <Ionicons name="book-outline" size={48} color={tokenColors.textMuted} />
+              <AppText variant="body" color="textMuted">
                 Lessons coming soon
-              </Text>
+              </AppText>
             </View>
           }
         />
@@ -125,36 +159,3 @@ export function LearnModuleScreen({ navigation, route }: any) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-  },
-  backButton: { width: 40 },
-  headerTitle: { fontSize: FONT_SIZE.subtitle, fontWeight: FONT_WEIGHT.semibold as any, flex: 1, textAlign: 'center' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { padding: SPACING.lg },
-  lessonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: SPACING.lg,
-    borderBottomWidth: 1,
-    gap: SPACING.md,
-  },
-  lessonNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lessonNumberText: { fontSize: FONT_SIZE.small, fontWeight: FONT_WEIGHT.semibold as any },
-  lessonTitle: { fontSize: FONT_SIZE.body, flex: 1 },
-  emptyContainer: { alignItems: 'center', paddingTop: SPACING.xxxl, gap: SPACING.md },
-  emptyText: { fontSize: FONT_SIZE.body },
-});

@@ -1,16 +1,17 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Animated } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, ScrollView, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useTheme } from '../context/ThemeContext';
 import { useLesson } from '../hooks/useLesson';
 import { ContentBlock } from '../components/ContentBlock';
-import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS } from '../constants/design';
+import { spacing, radius, colors as tokenColors } from '../theme/tokens';
+import { AppText } from '../components/ui/AppText';
+import { PressableScale } from '../components/ui/PressableScale';
+import { Skeleton } from '../components/ui/Skeleton';
 
 export function LessonScreen({ navigation, route }: any) {
   const { lessonId, title } = route.params;
-  const { colors } = useTheme();
   const { lesson, completed, loading, markComplete } = useLesson(lessonId);
   const [quizResults, setQuizResults] = useState<boolean[]>([]);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -55,9 +56,13 @@ export function LessonScreen({ navigation, route }: any) {
 
   if (loading || !lesson) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <Text style={{ color: colors.textMuted }}>Loading...</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.background }} edges={['top']}>
+        <View style={{ flex: 1, padding: spacing.lg, gap: spacing.xl }}>
+          <Skeleton width="60%" height={28} borderRadius={radius.sm} />
+          <Skeleton width="100%" height={80} borderRadius={radius.md} />
+          <Skeleton width="100%" height={80} borderRadius={radius.md} />
+          <Skeleton width="90%" height={20} />
+          <Skeleton width="75%" height={20} />
         </View>
       </SafeAreaView>
     );
@@ -68,25 +73,49 @@ export function LessonScreen({ navigation, route }: any) {
     : 0;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.background }} edges={['top']}>
       {/* Header */}
-      <View style={[styles.headerBar, { borderColor: colors.border }]}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.closeBtn}>
-          <Ionicons name="close" size={24} color={colors.text} />
-        </Pressable>
-        <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
-          <View style={[styles.progressBarFill, { width: `${progressPct}%` }]} />
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+        borderColor: tokenColors.border,
+        gap: spacing.md,
+      }}>
+        <PressableScale onPress={() => navigation.goBack()} style={{ padding: spacing.xs }}>
+          <Ionicons name="close" size={24} color={tokenColors.textPrimary} />
+        </PressableScale>
+        <View style={{
+          flex: 1,
+          height: 8,
+          borderRadius: 4,
+          overflow: 'hidden',
+          backgroundColor: tokenColors.border,
+        }}>
+          <View style={{
+            height: '100%',
+            backgroundColor: tokenColors.accent,
+            borderRadius: 4,
+            width: `${progressPct}%`,
+          }} />
         </View>
         {completed && (
-          <View style={styles.completedBadge}>
-            <Ionicons name="checkmark-circle" size={20} color="#00843D" />
+          <View style={{ marginLeft: spacing.xs }}>
+            <Ionicons name="checkmark-circle" size={20} color={tokenColors.success} />
           </View>
         )}
       </View>
 
       {/* Content */}
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.lessonTitle, { color: colors.text }]}>{lesson.title}</Text>
+      <ScrollView
+        contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxxl }}
+        showsVerticalScrollIndicator={false}
+      >
+        <AppText variant="title" style={{ marginBottom: spacing.xl }}>
+          {lesson.title}
+        </AppText>
 
         {lesson.content_blocks.map((block, i) => (
           <ContentBlock
@@ -99,37 +128,74 @@ export function LessonScreen({ navigation, route }: any) {
 
         {/* Complete button */}
         {!completed && (
-          <Pressable
+          <PressableScale
             onPress={handleComplete}
             disabled={isCompleting}
-            style={[styles.completeBtn, isCompleting && { opacity: 0.6 }]}
+            style={{
+              backgroundColor: tokenColors.accent,
+              borderRadius: radius.lg,
+              paddingVertical: spacing.lg,
+              alignItems: 'center',
+              marginTop: spacing.xl,
+              opacity: isCompleting ? 0.6 : 1,
+            }}
           >
-            <Text style={styles.completeBtnText}>
+            <AppText variant="heading" color="onAccent">
               {isCompleting ? 'Saving...' : 'Complete Lesson'}
-            </Text>
-          </Pressable>
+            </AppText>
+          </PressableScale>
         )}
 
         {completed && !showCelebration && (
-          <View style={styles.completedMessage}>
-            <Ionicons name="checkmark-circle" size={24} color="#00843D" />
-            <Text style={[styles.completedText, { color: '#00843D' }]}>Lesson completed</Text>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing.sm,
+            marginTop: spacing.xl,
+            paddingVertical: spacing.lg,
+          }}>
+            <Ionicons name="checkmark-circle" size={24} color={tokenColors.success} />
+            <AppText variant="heading" color="success">Lesson completed</AppText>
           </View>
         )}
       </ScrollView>
 
       {/* Celebration overlay */}
       {showCelebration && (
-        <Animated.View style={[styles.celebrationOverlay, { opacity: celebrationOpacity }]}>
-          <Animated.View style={[styles.celebrationContent, { transform: [{ scale: celebrationScale }] }]}>
-            <View style={styles.celebrationCircle}>
-              <Ionicons name="checkmark" size={48} color="#fff" />
+        <Animated.View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          opacity: celebrationOpacity,
+        }}>
+          <Animated.View style={{
+            alignItems: 'center',
+            transform: [{ scale: celebrationScale }],
+          }}>
+            <View style={{
+              width: 96,
+              height: 96,
+              borderRadius: 48,
+              backgroundColor: tokenColors.accent,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: spacing.lg,
+            }}>
+              <Ionicons name="checkmark" size={48} color={tokenColors.onAccent} />
             </View>
-            <Text style={styles.celebrationTitle}>Lesson Complete!</Text>
+            <AppText variant="title" color="textInverse" style={{ color: '#FFFFFF', marginBottom: spacing.xs }}>
+              Lesson Complete!
+            </AppText>
             {totalQuizzes > 0 && (
-              <Text style={styles.celebrationScore}>
+              <AppText variant="heading" style={{ color: 'rgba(255,255,255,0.8)' }}>
                 {quizResults.filter(Boolean).length}/{totalQuizzes} correct
-              </Text>
+              </AppText>
             )}
           </Animated.View>
         </Animated.View>
@@ -137,90 +203,3 @@ export function LessonScreen({ navigation, route }: any) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    gap: SPACING.md,
-  },
-  closeBtn: { padding: SPACING.xs },
-  progressBarBg: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#00843D',
-    borderRadius: 4,
-  },
-  completedBadge: { marginLeft: SPACING.xs },
-  content: {
-    padding: SPACING.lg,
-    paddingBottom: SPACING.xxxl,
-  },
-  lessonTitle: {
-    fontSize: FONT_SIZE.heading,
-    fontWeight: FONT_WEIGHT.bold as any,
-    marginBottom: SPACING.xl,
-  },
-  completeBtn: {
-    backgroundColor: '#00843D',
-    borderRadius: BORDER_RADIUS.lg,
-    paddingVertical: SPACING.lg,
-    alignItems: 'center',
-    marginTop: SPACING.xl,
-  },
-  completeBtnText: {
-    color: '#fff',
-    fontSize: FONT_SIZE.subtitle,
-    fontWeight: FONT_WEIGHT.semibold as any,
-  },
-  completedMessage: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.sm,
-    marginTop: SPACING.xl,
-    paddingVertical: SPACING.lg,
-  },
-  completedText: {
-    fontSize: FONT_SIZE.subtitle,
-    fontWeight: FONT_WEIGHT.semibold as any,
-  },
-  celebrationOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  celebrationContent: {
-    alignItems: 'center',
-  },
-  celebrationCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#00843D',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: SPACING.lg,
-  },
-  celebrationTitle: {
-    fontSize: FONT_SIZE.heading,
-    fontWeight: FONT_WEIGHT.bold as any,
-    color: '#fff',
-    marginBottom: SPACING.xs,
-  },
-  celebrationScore: {
-    fontSize: FONT_SIZE.subtitle,
-    color: 'rgba(255,255,255,0.8)',
-  },
-});

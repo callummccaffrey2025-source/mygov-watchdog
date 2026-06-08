@@ -26,7 +26,7 @@ import { trackEngagement } from '../hooks/useEngagementScore';
 import { useBillHistory } from '../hooks/useBillHistory';
 import { enrichBill, type NarrativeStatus } from '../lib/billEnrichment';
 import { BillExplainerCard } from '../components/BillExplainer';
-import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
+import { spacing, radius, elevation } from '../theme/tokens';
 import { hapticLight } from '../lib/haptics';
 
 // ── Interfaces ───────────────────────────────────────────────────────────────
@@ -282,7 +282,7 @@ export function BillDetailScreen({ route, navigation }: any) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       {/* ── Nav bar ── */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: SPACING.xl, paddingVertical: SPACING.md }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.xl, paddingVertical: spacing.md }}>
         <Pressable
           style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
           onPress={() => navigation.goBack()} hitSlop={8}
@@ -327,16 +327,16 @@ export function BillDetailScreen({ route, navigation }: any) {
         }
       >
         {/* ═══ 1. HEADER ═══ */}
-        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
           {/* Narrative status row */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: SPACING.md }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.md }}>
             <View style={{
               flexDirection: 'row', alignItems: 'center', gap: 5,
               backgroundColor: enrichment.statusColor + '14',
               paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
             }}>
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: enrichment.statusColor }} />
-              <Text style={{ fontSize: 13, fontWeight: FONT_WEIGHT.bold, color: enrichment.statusColor }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: enrichment.statusColor }}>
                 {enrichment.isLive ? 'Live' : enrichment.narrativeStatus === 'became_law' ? 'Passed' : enrichment.narrativeStatus === 'defeated' ? 'Defeated' : 'Archived'}
               </Text>
             </View>
@@ -349,7 +349,7 @@ export function BillDetailScreen({ route, navigation }: any) {
 
           {/* Chamber badge */}
           {chamberRaw ? (
-            <View style={{ flexDirection: 'row', marginBottom: SPACING.sm }}>
+            <View style={{ flexDirection: 'row', marginBottom: spacing.sm }}>
               <View style={{ backgroundColor: colors.cardAlt, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
                 <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted }}>
                   {chamberRaw.toLowerCase().includes('senate') ? 'Senate' : 'House of Representatives'}
@@ -359,7 +359,7 @@ export function BillDetailScreen({ route, navigation }: any) {
           ) : null}
 
           {/* Title */}
-          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, lineHeight: 30, marginBottom: SPACING.md }}>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, lineHeight: 30, marginBottom: spacing.md }}>
             {bill.title}
           </Text>
 
@@ -401,7 +401,7 @@ export function BillDetailScreen({ route, navigation }: any) {
         </View>
 
         {/* ── Progress tracker ── */}
-        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             {STAGES.map((stage, i) => {
               const isActive = i <= currentStage;
@@ -439,15 +439,15 @@ export function BillDetailScreen({ route, navigation }: any) {
         </View>
 
         {/* ═══ 2. WHAT IT SAYS ═══ */}
-        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
           <View style={{
-            backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg,
-            overflow: 'hidden', ...SHADOWS.sm,
+            backgroundColor: colors.card, borderRadius: radius.md,
+            overflow: 'hidden', ...elevation.sm,
           }}>
             <View style={{ flexDirection: 'row' }}>
               <View style={{ width: 4, backgroundColor: '#00843D' }} />
-              <View style={{ flex: 1, padding: SPACING.lg }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: SPACING.sm }}>
+              <View style={{ flex: 1, padding: spacing.lg }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.sm }}>
                   <Ionicons name="document-text-outline" size={14} color="#00843D" />
                   <Text style={{ fontSize: 11, fontWeight: '700', color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     What it says
@@ -462,11 +462,11 @@ export function BillDetailScreen({ route, navigation }: any) {
                     {(bill.expanded_summary || bill.summary_full) && (
                       <>
                         {summaryExpanded && (
-                          <Text style={{ fontSize: 14, color: colors.textBody, lineHeight: 22, marginTop: SPACING.sm }}>
+                          <Text style={{ fontSize: 14, color: colors.textBody, lineHeight: 22, marginTop: spacing.sm }}>
                             {decodeHtml(bill.expanded_summary || bill.summary_full || '')}
                           </Text>
                         )}
-                        <Pressable onPress={() => setSummaryExpanded(!summaryExpanded)} accessibilityRole="button" accessibilityLabel={summaryExpanded ? 'Show less' : 'Read more'} style={{ marginTop: SPACING.sm }}>
+                        <Pressable onPress={() => setSummaryExpanded(!summaryExpanded)} accessibilityRole="button" accessibilityLabel={summaryExpanded ? 'Show less' : 'Read more'} style={{ marginTop: spacing.sm }}>
                           <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>
                             {summaryExpanded ? 'Show less' : 'Read more'}
                           </Text>
@@ -492,7 +492,7 @@ export function BillDetailScreen({ route, navigation }: any) {
                     onPress={() => Linking.openURL(bill.aph_url!)}
                     accessibilityRole="button"
                     accessibilityLabel="View full bill text on APH website"
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: SPACING.md }}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.md }}
                   >
                     <Ionicons name="open-outline" size={13} color="#00843D" />
                     <Text style={{ fontSize: 12, fontWeight: '600', color: '#00843D' }}>View full bill text</Text>
@@ -504,7 +504,7 @@ export function BillDetailScreen({ route, navigation }: any) {
         </View>
 
         {/* ═══ 2b. PLAIN-ENGLISH EXPLAINER ═══ */}
-        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
           <BillExplainerCard
             billId={bill.id}
             billTitle={bill.title}
@@ -515,8 +515,8 @@ export function BillDetailScreen({ route, navigation }: any) {
 
         {/* ═══ 3. HOW THIS AFFECTS YOU ═══ */}
         {impactTags.length > 0 && (
-          <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: SPACING.md }}>
+          <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: spacing.md }}>
               Who this affects
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -534,7 +534,7 @@ export function BillDetailScreen({ route, navigation }: any) {
         )}
 
         {/* ═══ 3b. HOW DOES THIS AFFECT ME? ═══ */}
-        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
           <PersonalImpactCard
             billTitle={bill.title}
             billSummary={bill.summary_plain || (bill as any).summary || bill.summary_full || ''}
@@ -545,8 +545,8 @@ export function BillDetailScreen({ route, navigation }: any) {
 
         {/* ═══ 4. WHAT YOU CAN DO — prominent, never paywalled ═══ */}
         {myMP && (
-          <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: SPACING.md }}>
+          <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: spacing.md }}>
               What you can do
             </Text>
 
@@ -559,10 +559,10 @@ export function BillDetailScreen({ route, navigation }: any) {
               accessibilityRole="button"
               accessibilityLabel={`Contact ${myMP.first_name} ${myMP.last_name} about this bill`}
               style={{
-                flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-                backgroundColor: '#00843D', borderRadius: BORDER_RADIUS.md,
-                paddingHorizontal: SPACING.lg, paddingVertical: 14,
-                marginBottom: SPACING.sm,
+                flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+                backgroundColor: '#00843D', borderRadius: radius.sm,
+                paddingHorizontal: spacing.lg, paddingVertical: 14,
+                marginBottom: spacing.sm,
               }}
             >
               <Ionicons name="mail-outline" size={20} color="#ffffff" />
@@ -587,7 +587,7 @@ export function BillDetailScreen({ route, navigation }: any) {
               accessibilityLabel="Share this bill"
               style={{
                 flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-                backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.md,
+                backgroundColor: colors.surface, borderRadius: radius.sm,
                 paddingVertical: 12,
               }}
             >
@@ -598,8 +598,8 @@ export function BillDetailScreen({ route, navigation }: any) {
         )}
 
         {/* ═══ 5. THE POLITICS — Key Arguments ═══ */}
-        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: SPACING.md }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: spacing.md }}>
             The politics
           </Text>
 
@@ -610,8 +610,8 @@ export function BillDetailScreen({ route, navigation }: any) {
             </>
           ) : forArgs.length === 0 && againstArgs.length === 0 ? (
             <View style={{
-              backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg, alignItems: 'center', gap: SPACING.sm,
+              backgroundColor: colors.surface, borderRadius: radius.md,
+              padding: spacing.lg, alignItems: 'center', gap: spacing.sm,
             }}>
               <Ionicons name="chatbubbles-outline" size={28} color={colors.textMuted} />
               <Text style={{ fontSize: 14, color: colors.textBody, textAlign: 'center', lineHeight: 20 }}>
@@ -654,8 +654,8 @@ export function BillDetailScreen({ route, navigation }: any) {
         </View>
 
         {/* ═══ 6. HOW PARLIAMENT VOTED ═══ */}
-        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: SPACING.md }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: spacing.md }}>
             How Parliament voted
           </Text>
 
@@ -664,8 +664,8 @@ export function BillDetailScreen({ route, navigation }: any) {
           ) : relatedDivisions.length > 0 ? (
             <>
               {/* Aggregate bar */}
-              <View style={{ backgroundColor: colors.card, borderRadius: BORDER_RADIUS.lg, padding: SPACING.lg, ...SHADOWS.sm, marginBottom: SPACING.sm }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: SPACING.md }}>
+              <View style={{ backgroundColor: colors.card, borderRadius: radius.md, padding: spacing.lg, ...elevation.sm, marginBottom: spacing.sm }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: spacing.md }}>
                   <View style={{ alignItems: 'flex-start', minWidth: 36 }}>
                     <Text style={{ fontSize: 18, fontWeight: '800', color: '#00843D' }}>{divAyeTotal}</Text>
                     <Text style={{ fontSize: 10, color: colors.textMuted }}>Ayes</Text>
@@ -703,9 +703,9 @@ export function BillDetailScreen({ route, navigation }: any) {
                 // Check divisions for MP vote data
                 return (
                   <View style={{
-                    backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.md,
-                    padding: SPACING.md, marginBottom: SPACING.sm,
-                    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+                    backgroundColor: colors.surface, borderRadius: radius.sm,
+                    padding: spacing.md, marginBottom: spacing.sm,
+                    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
                   }}>
                     <Ionicons name="person-outline" size={16} color="#00843D" />
                     <Text style={{ fontSize: 13, color: colors.textBody, flex: 1 }}>
@@ -729,7 +729,7 @@ export function BillDetailScreen({ route, navigation }: any) {
                 return (
                   <View key={d.id} style={{
                     backgroundColor: colors.card, borderRadius: 10,
-                    padding: 12, marginBottom: 8, ...SHADOWS.sm, gap: 4,
+                    padding: 12, marginBottom: 8, ...elevation.sm, gap: 4,
                   }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Text style={{ fontSize: 11, color: colors.textMuted }}>{timeAgo(d.date)}</Text>
@@ -754,8 +754,8 @@ export function BillDetailScreen({ route, navigation }: any) {
             </>
           ) : (
             <View style={{
-              backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.lg, flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+              backgroundColor: colors.surface, borderRadius: radius.md,
+              padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
             }}>
               <Ionicons name="time-outline" size={20} color={colors.textMuted} />
               <Text style={{ flex: 1, fontSize: 14, color: colors.textBody, lineHeight: 20 }}>
@@ -767,8 +767,8 @@ export function BillDetailScreen({ route, navigation }: any) {
 
         {/* ═══ 7. HISTORY TIMELINE ═══ */}
         {billHistory.length > 0 && (
-          <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: SPACING.md }}>
+          <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase', marginBottom: spacing.md }}>
               History
             </Text>
             {billHistory.map((change, i) => {
@@ -806,7 +806,7 @@ export function BillDetailScreen({ route, navigation }: any) {
         )}
 
         {/* ═══ 8. FOLLOW THIS BILL ═══ */}
-        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xl }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
           <Pressable
             onPress={() => { hapticLight(); requireAuth('follow this bill', toggleBookmark); }}
             accessibilityRole="button"
@@ -814,7 +814,7 @@ export function BillDetailScreen({ route, navigation }: any) {
             style={{
               flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
               backgroundColor: bookmarked ? '#E8F5EE' : colors.surface,
-              borderRadius: BORDER_RADIUS.md, paddingVertical: 14,
+              borderRadius: radius.sm, paddingVertical: 14,
             }}
           >
             <Ionicons
@@ -829,8 +829,8 @@ export function BillDetailScreen({ route, navigation }: any) {
         </View>
 
         {/* ── Source footer ── */}
-        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg }}>
-          <View style={{ backgroundColor: colors.surface, borderRadius: BORDER_RADIUS.lg, padding: SPACING.lg }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.lg }}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.lg }}>
             <Text style={{ fontSize: 12, color: colors.textMuted, lineHeight: 18 }}>
               Data sourced from the Parliament of Australia, TheyVoteForYou, and the Australian Electoral Commission.
             </Text>

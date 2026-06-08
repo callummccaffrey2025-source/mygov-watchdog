@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../context/ThemeContext';
-import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
+import { spacing, radius, colors as tokenColors } from '../theme/tokens';
+import { AppText } from './ui/AppText';
+import { Card } from './ui/Card';
 
 interface LessonCardProps {
   title: string;
@@ -14,71 +15,59 @@ interface LessonCardProps {
 }
 
 export const LessonCard = React.memo(function LessonCard({ title, icon, color, lessonCount, completedCount, onPress }: LessonCardProps) {
-  const { colors } = useTheme();
   const progress = lessonCount > 0 ? completedCount / lessonCount : 0;
-  const cardColor = color || '#00843D';
+  const cardColor = color || tokenColors.accent;
 
   return (
-    <Pressable
+    <Card
       onPress={onPress}
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, SHADOWS.sm]}
+      elevated
+      style={{
+        flex: 1,
+        margin: spacing.xs,
+        minHeight: 160,
+        justifyContent: 'space-between',
+      }}
     >
-      <View style={[styles.iconContainer, { backgroundColor: cardColor + '15' }]}>
+      <View style={{
+        width: 48,
+        height: 48,
+        borderRadius: radius.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: cardColor + '15',
+        marginBottom: spacing.md,
+      }}>
         <Ionicons name={(icon as any) || 'book'} size={28} color={cardColor} />
       </View>
-      <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>{title}</Text>
+
+      <AppText
+        variant="body"
+        style={{ fontWeight: '600', lineHeight: 20, marginBottom: spacing.md }}
+        numberOfLines={2}
+      >
+        {title}
+      </AppText>
 
       {/* Progress bar */}
-      <View style={styles.progressContainer}>
-        <View style={[styles.progressBg, { backgroundColor: colors.border }]}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: cardColor }]} />
+      <View style={{ gap: spacing.xs }}>
+        <View style={{
+          height: 6,
+          borderRadius: 3,
+          overflow: 'hidden',
+          backgroundColor: tokenColors.border,
+        }}>
+          <View style={{
+            height: '100%',
+            borderRadius: 3,
+            width: `${progress * 100}%`,
+            backgroundColor: tokenColors.accent,
+          }} />
         </View>
-        <Text style={[styles.progressText, { color: colors.textMuted }]}>
+        <AppText variant="caption" color="textMuted">
           {completedCount}/{lessonCount}
-        </Text>
+        </AppText>
       </View>
-    </Pressable>
+    </Card>
   );
-});
-
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    padding: SPACING.lg,
-    margin: SPACING.xs,
-    minHeight: 160,
-    justifyContent: 'space-between',
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: BORDER_RADIUS.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.md,
-  },
-  title: {
-    fontSize: FONT_SIZE.body,
-    fontWeight: FONT_WEIGHT.semibold as any,
-    lineHeight: 20,
-    marginBottom: SPACING.md,
-  },
-  progressContainer: {
-    gap: SPACING.xs,
-  },
-  progressBg: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  progressText: {
-    fontSize: FONT_SIZE.caption,
-    fontWeight: FONT_WEIGHT.medium as any,
-  },
 });

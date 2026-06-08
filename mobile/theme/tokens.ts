@@ -97,7 +97,7 @@ export const darkColors: Record<keyof typeof lightColors, string> = {
   info: '#5BA3D0',
 };
 
-export const colors = lightColors;
+export const colors: Record<string, string> = lightColors;
 
 // ─── MOTION ───────────────────────────────────────────────────────────────────
 export const motion = {

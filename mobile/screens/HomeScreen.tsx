@@ -1,11 +1,9 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   RefreshControl,
   TextInput,
-  Pressable,
   Alert,
   Keyboard,
   Platform,
@@ -16,14 +14,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
-import { useTheme } from '../context/ThemeContext';
 import { SkeletonLoader } from '../components/SkeletonLoader';
-import { decodeHtml } from '../utils/decodeHtml';
 import { useVotes } from '../hooks/useVotes';
 import { timeAgo } from '../lib/timeAgo';
-import { spacing, typography, radius, elevation, colors as tokenColors, motion } from '../theme/tokens';
+import { spacing, radius, colors as tokenColors } from '../theme/tokens';
 import { PressableScale, AppText, Card } from '../components/ui';
-import AsyncStorage from '../lib/storage';
 import { hapticLight } from '../lib/haptics';
 import { HomeScreenSkeleton } from '../components/HomeScreenSkeleton';
 import { AuthPromptSheet } from '../components/AuthPromptSheet';
@@ -32,7 +27,6 @@ import { useSittingCalendar } from '../hooks/useSittingCalendar';
 import { useBillSwipe } from '../hooks/useBillSwipe';
 import * as Haptics from 'expo-haptics';
 import { track } from '../lib/analytics';
-import { trackEvent } from '../lib/engagementTracker';
 import { useLearnModules } from '../hooks/useLearnModules';
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -70,12 +64,11 @@ function formatHeaderDate(date: Date): string {
 // ── Section Header ──────────────────────────────────────────────────────
 
 function SectionHeader({
-  color,
   label,
   rightLabel,
   onRightPress,
 }: {
-  color: string;
+  color?: string;
   label: string;
   rightLabel?: string;
   onRightPress?: () => void;
@@ -103,7 +96,6 @@ function SectionDivider() {
 // ── Main Screen ─────────────────────────────────────────────────────────
 
 export function HomeScreen({ navigation }: any) {
-  const { colors } = useTheme();
   const { postcode, setPostcode, user } = useUser();
   const [postcodeInput, setPostcodeInput] = useState(postcode || '');
   const [refreshing, setRefreshing] = useState(false);
@@ -136,7 +128,6 @@ export function HomeScreen({ navigation }: any) {
     hapticLight();
     setRefreshing(true);
     setRefreshKey(k => k + 1);
-    // Allow hooks to re-fire by updating key, then clear spinner after delay
     setTimeout(() => setRefreshing(false), 1500);
   }, []);
 
@@ -174,24 +165,24 @@ export function HomeScreen({ navigation }: any) {
   const initialLoading = mpLoading && !!postcode;
   if (initialLoading && !refreshing) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.background }} edges={['bottom']}>
         <HomeScreenSkeleton />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.background }} edges={['bottom']}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: spacing.xl }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00843D" colors={['#00843D']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokenColors.accent} colors={[tokenColors.accent]} />
         }
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* ═══ 1. GREEN HERO ═══ */}
+        {/* ═══ 1. HERO ═══ */}
         <View style={{ backgroundColor: tokenColors.background, paddingTop: spacing.md, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl }}>
           {/* Top bar: Verity wordmark + icons */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl }}>
@@ -208,7 +199,7 @@ export function HomeScreen({ navigation }: any) {
             </View>
           </View>
 
-          {/* Greeting — display scale for typographic drama */}
+          {/* Greeting */}
           <AppText variant="display">{greeting}</AppText>
           <AppText variant="body" color="textMuted" style={{ marginTop: spacing.xs }}>
             {myMP
@@ -218,7 +209,7 @@ export function HomeScreen({ navigation }: any) {
 
           {/* Parliament status */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.lg }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isSittingToday ? tokenColors.success : tokenColors.warning }} />
+            <View style={{ width: spacing.sm, height: spacing.sm, borderRadius: spacing.xs, backgroundColor: isSittingToday ? tokenColors.success : tokenColors.warning }} />
             <AppText variant="caption" color="textSecondary">
               {isSittingToday ? 'Parliament is sitting' : `In recess${nextSitting ? ` · resumes ${formatParliamentDate(nextSitting)}` : ''}`}
             </AppText>
@@ -228,7 +219,6 @@ export function HomeScreen({ navigation }: any) {
         {/* ═══ 2. YOUR REPRESENTATIVE ═══ */}
         <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
           <SectionHeader
-            color={colors.green}
             label="YOUR REPRESENTATIVE"
             rightLabel={postcode ? 'Change' : undefined}
             onRightPress={postcode ? clearPostcode : undefined}
@@ -236,39 +226,34 @@ export function HomeScreen({ navigation }: any) {
 
           {!postcode ? (
             /* Empty state: set electorate */
-            <View style={{
-              backgroundColor: colors.card,
-              borderRadius: radius.md,
-              padding: 18,
-              ...elevation.sm,
-            }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: 14 }}>
+            <Card elevated>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
                 <View style={{
-                  width: 44, height: 44, borderRadius: 22,
-                  backgroundColor: '#E8F5EE',
+                  width: 44, height: 44, borderRadius: radius.lg,
+                  backgroundColor: tokenColors.accentMuted,
                   justifyContent: 'center', alignItems: 'center',
                 }}>
-                  <Ionicons name="location-outline" size={22} color={colors.green} />
+                  <Ionicons name="location-outline" size={22} color={tokenColors.accent} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>Set your electorate</Text>
-                  <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>
+                  <AppText variant="callout" style={{ fontWeight: '700' }}>Set your electorate</AppText>
+                  <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
                     Enter your postcode to find your MP
-                  </Text>
+                  </AppText>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                 <TextInput
                   style={{
                     flex: 1, height: 44, borderRadius: radius.sm,
-                    backgroundColor: colors.surface,
-                    paddingHorizontal: 14,
-                    fontSize: 15, color: colors.text,
+                    backgroundColor: tokenColors.surfaceMuted,
+                    paddingHorizontal: spacing.md,
+                    fontSize: 15, color: tokenColors.textPrimary,
                   }}
                   value={postcodeInput}
                   onChangeText={setPostcodeInput}
                   placeholder="Enter postcode"
-                  placeholderTextColor="#9aabb8"
+                  placeholderTextColor={tokenColors.textMuted}
                   keyboardType="number-pad"
                   maxLength={4}
                   returnKeyType="done"
@@ -278,17 +263,17 @@ export function HomeScreen({ navigation }: any) {
                 />
                 {Platform.OS === 'ios' && (
                   <InputAccessoryView nativeID="home-postcode-done">
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: '#F1F1F1', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: '#C8C8C8' }}>
-                      <Pressable onPress={() => { Keyboard.dismiss(); handleSetPostcode(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="Done entering postcode">
-                        <Text style={{ fontSize: 17, fontWeight: '600', color: '#007AFF' }}>Done</Text>
-                      </Pressable>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: tokenColors.surfaceMuted, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderTopWidth: 0.5, borderTopColor: tokenColors.border }}>
+                      <PressableScale onPress={() => { Keyboard.dismiss(); handleSetPostcode(); }} accessibilityRole="button" accessibilityLabel="Done entering postcode">
+                        <AppText variant="callout" color="accent">Done</AppText>
+                      </PressableScale>
                     </View>
                   </InputAccessoryView>
                 )}
-                <Pressable
+                <PressableScale
                   style={{
                     height: 44, paddingHorizontal: spacing.lg,
-                    backgroundColor: colors.green,
+                    backgroundColor: tokenColors.accent,
                     borderRadius: radius.sm,
                     justifyContent: 'center', alignItems: 'center',
                   }}
@@ -296,61 +281,56 @@ export function HomeScreen({ navigation }: any) {
                   accessibilityRole="button"
                   accessibilityLabel="Find MP"
                 >
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#ffffff' }}>Find MP</Text>
-                </Pressable>
+                  <AppText variant="label" style={{ color: tokenColors.onAccent }}>Find MP</AppText>
+                </PressableScale>
               </View>
-            </View>
+            </Card>
           ) : mpLoading ? (
             <SkeletonLoader height={130} borderRadius={radius.md} />
           ) : myMP ? (
             /* MP card */
-            <View style={{
-              backgroundColor: colors.card,
-              borderRadius: radius.md,
-              padding: spacing.lg,
-              ...elevation.sm,
-            }}>
+            <Card elevated>
               {/* Avatar + info */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                 {/* MP photo or initials fallback */}
                 {myMP.photo_url ? (
                   <Image
                     source={{ uri: myMP.photo_url }}
                     style={{
-                      width: 54, height: 54, borderRadius: 27,
-                      borderWidth: 2, borderColor: myMP.party?.colour || colors.green,
+                      width: 54, height: 54, borderRadius: radius.lg,
+                      borderWidth: 2, borderColor: myMP.party?.colour || tokenColors.accent,
                     }}
                     contentFit="cover"
                   />
                 ) : (
                   <View style={{
-                    width: 54, height: 54, borderRadius: 27,
-                    backgroundColor: (myMP.party?.colour || colors.green) + '20',
+                    width: 54, height: 54, borderRadius: radius.lg,
+                    backgroundColor: (myMP.party?.colour || tokenColors.accent) + '20',
                     justifyContent: 'center', alignItems: 'center',
-                    borderWidth: 2, borderColor: myMP.party?.colour || colors.green,
+                    borderWidth: 2, borderColor: myMP.party?.colour || tokenColors.accent,
                   }}>
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: myMP.party?.colour || colors.green }}>
+                    <AppText variant="heading" style={{ color: myMP.party?.colour || tokenColors.accent }}>
                       {myMP.first_name[0]}{myMP.last_name[0]}
-                    </Text>
+                    </AppText>
                   </View>
                 )}
 
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                    <AppText variant="callout" style={{ fontWeight: '700' }}>
                       {myMP.first_name} {myMP.last_name}
-                    </Text>
-                    <Ionicons name="checkmark-circle" size={14} color={colors.green} />
+                    </AppText>
+                    <Ionicons name="checkmark-circle" size={14} color={tokenColors.success} />
                   </View>
-                  <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>
+                  <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
                     {myMP.party?.short_name || myMP.party?.abbreviation || myMP.party?.name || ''}
                     {' \u00B7 MP for '}
                     {myMP.electorate?.name ?? ''}
-                  </Text>
+                  </AppText>
                   {myMP.ministerial_role && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                      <View style={{ backgroundColor: colors.greenBg, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                        <Text style={{ fontSize: 10, fontWeight: '600', color: colors.green }}>{myMP.ministerial_role}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
+                      <View style={{ backgroundColor: tokenColors.accentMuted, borderRadius: spacing.xs, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}>
+                        <AppText variant="caption" style={{ fontSize: 10, fontWeight: '600', color: tokenColors.success }}>{myMP.ministerial_role}</AppText>
                       </View>
                     </View>
                   )}
@@ -359,94 +339,92 @@ export function HomeScreen({ navigation }: any) {
 
               {/* Last vote pill */}
               {lastVote && (
-                <Pressable
+                <PressableScale
                   onPress={() => navigation.navigate('MemberProfile', { member: myMP })}
                   accessibilityRole="button"
                   accessibilityLabel={`View ${myMP.first_name} ${myMP.last_name}'s profile`}
                   style={{
                     flexDirection: 'row', alignItems: 'center',
                     marginTop: spacing.md,
-                    backgroundColor: lastVote.cast === 'aye' ? 'rgba(0,132,61,0.08)' : 'rgba(220,38,38,0.08)',
+                    backgroundColor: lastVote.cast === 'aye' ? tokenColors.success + '14' : tokenColors.danger + '14',
                     borderRadius: radius.sm,
-                    paddingHorizontal: 12, paddingVertical: 10,
+                    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
                   }}
                 >
                   <View style={{
-                    width: 6, height: 6, borderRadius: 3,
-                    backgroundColor: lastVote.cast === 'aye' ? '#00843D' : '#DC2626',
-                    marginRight: 10,
+                    width: spacing.sm, height: spacing.sm, borderRadius: spacing.xs,
+                    backgroundColor: lastVote.cast === 'aye' ? tokenColors.success : tokenColors.danger,
+                    marginRight: spacing.sm,
                   }} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{
-                      fontSize: 12.5, fontWeight: '600',
-                      color: lastVote.cast === 'aye' ? '#166534' : '#991B1B',
+                    <AppText variant="caption" style={{
+                      fontWeight: '600',
+                      color: lastVote.cast === 'aye' ? tokenColors.success : tokenColors.danger,
                     }} numberOfLines={1}>
                       Voted {lastVote.cast === 'aye' ? 'Aye' : 'No'} · {smartTruncate(lastVote.name, 30)}
-                    </Text>
-                    <Text style={{
-                      fontSize: 11, marginTop: 2,
-                      color: lastVote.cast === 'aye' ? 'rgba(22,101,52,0.65)' : 'rgba(153,27,27,0.65)',
+                    </AppText>
+                    <AppText variant="caption" style={{
+                      fontSize: 11, marginTop: spacing.xs,
+                      color: lastVote.cast === 'aye' ? tokenColors.success + 'A6' : tokenColors.danger + 'A6',
                     }}>
                       Last session · {timeAgo(lastVote.date)}
-                    </Text>
+                    </AppText>
                   </View>
                   <Ionicons
                     name="chevron-forward"
                     size={16}
-                    color={lastVote.cast === 'aye' ? '#166534' : '#991B1B'}
-                    style={{ marginLeft: 6 }}
+                    color={lastVote.cast === 'aye' ? tokenColors.success : tokenColors.danger}
+                    style={{ marginLeft: spacing.sm }}
                   />
-                </Pressable>
+                </PressableScale>
               )}
 
               {/* Action buttons */}
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-                {/* Write to MP — green filled */}
-                <Pressable
+              <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+                {/* Write to MP — accent filled */}
+                <PressableScale
                   style={{
                     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                    gap: 6, height: 40, borderRadius: radius.pill,
-                    backgroundColor: colors.green,
+                    gap: spacing.sm, height: 40, borderRadius: radius.pill,
+                    backgroundColor: tokenColors.accent,
                   }}
                   onPress={() => requireAuth('write to your MP', () => navigation.navigate('WriteToMP', { member: myMP }))}
                   accessibilityRole="button"
                   accessibilityLabel="Write to MP"
                 >
-                  <Ionicons name="mail-outline" size={14} color="#ffffff" />
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#ffffff' }}>Write to MP</Text>
-                </Pressable>
+                  <Ionicons name="mail-outline" size={14} color={tokenColors.onAccent} />
+                  <AppText variant="label" style={{ color: tokenColors.onAccent }}>Write to MP</AppText>
+                </PressableScale>
                 {/* View profile — outlined */}
-                <Pressable
+                <PressableScale
                   style={{
                     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
                     height: 40, borderRadius: radius.pill,
-                    backgroundColor: colors.card,
-                    borderWidth: 1, borderColor: colors.border,
+                    backgroundColor: tokenColors.surface,
+                    borderWidth: 1, borderColor: tokenColors.border,
                   }}
                   onPress={() => navigation.navigate('MemberProfile', { member: myMP })}
                   accessibilityRole="button"
                   accessibilityLabel="View profile"
                 >
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text }}>
+                  <AppText variant="label">
                     View profile {'\u2192'}
-                  </Text>
-                </Pressable>
+                  </AppText>
+                </PressableScale>
               </View>
-            </View>
+            </Card>
           ) : (
             /* Fallback: electorate found but no MP */
-            <View style={{
-              backgroundColor: colors.surface,
-              borderRadius: radius.md, padding: 14,
-              flexDirection: 'row', alignItems: 'center', gap: 10,
-            }}>
-              <Ionicons name="information-circle-outline" size={18} color={colors.textMuted} />
-              <Text style={{ flex: 1, fontSize: 13, color: colors.textMuted, lineHeight: 18 }}>
-                {electorateResult.electorate
-                  ? `${electorateResult.electorate.name} (${electorateResult.electorate.state}) \u2014 MP data loading soon.`
-                  : `No electorate found for ${postcode}.`}
-              </Text>
-            </View>
+            <Card>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Ionicons name="information-circle-outline" size={18} color={tokenColors.textMuted} />
+                <AppText variant="caption" color="textMuted" style={{ flex: 1 }}>
+                  {electorateResult.electorate
+                    ? `${electorateResult.electorate.name} (${electorateResult.electorate.state}) \u2014 MP data loading soon.`
+                    : `No electorate found for ${postcode}.`}
+                </AppText>
+              </View>
+            </Card>
           )}
         </View>
 
@@ -456,73 +434,62 @@ export function HomeScreen({ navigation }: any) {
         {currentBill && (
           <>
             <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-              <SectionHeader color="#00843D" label="HAVE YOUR SAY" rightLabel={`${billsRemaining} bills`} />
-              <Text style={{ fontSize: 13, color: colors.textMuted, marginBottom: 14 }}>
+              <SectionHeader label="HAVE YOUR SAY" rightLabel={`${billsRemaining} bills`} />
+              <AppText variant="caption" color="textMuted" style={{ marginBottom: spacing.md }}>
                 Swipe on bills currently before parliament
-              </Text>
+              </AppText>
 
               {/* Bill card — tappable to open detail */}
-              <Pressable
-                onPress={() => navigation.navigate('BillDetail', { billId: currentBill.id })}
-                accessibilityRole="button"
-                accessibilityLabel={`View bill: ${currentBill.short_title ?? currentBill.title}`}
-                style={({ pressed }) => ({
-                  backgroundColor: colors.card,
-                  borderRadius: radius.lg,
-                  padding: 20,
-                  ...elevation.md,
-                  opacity: pressed ? 0.95 : 1,
-                })}
-              >
+              <Card elevated onPress={() => navigation.navigate('BillDetail', { billId: currentBill.id })}>
                 {/* Status + chamber */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <View style={{ backgroundColor: '#E8F5EE', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md }}>
+                  <View style={{ backgroundColor: tokenColors.accentMuted, borderRadius: spacing.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}>
+                    <AppText variant="caption" style={{ fontSize: 10, fontWeight: '700', color: tokenColors.accent, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       {currentBill.current_status ?? 'Before Parliament'}
-                    </Text>
+                    </AppText>
                   </View>
                   {currentBill.origin_chamber && (
-                    <Text style={{ fontSize: 11, color: colors.textMuted }}>
+                    <AppText variant="caption" color="textMuted">
                       {currentBill.origin_chamber === 'house' ? 'House' : 'Senate'}
-                    </Text>
+                    </AppText>
                   )}
                 </View>
 
                 {/* Title */}
-                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 8, lineHeight: 24 }}>
+                <AppText variant="heading" style={{ marginBottom: spacing.sm }}>
                   {currentBill.short_title ?? currentBill.title}
-                </Text>
+                </AppText>
 
                 {/* TLDR explainer */}
                 {currentBill.tldr && (
-                  <Text style={{ fontSize: 14, color: colors.textBody, lineHeight: 20, marginBottom: 16 }}>
+                  <AppText variant="body" color="textSecondary" style={{ fontSize: 14, lineHeight: 20, marginBottom: spacing.lg }}>
                     {currentBill.tldr}
-                  </Text>
+                  </AppText>
                 )}
 
                 {/* For / Against arguments */}
                 {(currentBill.supporters_argument || currentBill.critics_argument) && (
-                  <View style={{ marginBottom: 16 }}>
+                  <View style={{ marginBottom: spacing.lg }}>
                     {currentBill.supporters_argument && (
-                      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
-                        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,132,61,0.1)', alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="checkmark" size={12} color="#00843D" />
+                      <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm }}>
+                        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: tokenColors.success + '1A', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="checkmark" size={12} color={tokenColors.success} />
                         </View>
-                        <Text style={{ flex: 1, fontSize: 12.5, color: colors.textBody, lineHeight: 17 }}>
-                          <Text style={{ fontWeight: '600', color: '#00843D' }}>For: </Text>
+                        <AppText variant="caption" color="textSecondary" style={{ flex: 1, lineHeight: 17 }}>
+                          <AppText variant="caption" style={{ fontWeight: '600', color: tokenColors.success }}>For: </AppText>
                           {currentBill.supporters_argument}
-                        </Text>
+                        </AppText>
                       </View>
                     )}
                     {currentBill.critics_argument && (
-                      <View style={{ flexDirection: 'row', gap: 8 }}>
-                        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(220,38,38,0.1)', alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="close" size={12} color="#DC2626" />
+                      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                        <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: tokenColors.danger + '1A', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="close" size={12} color={tokenColors.danger} />
                         </View>
-                        <Text style={{ flex: 1, fontSize: 12.5, color: colors.textBody, lineHeight: 17 }}>
-                          <Text style={{ fontWeight: '600', color: '#DC2626' }}>Against: </Text>
+                        <AppText variant="caption" color="textSecondary" style={{ flex: 1, lineHeight: 17 }}>
+                          <AppText variant="caption" style={{ fontWeight: '600', color: tokenColors.danger }}>Against: </AppText>
                           {currentBill.critics_argument}
-                        </Text>
+                        </AppText>
                       </View>
                     )}
                   </View>
@@ -530,20 +497,20 @@ export function HomeScreen({ navigation }: any) {
 
                 {/* Vote counts */}
                 {(currentBill.agree_count + currentBill.disagree_count) > 0 && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                    <Text style={{ fontSize: 11, color: colors.textMuted }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+                    <AppText variant="caption" color="textMuted" tabular>
                       {currentBill.agree_count + currentBill.disagree_count} opinions
-                    </Text>
-                    <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden', flexDirection: 'row' }}>
-                      <View style={{ flex: currentBill.agree_count || 0.01, backgroundColor: '#00843D', borderRadius: 2 }} />
-                      <View style={{ flex: currentBill.disagree_count || 0.01, backgroundColor: '#DC2626', borderRadius: 2 }} />
+                    </AppText>
+                    <View style={{ flex: 1, height: spacing.xs, borderRadius: 2, backgroundColor: tokenColors.border, overflow: 'hidden', flexDirection: 'row' }}>
+                      <View style={{ flex: currentBill.agree_count || 0.01, backgroundColor: tokenColors.success, borderRadius: 2 }} />
+                      <View style={{ flex: currentBill.disagree_count || 0.01, backgroundColor: tokenColors.danger, borderRadius: 2 }} />
                     </View>
                   </View>
                 )}
 
-                {/* Agree / Disagree / Skip buttons — onStartShouldSetResponder prevents parent Pressable from firing */}
-                <View style={{ flexDirection: 'row', gap: 10 }} onStartShouldSetResponder={() => true}>
-                  <Pressable
+                {/* Agree / Disagree / Skip buttons */}
+                <View style={{ flexDirection: 'row', gap: spacing.sm }} onStartShouldSetResponder={() => true}>
+                  <PressableScale
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                       submitOpinion('disagree');
@@ -552,27 +519,27 @@ export function HomeScreen({ navigation }: any) {
                     accessibilityRole="button"
                     accessibilityLabel="Disagree with this bill"
                     style={{
-                      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      backgroundColor: 'rgba(220,38,38,0.08)', borderRadius: radius.pill,
-                      paddingVertical: 12,
+                      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+                      backgroundColor: tokenColors.danger + '14', borderRadius: radius.pill,
+                      paddingVertical: spacing.md,
                     }}
                   >
-                    <Ionicons name="thumbs-down-outline" size={16} color="#DC2626" />
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#DC2626' }}>Disagree</Text>
-                  </Pressable>
+                    <Ionicons name="thumbs-down-outline" size={16} color={tokenColors.danger} />
+                    <AppText variant="label" style={{ color: tokenColors.danger }}>Disagree</AppText>
+                  </PressableScale>
 
-                  <Pressable
+                  <PressableScale
                     onPress={() => { submitOpinion('skip'); }}
                     accessibilityRole="button"
                     accessibilityLabel="Skip this bill"
                     style={{
-                      paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center',
+                      paddingHorizontal: spacing.lg, alignItems: 'center', justifyContent: 'center',
                     }}
                   >
-                    <Text style={{ fontSize: 12, color: colors.textMuted }}>Skip</Text>
-                  </Pressable>
+                    <AppText variant="caption" color="textMuted">Skip</AppText>
+                  </PressableScale>
 
-                  <Pressable
+                  <PressableScale
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                       submitOpinion('agree');
@@ -581,29 +548,29 @@ export function HomeScreen({ navigation }: any) {
                     accessibilityRole="button"
                     accessibilityLabel="Agree with this bill"
                     style={{
-                      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      backgroundColor: 'rgba(0,132,61,0.08)', borderRadius: radius.pill,
-                      paddingVertical: 12,
+                      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+                      backgroundColor: tokenColors.success + '14', borderRadius: radius.pill,
+                      paddingVertical: spacing.md,
                     }}
                   >
-                    <Ionicons name="thumbs-up-outline" size={16} color="#00843D" />
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#00843D' }}>Agree</Text>
-                  </Pressable>
+                    <Ionicons name="thumbs-up-outline" size={16} color={tokenColors.success} />
+                    <AppText variant="label" style={{ color: tokenColors.success }}>Agree</AppText>
+                  </PressableScale>
                 </View>
 
                 {/* Read more affordance */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14, gap: 4 }}>
-                  <Text style={{ fontSize: 13, fontWeight: '500', color: colors.textMuted }}>Read more about this bill</Text>
-                  <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: spacing.md, gap: spacing.xs }}>
+                  <AppText variant="caption" color="textMuted" style={{ fontWeight: '500' }}>Read more about this bill</AppText>
+                  <Ionicons name="chevron-forward" size={14} color={tokenColors.textMuted} />
                 </View>
-              </Pressable>
+              </Card>
             </View>
             <SectionDivider />
           </>
         )}
 
         {/* ═══ 4. CONTINUE LEARNING ═══ */}
-        <ContinueLearningCard navigation={navigation} colors={colors} />
+        <ContinueLearningCard navigation={navigation} />
 
         <SectionDivider />
 
@@ -611,82 +578,73 @@ export function HomeScreen({ navigation }: any) {
         {myMP && mpRecentVotes.length > 0 && (
           <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: spacing.md }}>
-              <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text }}>
+              <AppText variant="heading">
                 How {myMP.first_name} voted
-              </Text>
-              <Pressable onPress={() => navigation.navigate('MemberProfile', { member: myMP })} hitSlop={8} accessibilityRole="button" accessibilityLabel="View all votes">
-                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.green }}>All votes</Text>
-              </Pressable>
+              </AppText>
+              <PressableScale onPress={() => navigation.navigate('MemberProfile', { member: myMP })} accessibilityRole="button" accessibilityLabel="View all votes">
+                <AppText variant="label" color="accent">All votes</AppText>
+              </PressableScale>
             </View>
 
-            <View style={{
-              backgroundColor: colors.card,
-              borderRadius: radius.md,
-              padding: spacing.lg,
-              ...elevation.md,
-            }}>
+            <Card elevated>
               {mpRecentVotes.map((vote, i) => {
                 const divName = vote.division ? cleanDivisionName(vote.division.name) : 'Unknown';
                 const isAye = vote.vote_cast === 'aye';
                 return (
-                  <Pressable
+                  <PressableScale
                     key={vote.id}
                     onPress={() => navigation.navigate('MemberProfile', { member: myMP })}
                     accessibilityRole="button"
                     accessibilityLabel={`${myMP.first_name} voted ${isAye ? 'aye' : 'no'} on ${divName}`}
-                    style={({ pressed }) => ({
-                      paddingVertical: 12,
+                    style={{
+                      paddingVertical: spacing.md,
                       borderBottomWidth: i < mpRecentVotes.length - 1 ? 1 : 0,
-                      borderBottomColor: 'rgba(26,26,23,0.08)',
-                      opacity: pressed ? 0.85 : 1,
-                    })}
+                      borderBottomColor: tokenColors.border,
+                    }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <View style={{ flex: 1, marginRight: 10 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#1A1A17', lineHeight: 18 }} numberOfLines={2}>
+                      <View style={{ flex: 1, marginRight: spacing.sm }}>
+                        <AppText variant="callout" style={{ fontSize: 14, lineHeight: 18 }} numberOfLines={2}>
                           {divName}
-                        </Text>
-                        <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 3 }}>
+                        </AppText>
+                        <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
                           {vote.division?.chamber === 'senate' ? 'Senate' : 'House'} · {vote.division?.date ? timeAgo(vote.division.date) : ''}
-                        </Text>
+                        </AppText>
                       </View>
                       {/* Aye/No pill */}
                       <View style={{
-                        backgroundColor: isAye ? 'rgba(0,132,61,0.1)' : 'rgba(220,38,38,0.1)',
+                        backgroundColor: isAye ? tokenColors.success + '1A' : tokenColors.danger + '1A',
                         borderRadius: radius.sm,
-                        paddingHorizontal: 10, paddingVertical: 4,
+                        paddingHorizontal: spacing.sm, paddingVertical: spacing.xs,
                         marginRight: spacing.sm,
                       }}>
-                        <Text style={{
-                          fontSize: 11, fontWeight: '700', letterSpacing: 0.5,
-                          color: isAye ? '#00843D' : '#DC2626',
+                        <AppText variant="caption" tabular style={{
+                          fontWeight: '700', letterSpacing: 0.5,
+                          color: isAye ? tokenColors.success : tokenColors.danger,
                         }}>
                           {isAye ? 'AYE' : 'NO'}
-                        </Text>
+                        </AppText>
                       </View>
-                      {/* Share button — the viral loop */}
-                      <Pressable
-                        onPress={(e) => {
-                          e.stopPropagation?.();
+                      {/* Share button */}
+                      <PressableScale
+                        onPress={() => {
                           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                           navigation.navigate('MemberProfile', {
                             member: myMP,
                             shareVote: { divisionName: divName, voteCast: vote.vote_cast, date: vote.division?.date },
                           });
                         }}
-                        hitSlop={8}
                         accessibilityRole="button"
                         accessibilityLabel={`Share ${myMP.first_name}'s vote`}
-                        style={{ padding: 4 }}
-                        onStartShouldSetResponder={() => true}
+                        style={{ padding: spacing.xs }}
                       >
-                        <Ionicons name="share-outline" size={16} color="#6B7280" />
-                      </Pressable>
+                        <Ionicons name="share-outline" size={16} color={tokenColors.textMuted} />
+                      </PressableScale>
                     </View>
-                  </Pressable>
+                  </PressableScale>
                 );
               })}
-            </View>
+            </Card>
 
             <SectionDivider />
           </View>
@@ -694,7 +652,7 @@ export function HomeScreen({ navigation }: any) {
 
 
         {/* Bottom spacing */}
-        <View style={{ height: 20 }} />
+        <View style={{ height: spacing.xl }} />
       </ScrollView>
 
       <AuthPromptSheet {...authSheetProps} />
@@ -702,7 +660,7 @@ export function HomeScreen({ navigation }: any) {
   );
 }
 
-function ContinueLearningCard({ navigation, colors }: { navigation: any; colors: any }) {
+function ContinueLearningCard({ navigation }: { navigation: any }) {
   const { modules, loading } = useLearnModules();
 
   if (loading) return null;
@@ -718,47 +676,35 @@ function ContinueLearningCard({ navigation, colors }: { navigation: any; colors:
 
   return (
     <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-      <Pressable
-        onPress={() => navigation.navigate('Learn')}
-        style={({ pressed }) => ({
-          backgroundColor: colors.card,
-          borderRadius: radius.md,
-          padding: spacing.lg,
-          borderWidth: 1,
-          borderColor: colors.border,
-          opacity: pressed ? 0.92 : 1,
-          ...elevation.sm,
-        })}
-      >
+      <Card onPress={() => navigation.navigate('Learn')} elevated>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
           <View style={{
             width: 40, height: 40, borderRadius: radius.sm,
-            backgroundColor: colors.greenBg, alignItems: 'center', justifyContent: 'center',
+            backgroundColor: tokenColors.accentMuted, alignItems: 'center', justifyContent: 'center',
           }}>
-            <Ionicons name="school" size={20} color={colors.green} />
+            <Ionicons name="school" size={20} color={tokenColors.accent} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: colors.green, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+            <AppText variant="caption" style={{ fontWeight: '600', color: tokenColors.accent, textTransform: 'uppercase', letterSpacing: 0.6 }}>
               Continue Learning
-            </Text>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 1 }}>
+            </AppText>
+            <AppText variant="callout" style={{ fontWeight: '700', marginTop: 1 }}>
               {nextModule.title}
-            </Text>
+            </AppText>
           </View>
-          <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
+          <Ionicons name="arrow-forward" size={16} color={tokenColors.textMuted} />
         </View>
 
         {/* Progress bar */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden' }}>
-            <View style={{ height: '100%', width: `${progress * 100}%`, backgroundColor: colors.green, borderRadius: 2 }} />
+          <View style={{ flex: 1, height: spacing.xs, borderRadius: 2, backgroundColor: tokenColors.border, overflow: 'hidden' }}>
+            <View style={{ height: '100%', width: `${progress * 100}%`, backgroundColor: tokenColors.accent, borderRadius: 2 }} />
           </View>
-          <Text style={{ fontSize: 11, color: colors.textMuted, fontWeight: '500' }}>
+          <AppText variant="caption" color="textMuted" tabular>
             {completedLessons}/{totalLessons}
-          </Text>
+          </AppText>
         </View>
-      </Pressable>
+      </Card>
     </View>
   );
 }
-
