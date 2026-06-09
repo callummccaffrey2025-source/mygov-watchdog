@@ -1,10 +1,13 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../context/ThemeContext';
-import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS } from '../constants/design';
+import { spacing, radius, colors as tokenColors } from '../theme/tokens';
+import { AppText } from './ui/AppText';
+import { Card } from './ui/Card';
+import { PressableScale } from './ui/PressableScale';
 import { QuizBlock } from './QuizBlock';
 import type { ContentBlock as ContentBlockType } from '../hooks/useLesson';
+import { decodeHtml } from '../utils/decodeHtml';
 
 interface ContentBlockProps {
   block: ContentBlockType;
@@ -13,25 +16,29 @@ interface ContentBlockProps {
 }
 
 export function ContentBlock({ block, onQuizAnswer, onRealDataPress }: ContentBlockProps) {
-  const { colors } = useTheme();
-
   switch (block.type) {
     case 'text':
       return (
-        <View style={styles.textBlock}>
+        <View style={{ marginBottom: spacing.lg }}>
           {block.title && (
-            <Text style={[styles.textTitle, { color: colors.text }]}>{block.title}</Text>
+            <AppText variant="title" style={{ marginBottom: spacing.sm }}>
+              {block.title}
+            </AppText>
           )}
-          <Text style={[styles.textBody, { color: colors.text }]}>{block.body}</Text>
+          <AppText variant="body" style={{ lineHeight: 24 }}>
+            {decodeHtml(block.body)}
+          </AppText>
         </View>
       );
 
     case 'fact':
       return (
-        <View style={[styles.factBlock, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={styles.factEmoji}>{block.emoji}</Text>
-          <Text style={[styles.factText, { color: colors.text }]}>{block.text}</Text>
-        </View>
+        <Card style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.lg }}>
+          <AppText variant="title" style={{ fontSize: 24 }}>{block.emoji}</AppText>
+          <AppText variant="body" style={{ lineHeight: 22, flex: 1 }}>
+            {decodeHtml(block.text)}
+          </AppText>
+        </Card>
       );
 
     case 'quiz':
@@ -47,108 +54,48 @@ export function ContentBlock({ block, onQuizAnswer, onRealDataPress }: ContentBl
 
     case 'diagram':
       return (
-        <View style={[styles.diagramBlock, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="image-outline" size={48} color={colors.textMuted} />
-          <Text style={[styles.diagramCaption, { color: colors.textMuted }]}>{block.caption}</Text>
-        </View>
+        <Card style={{
+          alignItems: 'center', justifyContent: 'center',
+          marginBottom: spacing.lg, minHeight: 120,
+        }}>
+          <Ionicons name="image-outline" size={48} color={tokenColors.textMuted} />
+          <AppText variant="caption" color="textMuted" center style={{ marginTop: spacing.sm }}>
+            {block.caption}
+          </AppText>
+        </Card>
       );
 
     case 'real_data':
       return (
-        <Pressable
+        <PressableScale
           onPress={() => onRealDataPress?.(block.entity, block.id)}
-          style={[styles.realDataBlock, { backgroundColor: colors.surface, borderColor: '#00843D' }]}
+          style={{
+            padding: spacing.lg,
+            borderRadius: radius.md,
+            borderWidth: 1.5,
+            borderStyle: 'dashed' as any,
+            borderColor: tokenColors.accent,
+            backgroundColor: tokenColors.surface,
+            marginBottom: spacing.lg,
+          }}
         >
-          <View style={styles.realDataHeader}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs }}>
             <Ionicons
               name={block.entity === 'bill' ? 'document-text' : block.entity === 'member' ? 'person' : 'hand-left'}
               size={18}
-              color="#00843D"
+              color={tokenColors.accent}
             />
-            <Text style={[styles.realDataLabel, { color: '#00843D' }]}>
+            <AppText variant="label" color="accent" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
               See real {block.entity === 'bill' ? 'bill' : block.entity === 'member' ? 'MP' : 'vote'}
-            </Text>
+            </AppText>
           </View>
-          <Text style={[styles.realDataCaption, { color: colors.text }]}>{block.caption}</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textMuted} style={styles.realDataChevron} />
-        </Pressable>
+          <AppText variant="body" style={{ lineHeight: 22 }}>
+            {block.caption}
+          </AppText>
+        </PressableScale>
       );
 
     default:
       return null;
   }
 }
-
-const styles = StyleSheet.create({
-  textBlock: {
-    marginBottom: SPACING.lg,
-  },
-  textTitle: {
-    fontSize: FONT_SIZE.title,
-    fontWeight: FONT_WEIGHT.bold as any,
-    marginBottom: SPACING.sm,
-  },
-  textBody: {
-    fontSize: FONT_SIZE.body,
-    lineHeight: 24,
-  },
-  factBlock: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: SPACING.lg,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    marginBottom: SPACING.lg,
-    gap: SPACING.md,
-  },
-  factEmoji: {
-    fontSize: 24,
-  },
-  factText: {
-    fontSize: FONT_SIZE.body,
-    lineHeight: 22,
-    flex: 1,
-  },
-  diagramBlock: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.xl,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    marginBottom: SPACING.lg,
-    minHeight: 120,
-  },
-  diagramCaption: {
-    fontSize: FONT_SIZE.small,
-    marginTop: SPACING.sm,
-    textAlign: 'center',
-  },
-  realDataBlock: {
-    padding: SPACING.lg,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    marginBottom: SPACING.lg,
-  },
-  realDataHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-    marginBottom: SPACING.xs,
-  },
-  realDataLabel: {
-    fontSize: FONT_SIZE.small,
-    fontWeight: FONT_WEIGHT.semibold as any,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  realDataCaption: {
-    fontSize: FONT_SIZE.body,
-    lineHeight: 22,
-  },
-  realDataChevron: {
-    position: 'absolute',
-    right: SPACING.lg,
-    top: '50%',
-  },
-});
