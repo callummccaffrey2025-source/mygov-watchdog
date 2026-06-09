@@ -22,10 +22,26 @@ LOG_DIR="${HOME}/verity/logs"
 CYCLE_LOG="${LOG_DIR}/daily_cycle.log"
 LOOPS_DIR="${PROJECT_DIR}/scripts/agent_loops"
 
+# Cron's PATH may resolve python3 to the system interpreter, which lacks
+# python-dotenv/supabase (killed the 2026-06-09 cycle). Pin the homebrew one.
+PYTHON_BIN="${PYTHON_BIN:-/opt/homebrew/bin/python3}"
+if [[ -x "$PYTHON_BIN" ]]; then
+  python3() { "$PYTHON_BIN" "$@"; }
+fi
+
 mkdir -p "$LOG_DIR"
 
 timestamp() { date "+%Y-%m-%d %H:%M:%S"; }
 log() { echo "[$(timestamp)] $1" | tee -a "$CYCLE_LOG"; }
+
+# Self-heal: a Homebrew python upgrade wipes site-packages (this killed the
+# 2026-06-09 cycle via ModuleNotFoundError: dotenv). Verify core deps up front
+# and reinstall from requirements.txt if any are missing.
+if ! "$PYTHON_BIN" -c "import dotenv, supabase, requests, feedparser" 2>/dev/null; then
+  log "Core python deps missing — reinstalling from scripts/requirements.txt"
+  "$PYTHON_BIN" -m pip install -q --break-system-packages -r "$PROJECT_DIR/scripts/requirements.txt" \
+    || log "⚠ pip reinstall failed — cycle will likely fail"
+fi
 
 # Track overall cycle health
 CYCLE_STATUS="success"
@@ -72,6 +88,19 @@ phase_brief() {
   else
     log "⚠ Daily brief failed (HTTP $http_code)"
     CYCLE_STATUS="partial"
+  fi
+
+  # ── COUNCIL GATE: a different model panel grades the brief against the
+  # deterministic vote record. The writer (haiku) never vouches for itself.
+  log "── Council gate: grading brief against vote record ──"
+  local gate_exit=0
+  python3 scripts/grade_brief.py >> "$CYCLE_LOG" 2>&1 || gate_exit=$?
+
+  if [[ $gate_exit -eq 0 ]]; then
+    log "✓ Brief passed council gate"
+  else
+    log "🔴 Brief FAILED council gate — alerts fired, run marked degraded"
+    CYCLE_STATUS="degraded"
   fi
 }
 
