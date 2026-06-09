@@ -433,22 +433,6 @@ export function ExploreScreen({ navigation }: any) {
       >
         <AppText variant="title" style={{ color: colors.text, marginBottom: spacing.lg }}>Explore</AppText>
 
-        {/* Ask Verity AI */}
-        <Card onPress={() => navigation.navigate('Ask')} style={{ marginBottom: spacing.lg, borderWidth: 1.5, borderColor: colors.green }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-              <View style={{ width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.greenBg, justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="sparkles" size={20} color={colors.green} />
-              </View>
-              <View>
-                <AppText variant="callout" style={{ fontWeight: '700', color: colors.text }}>Ask Verity AI</AppText>
-                <AppText variant="caption" style={{ color: colors.textMuted, marginTop: 2 }}>Ask anything about Australian politics</AppText>
-              </View>
-            </View>
-            <Ionicons name="arrow-forward" size={18} color={colors.green} />
-          </View>
-        </Card>
-
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search MPs, bills, parties..." />
 
         {/* State filters */}
