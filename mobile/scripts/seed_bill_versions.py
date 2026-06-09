@@ -38,7 +38,7 @@ def compute_hash(bill: dict) -> str:
 
 def main():
     dry_run = "--dry-run" in sys.argv
-    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Get all bills
     bills = []

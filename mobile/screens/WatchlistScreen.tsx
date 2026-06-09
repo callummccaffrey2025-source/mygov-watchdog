@@ -14,7 +14,7 @@ import { hapticLight } from '../lib/haptics';
 
 // ── Watchlist Item Card ─────────────────────────────────────────────────
 
-function WatchlistCard({
+const WatchlistCard = React.memo(function WatchlistCard({
   item,
   onPress,
   colors,
@@ -152,7 +152,7 @@ function WatchlistCard({
       )}
     </Pressable>
   );
-}
+});
 
 // ── Main Screen ─────────────────────────────────────────────────────────
 

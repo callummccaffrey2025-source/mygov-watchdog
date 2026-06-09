@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env'))
 
 SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+SUPABASE_SERVICE_ROLE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 FUNCTION_URL = f"{SUPABASE_URL}/functions/v1/ask-verity-ingest"
 
 BATCH_SIZE = 10  # Max per call to avoid WORKER_RESOURCE_LIMIT
@@ -56,7 +56,7 @@ def ingest_batch(source_type: str, limit: int, offset: int) -> dict:
     resp = requests.post(
         FUNCTION_URL,
         headers={
-            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
             "Content-Type": "application/json",
         },
         json={"source_type": source_type, "limit": limit, "offset": offset},

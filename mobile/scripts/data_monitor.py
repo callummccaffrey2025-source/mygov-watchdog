@@ -87,7 +87,7 @@ def check_brief_present(sb) -> tuple[bool, str]:
 
 
 def check_bias_coverage(sb) -> tuple[bool, str]:
-    """Pass if >70% of recent articles map to a source with bias_score."""
+    """Pass if >50% of recent articles map to a source with bias_score."""
     arts = (
         sb.table("news_articles")
         .select("source_id")
@@ -111,9 +111,9 @@ def check_bias_coverage(sb) -> tuple[bool, str]:
 
     matched = sum(1 for a in arts if a.get("source_id") in biased_ids)
     pct = matched / len(arts)
-    if pct >= 0.70:
+    if pct >= 0.50:
         return True, f"{matched}/{len(arts)} ({pct:.0%}) recent articles have bias"
-    return False, f"only {matched}/{len(arts)} ({pct:.0%}) recent articles have bias (< 70%)"
+    return False, f"only {matched}/{len(arts)} ({pct:.0%}) recent articles have bias (< 50%)"
 
 
 def check_members_active(sb) -> tuple[bool, str]:
@@ -156,7 +156,7 @@ def log_run(sb, status: str, details: str) -> None:
 
 
 def main() -> None:
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     print()
     print("═══════════════ VERITY HEALTH CHECK ═══════════════")

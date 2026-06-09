@@ -136,7 +136,7 @@ def main():
         if arg == "--limit" and i + 1 < len(sys.argv):
             limit = int(sys.argv[i + 1])
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Get sources missing bias data
     r = sb.table("news_sources").select("id,name,website_url,bias_score,factuality_numeric,owner").execute()

@@ -50,13 +50,13 @@ logging.basicConfig(
 log = logging.getLogger("orchestrate")
 
 STATUS_FILE = SCRIPTS_DIR / "pipeline_status.json"
-TIMEOUT_SECONDS = 600  # 10 minutes
+TIMEOUT_SECONDS = 1200  # 20 minutes
 RETRY_DELAY = 30
 
 # Pipeline stages — order matters
 STAGES = {
     "news": {"script": "ingest_news.py", "args": ["--fresh"], "stage": 1},
-    "votes": {"script": "ingest_votes.py", "args": [], "stage": 1},
+    "votes": {"script": "ingest_votes.py", "args": ["--recent", "7"], "stage": 1},
     "summaries": {"script": "generate_ai_summaries.py", "args": [], "stage": 2},
     "health": {"script": "data_monitor.py", "args": [], "stage": 3},
 }
@@ -152,7 +152,7 @@ def log_to_supabase(status: dict):
     try:
         from supabase import create_client
         url = os.environ.get("SUPABASE_URL")
-        key = os.environ.get("SUPABASE_KEY")
+        key = os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
         if not url or not key:
             return
         sb = create_client(url, key)

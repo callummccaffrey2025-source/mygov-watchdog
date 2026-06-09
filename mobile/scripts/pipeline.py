@@ -73,9 +73,9 @@ def log_pipeline_run(sb, pipeline: str, status: str, started_at: datetime,
 
 def main():
     url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_KEY")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
-        raise SystemExit("Missing SUPABASE_URL or SUPABASE_KEY in .env")
+        raise SystemExit("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env")
 
     sb = create_client(url, key)
     skip_images = "--no-images" in sys.argv

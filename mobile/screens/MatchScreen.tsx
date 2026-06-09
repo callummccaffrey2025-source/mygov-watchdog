@@ -495,7 +495,7 @@ function IssueRow({ issue, colors }: { issue: IssueMatch; colors: any }) {
 
 // ── Match Card ──────────────────────────────────────────────────────────
 
-function MatchCard({
+const MatchCard = React.memo(function MatchCard({
   match,
   rank,
   onPress,
@@ -608,7 +608,7 @@ function MatchCard({
       </View>
     </Pressable>
   );
-}
+});
 
 // ── Main Screen ─────────────────────────────────────────────────────────
 

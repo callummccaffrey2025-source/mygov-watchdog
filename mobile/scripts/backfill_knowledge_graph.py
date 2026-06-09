@@ -184,7 +184,7 @@ def backfill_rebellions(db, dry_run: bool) -> int:
 def main():
     dry_run = "--dry-run" in sys.argv
 
-    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     print(f"\n{'=' * 60}")
     print(f"KNOWLEDGE GRAPH BACKFILL")

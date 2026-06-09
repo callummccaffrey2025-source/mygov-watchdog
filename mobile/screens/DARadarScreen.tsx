@@ -22,7 +22,7 @@ const TYPE_ICONS: Record<string, string> = {
   review: 'refresh',
 };
 
-function DACard({ da, colors, onPress }: { da: DevelopmentApplication; colors: any; onPress: () => void }) {
+const DACard = React.memo(function DACard({ da, colors, onPress }: { da: DevelopmentApplication; colors: any; onPress: () => void }) {
   const statusStyle = STATUS_COLORS[da.status] || STATUS_COLORS.lodged;
   const isRezoning = da.da_type === 'rezoning';
 
@@ -123,7 +123,7 @@ function DACard({ da, colors, onPress }: { da: DevelopmentApplication; colors: a
       )}
     </Pressable>
   );
-}
+});
 
 export function DARadarScreen({ navigation }: any) {
   const { colors } = useTheme();

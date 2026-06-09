@@ -88,9 +88,9 @@ BILLS_TO_WATCH = [
 
 def main() -> None:
     url = os.environ.get("SUPABASE_URL") or os.environ.get("EXPO_PUBLIC_SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
-        log.error("Missing SUPABASE_URL / SUPABASE_KEY")
+        log.error("Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY")
         sys.exit(1)
 
     target_date = sys.argv[1] if len(sys.argv) > 1 else date.today().isoformat()

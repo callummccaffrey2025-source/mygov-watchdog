@@ -25,7 +25,7 @@ MODEL_VERSION = "baseline_party_cohesion_v1"
 
 def main():
     dry_run = "--dry-run" in sys.argv
-    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Fetch votes with party info
     log.info("Fetching division votes...")

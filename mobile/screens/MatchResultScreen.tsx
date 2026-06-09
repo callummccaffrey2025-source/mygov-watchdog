@@ -50,7 +50,7 @@ function AlignmentChip({ state }: { state: string }) {
     ? { label: 'Gap', bg: '#F59E0B15', color: '#F59E0B' }
     : state === 'big_gap'
     ? { label: 'Big gap', bg: '#DC354515', color: '#DC3545' }
-    : { label: 'No data', bg: '#6B728015', color: '#6B7280' };
+    : { label: 'Insufficient data', bg: '#6B728015', color: '#6B7280' };
 
   return (
     <View style={{

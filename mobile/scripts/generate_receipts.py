@@ -33,21 +33,21 @@ sys.path.insert(0, os.path.dirname(__file__))
 from supabase import create_client
 
 SUPABASE_URL = os.environ.get("EXPO_PUBLIC_SUPABASE_URL", "https://zmmglikiryuftqmoprqm.supabase.co")
-SUPABASE_KEY = os.environ.get("EXPO_PUBLIC_SUPABASE_ANON_KEY", "")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("EXPO_PUBLIC_SUPABASE_ANON_KEY", "")
 
 # Try to load from .env if not set
-if not SUPABASE_KEY:
+if not SUPABASE_SERVICE_ROLE_KEY:
     env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
     if os.path.exists(env_path):
         for line in open(env_path):
             if line.startswith('EXPO_PUBLIC_SUPABASE_ANON_KEY='):
-                SUPABASE_KEY = line.split('=', 1)[1].strip().strip('"').strip("'")
+                SUPABASE_SERVICE_ROLE_KEY = line.split('=', 1)[1].strip().strip('"').strip("'")
 
-if not SUPABASE_KEY:
+if not SUPABASE_SERVICE_ROLE_KEY:
     print("ERROR: EXPO_PUBLIC_SUPABASE_ANON_KEY not set")
     sys.exit(1)
 
-sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 # ── Card design constants ────────────────────────────────────────────────────
 

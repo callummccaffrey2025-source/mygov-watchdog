@@ -44,7 +44,7 @@ export function CommunityScreen({ navigation }: any) {
     const typeColor = POST_TYPE_COLORS[item.post_type] ?? '#9aabb8';
     return (
       <Pressable
-        style={[styles.postCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        style={[styles.postCard, { backgroundColor: colors.surface }]}
         onPress={() => navigation.navigate('CommunityPostDetail', { postId: item.id })}
         accessibilityLabel={`Open discussion: ${item.title}`}
         accessibilityRole="button"
@@ -121,7 +121,7 @@ export function CommunityScreen({ navigation }: any) {
             accessibilityLabel={`Show ${t === 'latest' ? 'Latest' : t === 'top' ? 'Top' : 'My Posts'} posts`}
             accessibilityRole="button"
           >
-            <Text style={[styles.tabText, { color: tab === t ? '#00843D' : colors.textMuted }]}>
+            <Text style={[styles.tabText, { color: tab === t ? colors.green : colors.textMuted }]}>
               {t === 'latest' ? 'Latest' : t === 'top' ? 'Top' : 'My Posts'}
             </Text>
           </Pressable>
@@ -130,7 +130,7 @@ export function CommunityScreen({ navigation }: any) {
 
       {/* List */}
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color="#00843D" />
+        <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
       ) : (
         <FlashList
           data={posts}
@@ -171,14 +171,14 @@ const styles = StyleSheet.create({
   navTitle: { fontSize: 17, fontWeight: '700', flex: 1, textAlign: 'center' },
   tabs: { flexDirection: 'row', borderBottomWidth: 1 },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: '#00843D' },
+  tabActive: { borderBottomWidth: 2, borderBottomColor: '#00843D' }, // tab indicator, not card border
   tabText: { fontSize: 14, fontWeight: '600' },
   list: { padding: 12, paddingBottom: 80 },
-  postCard: { borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 10 },
+  postCard: { borderRadius: 14, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 },
   postCardTop: { flexDirection: 'row', gap: 6, marginBottom: 6 },
   typePill: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   typePillText: { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
-  topicChip: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, backgroundColor: '#00843D18' },
+  topicChip: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, backgroundColor: '#00843D18' },
   topicChipText: { fontSize: 11, fontWeight: '600', color: '#00843D' },
   postTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
   postBody: { fontSize: 13, lineHeight: 18, marginBottom: 8 },
@@ -188,5 +188,5 @@ const styles = StyleSheet.create({
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40, gap: 8 },
   emptyTitle: { fontSize: 18, fontWeight: '700' },
   emptyBody: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
-  fab: { position: 'absolute', bottom: 24, right: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: '#00843D', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
+  fab: { position: 'absolute', bottom: 24, right: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: '#00843D', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
 });

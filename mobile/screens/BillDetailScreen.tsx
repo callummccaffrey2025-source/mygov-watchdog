@@ -26,7 +26,7 @@ import { trackEngagement } from '../hooks/useEngagementScore';
 import { useBillHistory } from '../hooks/useBillHistory';
 import { enrichBill, type NarrativeStatus } from '../lib/billEnrichment';
 import { BillExplainerCard } from '../components/BillExplainer';
-import { spacing, radius, elevation } from '../theme/tokens';
+import { spacing, radius, elevation, colors as tokenColors } from '../theme/tokens';
 import { hapticLight } from '../lib/haptics';
 
 // ── Interfaces ───────────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ function PersonalImpactCard({ billTitle, billSummary, billId, colors }: {
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: 6,
                 paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
-                backgroundColor: isActive ? '#00843D' : '#FFF0D6',
+                backgroundColor: isActive ? tokenColors.success : '#FFF0D6',
               }}
               accessibilityRole="button"
               accessibilityLabel={`I'm a ${opt.label}`}
@@ -231,7 +231,7 @@ export function BillDetailScreen({ route, navigation }: any) {
             <Ionicons name="alert-circle-outline" size={48} color={colors.textMuted} />
             <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, marginTop: 12 }}>Bill not found</Text>
             <Text style={{ fontSize: 15, color: colors.textMuted, marginTop: 8, textAlign: 'center' }}>This bill may have been removed or is temporarily unavailable.</Text>
-            <Pressable onPress={() => navigation.goBack()} style={{ marginTop: 20, backgroundColor: '#00843D', borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 }}>
+            <Pressable onPress={() => navigation.goBack()} style={{ marginTop: 20, backgroundColor: tokenColors.success, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 }}>
               <Text style={{ color: '#fff', fontWeight: '700' }}>Go back</Text>
             </Pressable>
           </View>
@@ -298,7 +298,7 @@ export function BillDetailScreen({ route, navigation }: any) {
             accessibilityRole="button"
             accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark this bill'}
           >
-            <Ionicons name={bookmarked ? 'bookmark' : 'bookmark-outline'} size={22} color={bookmarked ? '#00843D' : colors.text} />
+            <Ionicons name={bookmarked ? 'bookmark' : 'bookmark-outline'} size={22} color={bookmarked ? tokenColors.success : colors.text} />
           </Pressable>
           <Pressable
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.cardAlt, justifyContent: 'center', alignItems: 'center' }}
@@ -407,22 +407,22 @@ export function BillDetailScreen({ route, navigation }: any) {
               const isActive = i <= currentStage;
               const isCurrent = i === currentStage || (isFinal && i === 4);
               const dotColor = isFinal && i === 4
-                ? (isPassed ? '#00843D' : '#DC3545')
-                : isActive ? '#00843D' : colors.border;
+                ? (isPassed ? tokenColors.success : tokenColors.danger)
+                : isActive ? tokenColors.success : colors.border;
               return (
                 <View key={stage.key} style={{ alignItems: 'center', flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
                     {i > 0 && (
-                      <View style={{ flex: 1, height: 3, backgroundColor: isActive ? '#00843D' : colors.border, borderRadius: 2 }} />
+                      <View style={{ flex: 1, height: 3, backgroundColor: isActive ? tokenColors.success : colors.border, borderRadius: 2 }} />
                     )}
                     <View style={{
                       width: isCurrent ? 14 : 10, height: isCurrent ? 14 : 10,
                       borderRadius: 7, backgroundColor: dotColor,
                       borderWidth: isCurrent ? 2 : 0,
-                      borderColor: isFinal && i === 4 ? (isPassed ? '#00843D' : '#DC3545') : '#00843D',
+                      borderColor: isFinal && i === 4 ? (isPassed ? tokenColors.success : tokenColors.danger) : tokenColors.success,
                     }} />
                     {i < STAGES.length - 1 && (
-                      <View style={{ flex: 1, height: 3, backgroundColor: i < currentStage ? '#00843D' : colors.border, borderRadius: 2 }} />
+                      <View style={{ flex: 1, height: 3, backgroundColor: i < currentStage ? tokenColors.success : colors.border, borderRadius: 2 }} />
                     )}
                   </View>
                   <Text style={{
@@ -445,11 +445,11 @@ export function BillDetailScreen({ route, navigation }: any) {
             overflow: 'hidden', ...elevation.sm,
           }}>
             <View style={{ flexDirection: 'row' }}>
-              <View style={{ width: 4, backgroundColor: '#00843D' }} />
+              <View style={{ width: 4, backgroundColor: tokenColors.success }} />
               <View style={{ flex: 1, padding: spacing.lg }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.sm }}>
                   <Ionicons name="document-text-outline" size={14} color="#00843D" />
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#00843D', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: tokenColors.success, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     What it says
                   </Text>
                 </View>
@@ -467,7 +467,7 @@ export function BillDetailScreen({ route, navigation }: any) {
                           </Text>
                         )}
                         <Pressable onPress={() => setSummaryExpanded(!summaryExpanded)} accessibilityRole="button" accessibilityLabel={summaryExpanded ? 'Show less' : 'Read more'} style={{ marginTop: spacing.sm }}>
-                          <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>
+                          <Text style={{ fontSize: 13, fontWeight: '600', color: tokenColors.success }}>
                             {summaryExpanded ? 'Show less' : 'Read more'}
                           </Text>
                         </Pressable>
@@ -495,7 +495,7 @@ export function BillDetailScreen({ route, navigation }: any) {
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.md }}
                   >
                     <Ionicons name="open-outline" size={13} color="#00843D" />
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#00843D' }}>View full bill text</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: tokenColors.success }}>View full bill text</Text>
                   </Pressable>
                 )}
               </View>
@@ -560,7 +560,7 @@ export function BillDetailScreen({ route, navigation }: any) {
               accessibilityLabel={`Contact ${myMP.first_name} ${myMP.last_name} about this bill`}
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-                backgroundColor: '#00843D', borderRadius: radius.sm,
+                backgroundColor: tokenColors.success, borderRadius: radius.sm,
                 paddingHorizontal: spacing.lg, paddingVertical: 14,
                 marginBottom: spacing.sm,
               }}
@@ -623,11 +623,11 @@ export function BillDetailScreen({ route, navigation }: any) {
               {forArgs.map((a, i) => (
                 <View key={a.id ?? `for-${i}`} style={{
                   flexDirection: 'row', gap: 12,
-                  backgroundColor: '#E8F5EE', borderRadius: 10, padding: 14, marginBottom: 8,
+                  backgroundColor: tokenColors.accentMuted, borderRadius: 10, padding: 14, marginBottom: 8,
                 }}>
                   <Ionicons name="checkmark-circle" size={18} color="#00843D" style={{ marginTop: 2 }} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontWeight: '800', color: '#00843D', letterSpacing: 0.5, marginBottom: 4 }}>FOR</Text>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: tokenColors.success, letterSpacing: 0.5, marginBottom: 4 }}>FOR</Text>
                     <Text style={{ fontSize: 14, color: colors.text, lineHeight: 21 }}>{a.argument_text}</Text>
                   </View>
                 </View>
@@ -639,7 +639,7 @@ export function BillDetailScreen({ route, navigation }: any) {
                 }}>
                   <Ionicons name="close-circle" size={18} color="#DC3545" style={{ marginTop: 2 }} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontWeight: '800', color: '#DC3545', letterSpacing: 0.5, marginBottom: 4 }}>AGAINST</Text>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: tokenColors.danger, letterSpacing: 0.5, marginBottom: 4 }}>AGAINST</Text>
                     <Text style={{ fontSize: 14, color: colors.text, lineHeight: 21 }}>{a.argument_text}</Text>
                   </View>
                 </View>
@@ -667,28 +667,28 @@ export function BillDetailScreen({ route, navigation }: any) {
               <View style={{ backgroundColor: colors.card, borderRadius: radius.md, padding: spacing.lg, ...elevation.sm, marginBottom: spacing.sm }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: spacing.md }}>
                   <View style={{ alignItems: 'flex-start', minWidth: 36 }}>
-                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#00843D' }}>{divAyeTotal}</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: tokenColors.success }}>{divAyeTotal}</Text>
                     <Text style={{ fontSize: 10, color: colors.textMuted }}>Ayes</Text>
                   </View>
                   <View style={{ flex: 1, height: 12, borderRadius: 6, overflow: 'hidden', backgroundColor: colors.cardAlt, flexDirection: 'row' }}>
                     {divAyeTotal + divNoTotal > 0 && (
-                      <View style={{ flex: divAyeTotal, backgroundColor: '#00843D' }} />
+                      <View style={{ flex: divAyeTotal, backgroundColor: tokenColors.success }} />
                     )}
                     {divNoTotal > 0 && (
-                      <View style={{ flex: divNoTotal, backgroundColor: '#DC3545' }} />
+                      <View style={{ flex: divNoTotal, backgroundColor: tokenColors.danger }} />
                     )}
                   </View>
                   <View style={{ alignItems: 'flex-end', minWidth: 36 }}>
-                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#DC3545' }}>{divNoTotal}</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: tokenColors.danger }}>{divNoTotal}</Text>
                     <Text style={{ fontSize: 10, color: colors.textMuted }}>Noes</Text>
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <View style={{
-                    backgroundColor: divAyeTotal > divNoTotal ? '#E8F5EE' : '#FDECEA',
+                    backgroundColor: divAyeTotal > divNoTotal ? tokenColors.accentMuted : '#FDECEA',
                     borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
                   }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: divAyeTotal > divNoTotal ? '#00843D' : '#DC3545' }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: divAyeTotal > divNoTotal ? tokenColors.success : tokenColors.danger }}>
                       {divAyeTotal > divNoTotal ? 'PASSED' : 'NOT PASSED'}
                     </Text>
                   </View>
@@ -717,7 +717,7 @@ export function BillDetailScreen({ route, navigation }: any) {
                       accessibilityRole="button"
                       accessibilityLabel={`View ${myMP.first_name} ${myMP.last_name}'s profile`}
                     >
-                      <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>View</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: tokenColors.success }}>View</Text>
                     </Pressable>
                   </View>
                 );
@@ -734,10 +734,10 @@ export function BillDetailScreen({ route, navigation }: any) {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Text style={{ fontSize: 11, color: colors.textMuted }}>{timeAgo(d.date)}</Text>
                       <View style={{
-                        backgroundColor: passed ? '#E8F5EE' : '#FDECEA',
+                        backgroundColor: passed ? tokenColors.accentMuted : '#FDECEA',
                         borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
                       }}>
-                        <Text style={{ fontSize: 10, fontWeight: '700', color: passed ? '#00843D' : '#DC3545' }}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: passed ? tokenColors.success : tokenColors.danger }}>
                           {passed ? 'PASSED' : 'NOT PASSED'}
                         </Text>
                       </View>
@@ -778,8 +778,8 @@ export function BillDetailScreen({ route, navigation }: any) {
                   <View style={{ width: 24, alignItems: 'center' }}>
                     <View style={{
                       width: 12, height: 12, borderRadius: 6,
-                      backgroundColor: isLatest ? '#00843D' : colors.cardAlt,
-                      borderWidth: 2, borderColor: isLatest ? '#00843D' : colors.border,
+                      backgroundColor: isLatest ? tokenColors.success : colors.cardAlt,
+                      borderWidth: 2, borderColor: isLatest ? tokenColors.success : colors.border,
                       marginTop: 4,
                     }} />
                     {i < billHistory.length - 1 && (
@@ -813,16 +813,16 @@ export function BillDetailScreen({ route, navigation }: any) {
             accessibilityLabel={bookmarked ? 'Unfollow this bill' : 'Follow this bill for updates'}
             style={{
               flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-              backgroundColor: bookmarked ? '#E8F5EE' : colors.surface,
+              backgroundColor: bookmarked ? tokenColors.accentMuted : colors.surface,
               borderRadius: radius.sm, paddingVertical: 14,
             }}
           >
             <Ionicons
               name={bookmarked ? 'eye' : 'eye-outline'}
               size={18}
-              color={bookmarked ? '#00843D' : colors.text}
+              color={bookmarked ? tokenColors.success : colors.text}
             />
-            <Text style={{ fontSize: 14, fontWeight: '600', color: bookmarked ? '#00843D' : colors.text }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: bookmarked ? tokenColors.success : colors.text }}>
               {bookmarked ? 'Watching — you\'ll be notified of changes' : 'Add to watchlist'}
             </Text>
           </Pressable>

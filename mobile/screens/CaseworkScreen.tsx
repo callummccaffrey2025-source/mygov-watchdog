@@ -370,7 +370,7 @@ export function CaseworkScreen({ navigation }: any) {
             borderRadius: BORDER_RADIUS.lg,
             padding: SPACING.lg,
             flexDirection: 'row', gap: SPACING.md,
-            borderWidth: 1, borderColor: '#BAE6FD',
+            ...SHADOWS.sm,
           }}>
             <Ionicons name="information-circle" size={20} color="#0284C7" style={{ marginTop: 1 }} />
             <View style={{ flex: 1 }}>

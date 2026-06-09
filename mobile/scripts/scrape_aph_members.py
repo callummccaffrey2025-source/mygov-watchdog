@@ -110,7 +110,7 @@ def extract_profile(url: str) -> dict | None:
 def main():
     dry_run = "--dry-run" in sys.argv
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Get members missing aph_id
     r = sb.table("members").select("id,first_name,last_name,aph_id,is_active").eq("is_active", True).execute()

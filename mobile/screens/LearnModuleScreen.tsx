@@ -150,7 +150,7 @@ export function LearnModuleScreen({ navigation, route }: any) {
             <View style={{ alignItems: 'center', paddingTop: spacing.xxxl, gap: spacing.md }}>
               <Ionicons name="book-outline" size={48} color={tokenColors.textMuted} />
               <AppText variant="body" color="textMuted">
-                Lessons coming soon
+                No lessons available for this module yet
               </AppText>
             </View>
           }

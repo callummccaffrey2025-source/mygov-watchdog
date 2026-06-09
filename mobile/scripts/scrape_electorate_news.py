@@ -173,7 +173,7 @@ def main():
         if arg == "--electorate" and i + 1 < len(sys.argv):
             target_electorate = sys.argv[i + 1]
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Get electorates from DB
     r = sb.table("electorates").select("id,name,state").execute()

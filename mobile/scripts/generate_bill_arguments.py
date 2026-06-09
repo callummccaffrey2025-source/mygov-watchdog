@@ -75,10 +75,10 @@ def parse_response(text: str) -> dict | None:
 
 def main() -> None:
     sb_url = os.environ.get("SUPABASE_URL")
-    sb_key = os.environ.get("SUPABASE_KEY")
+    sb_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     anth_key = os.environ.get("ANTHROPIC_API_KEY")
     if not sb_url or not sb_key:
-        raise SystemExit("Missing SUPABASE_URL or SUPABASE_KEY")
+        raise SystemExit("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY")
     if not anth_key:
         raise SystemExit("Missing ANTHROPIC_API_KEY")
 

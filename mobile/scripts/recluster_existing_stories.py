@@ -140,7 +140,7 @@ def main():
     parser.add_argument("--min-score", type=int, default=3, help="Min match score to merge")
     args = parser.parse_args()
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
     cutoff = (datetime.now(timezone.utc) - timedelta(days=args.days)).isoformat()
 
     resp = sb.table("news_stories").select(

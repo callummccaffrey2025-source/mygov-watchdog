@@ -48,7 +48,7 @@ DEV_URL = 'https://azvwzfsnzopeyzxzexto.supabase.co'
 DEV_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6dnd6ZnNuem9wZXl6eHpleHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjU0NjAsImV4cCI6MjA5MjAwMTQ2MH0.i9aQpbgXHj8lfdKqhraJia9fgcTuRqVCXEFV1Lyhd9k'
 
 PROD_URL = os.environ.get('SUPABASE_URL', os.environ.get('EXPO_PUBLIC_SUPABASE_URL', ''))
-PROD_KEY = os.environ.get('SUPABASE_KEY', '')
+PROD_KEY = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
 
 DB_URL = DEV_URL if DEV_MODE else PROD_URL
 DB_KEY = DEV_ANON if DEV_MODE else PROD_KEY

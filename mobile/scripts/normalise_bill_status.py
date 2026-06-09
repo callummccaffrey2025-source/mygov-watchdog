@@ -68,9 +68,9 @@ def normalise(raw: str | None) -> str | None:
 
 def main() -> None:
     url = os.environ.get("SUPABASE_URL") or os.environ.get("EXPO_PUBLIC_SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
-        log.error("Missing SUPABASE_URL / SUPABASE_KEY"); sys.exit(1)
+        log.error("Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY"); sys.exit(1)
 
     db = create_client(url, key)
 

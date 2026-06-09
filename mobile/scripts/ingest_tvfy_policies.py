@@ -38,13 +38,13 @@ DRY_RUN = '--dry-run' in sys.argv
 if DEV_MODE:
     # Dev branch project
     SUPABASE_URL = 'https://azvwzfsnzopeyzxzexto.supabase.co'
-    SUPABASE_KEY = os.environ.get('SUPABASE_DEV_KEY', '')
-    if not SUPABASE_KEY:
+    SUPABASE_SERVICE_ROLE_KEY = os.environ.get('SUPABASE_DEV_KEY', '')
+    if not SUPABASE_SERVICE_ROLE_KEY:
         log.error("SUPABASE_DEV_KEY not set in .env — add your dev branch service_role key")
         sys.exit(1)
 else:
     SUPABASE_URL = os.environ.get('SUPABASE_URL', os.environ.get('EXPO_PUBLIC_SUPABASE_URL', ''))
-    SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
+    SUPABASE_SERVICE_ROLE_KEY = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
 
 TVFY_KEY = os.environ.get('THEYVOTEFORYOU_API_KEY', '')
 if not TVFY_KEY:
@@ -52,7 +52,7 @@ if not TVFY_KEY:
     sys.exit(1)
 
 from supabase import create_client
-db = create_client(SUPABASE_URL, SUPABASE_KEY)
+db = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 TVFY_BASE = 'https://theyvoteforyou.org.au/api/v1'
 

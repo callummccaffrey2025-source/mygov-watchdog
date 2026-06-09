@@ -237,7 +237,7 @@ def main():
         if arg == "--bill-id" and i + 1 < len(sys.argv):
             target_bill = sys.argv[i + 1]
 
-    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Find bills with 2+ versions that don't have deltas yet
     query = db.table("bill_versions").select("bill_id").order("bill_id")

@@ -29,7 +29,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 MAX_CHUNK_CHARS = 2000
 PAGE_SIZE = 1000
 
@@ -342,7 +342,7 @@ def main():
     parser.add_argument("--test", action="store_true", help="Dry run — 5 records per source")
     args = parser.parse_args()
 
-    sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+    sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     limit = 5 if args.test else None
 
     total_chunks = 0

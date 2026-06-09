@@ -15,12 +15,12 @@ from supabase import create_client
 load_dotenv()
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("ERROR: Missing SUPABASE_URL or SUPABASE_KEY in .env")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+    print("ERROR: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env")
     sys.exit(1)
 
-sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 # Candidates: {slug: [list of URLs to try in order]}
 CANDIDATES = {

@@ -84,7 +84,7 @@ def normalize_name(name: str) -> str:
 def main():
     dry_run = "--dry-run" in sys.argv
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Get all sources from DB
     r = sb.table("news_sources").select("id,name,bias_score").execute()

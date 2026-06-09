@@ -65,7 +65,7 @@ const HOUSING_LABELS: Record<string, string> = {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatWeeklyIncome(weekly: number | null): string {
-  if (!weekly) return 'N/A';
+  if (!weekly) return '—';
   const annual = Math.round(weekly * 52);
   if (annual >= 1000) return `$${Math.round(annual / 1000)}k/yr`;
   return `$${annual.toLocaleString()}/yr`;
@@ -87,9 +87,9 @@ function ComingSoonState({ colors }: { colors: any }) {
   return (
     <View style={styles.emptyContainer}>
       <Ionicons name="lock-closed-outline" size={48} color={colors.textMuted} />
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>Coming Soon</Text>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>Under Development</Text>
       <Text style={[styles.emptyBody, { color: colors.textBody }]}>
-        Policy wallet impact analysis is not yet available. Check back soon.
+        Policy wallet impact analysis is being built. We'll notify you when it's ready.
       </Text>
     </View>
   );
@@ -302,6 +302,17 @@ export function WalletScreen() {
     [nav],
   );
 
+  const renderImpactCard = useCallback(
+    ({ item }: { item: WalletImpactItem }) => (
+      <ImpactCard
+        item={item}
+        colors={colors}
+        onPress={() => navigateToBill(item.bill_id, item.bill_title)}
+      />
+    ),
+    [colors, navigateToBill],
+  );
+
   // ── Feature flag gate ──
   if (!enabled) {
     return (
@@ -415,13 +426,7 @@ export function WalletScreen() {
         <FlatList
           data={items}
           keyExtractor={(item) => item.bill_id}
-          renderItem={({ item }) => (
-            <ImpactCard
-              item={item}
-              colors={colors}
-              onPress={() => navigateToBill(item.bill_id, item.bill_title)}
-            />
-          )}
+          renderItem={renderImpactCard}
           ListHeaderComponent={<ListHeader />}
           ListFooterComponent={<ListFooter />}
           contentContainerStyle={styles.listContent}

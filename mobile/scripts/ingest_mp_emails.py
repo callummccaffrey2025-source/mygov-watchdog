@@ -37,12 +37,12 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
 SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("EXPO_PUBLIC_SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise SystemExit("Set SUPABASE_URL and SUPABASE_KEY in .env")
+if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+    raise SystemExit("Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env")
 
-sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 
 def normalise_name_part(s: str) -> str:

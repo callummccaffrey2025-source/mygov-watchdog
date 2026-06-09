@@ -21,13 +21,13 @@ except ImportError:
 load_dotenv()
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL") or os.environ.get("EXPO_PUBLIC_SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("ERROR: SUPABASE_URL and SUPABASE_KEY required in .env")
+if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+    print("ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required in .env")
     sys.exit(1)
 
-client = create_client(SUPABASE_URL, SUPABASE_KEY)
+client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 # ── Expected tables (public schema, as of Prompt 4 baseline) ─────────────────
 

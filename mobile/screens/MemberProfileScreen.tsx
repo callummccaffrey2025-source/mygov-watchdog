@@ -39,7 +39,7 @@ import { ContradictionCard } from '../components/ContradictionCard';
 import { RebellionCard } from '../components/RebellionCard';
 import { useElectorateDemographics } from '../hooks/useElectorateDemographics';
 import { useGovernmentContracts } from '../hooks/useGovernmentContracts';
-import { spacing, radius, elevation } from '../theme/tokens';
+import { spacing, radius, elevation, colors as tokenColors } from '../theme/tokens';
 import { PressableScale, AppText } from '../components/ui';
 import { supabase } from '../lib/supabase';
 import { decodeHtml } from '../utils/decodeHtml';
@@ -116,7 +116,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const { summary: contractSummary } = useGovernmentContracts(member?.electorate_id ?? undefined);
 
   const party = member?.party;
-  const partyColour = party?.colour || '#9aabb8';
+  const partyColour = party?.colour || tokenColors.textMuted;
   const displayName = member ? `${member.first_name} ${member.last_name}` : '';
 
   const ayeCount = votes.filter(v => v.vote_cast === 'aye').length;
@@ -331,7 +331,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: spacing.sm,
-              backgroundColor: followingMP ? '#006B31' : '#00843D',
+              backgroundColor: followingMP ? '#006B31' : tokenColors.success,
               borderRadius: 100,
               paddingVertical: spacing.md,
             }}
@@ -355,11 +355,11 @@ export function MemberProfileScreen({ route, navigation }: any) {
               borderRadius: 100,
               paddingVertical: spacing.md,
               borderWidth: 1.5,
-              borderColor: '#00843D',
+              borderColor: tokenColors.success,
             }}
           >
             <Ionicons name="mail-outline" size={16} color="#00843D" />
-            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: '#00843D' }}>
+            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: tokenColors.success }}>
               Write to {member.first_name}
             </Text>
           </Pressable>
@@ -377,11 +377,11 @@ export function MemberProfileScreen({ route, navigation }: any) {
               borderRadius: 100,
               paddingVertical: spacing.md,
               borderWidth: 1.5,
-              borderColor: '#00843D',
+              borderColor: tokenColors.success,
             }}
           >
             <Ionicons name="git-compare-outline" size={16} color="#00843D" />
-            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: '#00843D' }}>
+            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: tokenColors.success }}>
               Match
             </Text>
           </Pressable>
@@ -395,10 +395,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
               <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>Participation Index</Text>
               <Pressable onPress={handleShareParticipation} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share participation index" style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Ionicons name="share-outline" size={16} color="#00843D" />
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>Share</Text>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: tokenColors.success }}>Share</Text>
               </Pressable>
             </View>
-            <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: spacing.lg, lineHeight: 17 }}>
+            <Text style={{ fontSize: 12, color: tokenColors.textMuted, marginBottom: spacing.lg, lineHeight: 17 }}>
               Parliamentary participation from public APH records. Not a judgment of effectiveness or virtue.
             </Text>
 
@@ -432,39 +432,39 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
             {/* ───── 5. FOUR STAT CARDS (2x2) ───── */}
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
-              <View style={{ flex: 1, backgroundColor: '#F5F3EE', borderRadius: 16, padding: 14 }}>
+              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: 14 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
                   <Ionicons name="checkmark-done-outline" size={12} color="#6B7280" />
-                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.4 }}>Attendance</Text>
+                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: tokenColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 }}>Attendance</Text>
                 </View>
                 <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>{participationIndex.attendanceRate}%</Text>
-                <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>of {participationIndex.totalVotes} recorded votes</Text>
+                <Text style={{ fontSize: 11, color: tokenColors.textMuted, marginTop: 2 }}>of {participationIndex.totalVotes} recorded votes</Text>
               </View>
-              <View style={{ flex: 1, backgroundColor: '#F5F3EE', borderRadius: 16, padding: 14 }}>
+              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: 14 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
                   <Ionicons name="mic-outline" size={12} color="#6B7280" />
-                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.4 }}>Activity</Text>
+                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: tokenColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 }}>Activity</Text>
                 </View>
                 <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>{participationIndex.parliamentaryActivity}</Text>
-                <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{participationIndex.speechesCount} speeches · {participationIndex.questionsCount} questions</Text>
+                <Text style={{ fontSize: 11, color: tokenColors.textMuted, marginTop: 2 }}>{participationIndex.speechesCount} speeches · {participationIndex.questionsCount} questions</Text>
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: spacing.md }}>
-              <View style={{ flex: 1, backgroundColor: '#F5F3EE', borderRadius: 16, padding: 14 }}>
+              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: 14 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
                   <Ionicons name="git-branch-outline" size={12} color="#6B7280" />
-                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.4 }}>Independence</Text>
+                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: tokenColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 }}>Independence</Text>
                 </View>
                 <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>{participationIndex.independenceRate}%</Text>
-                <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{participationIndex.rebelVotes === 1 ? 'crossed floor once' : `crossed floor ${participationIndex.rebelVotes} times`}</Text>
+                <Text style={{ fontSize: 11, color: tokenColors.textMuted, marginTop: 2 }}>{participationIndex.rebelVotes === 1 ? 'crossed floor once' : `crossed floor ${participationIndex.rebelVotes} times`}</Text>
               </View>
-              <View style={{ flex: 1, backgroundColor: '#F5F3EE', borderRadius: 16, padding: 14 }}>
+              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: 14 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
                   <Ionicons name="people-outline" size={12} color="#6B7280" />
-                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.4 }}>Committees</Text>
+                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: tokenColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 }}>Committees</Text>
                 </View>
                 <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>{participationIndex.committeeCount}</Text>
-                <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{participationIndex.chairCount > 0 ? `${participationIndex.chairCount} as chair/deputy` : 'member roles'}</Text>
+                <Text style={{ fontSize: 11, color: tokenColors.textMuted, marginTop: 2 }}>{participationIndex.chairCount > 0 ? `${participationIndex.chairCount} as chair/deputy` : 'member roles'}</Text>
               </View>
             </View>
 
@@ -473,10 +473,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
               onPress={() => setShowMethodology(true)}
               accessibilityRole="button"
               accessibilityLabel="View methodology"
-              style={{ backgroundColor: '#F5F3EE', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+              style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             >
-              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Methodology v1.0 · Wilson 95% CI</Text>
-              <Text style={{ fontSize: 12.5, fontWeight: '600', color: '#00843D' }}>How we calculate →</Text>
+              <Text style={{ fontSize: 12, color: tokenColors.textMuted }}>Methodology v1.0 · Wilson 95% CI</Text>
+              <Text style={{ fontSize: 12.5, fontWeight: '600', color: tokenColors.success }}>How we calculate →</Text>
             </Pressable>
           </View>
         )}
@@ -510,10 +510,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   paddingVertical: spacing.md + 2,
                   paddingHorizontal: spacing.lg,
                   borderBottomWidth: activeTab === tab.id ? 2 : 0,
-                  borderBottomColor: activeTab === tab.id ? '#00843D' : 'transparent',
+                  borderBottomColor: activeTab === tab.id ? tokenColors.success : 'transparent',
                 }}
               >
-                <Text style={{ fontSize: 13 + 1, fontWeight: '500', color: activeTab === tab.id ? '#00843D' : colors.textMuted }}>
+                <Text style={{ fontSize: 13 + 1, fontWeight: '500', color: activeTab === tab.id ? tokenColors.success : colors.textMuted }}>
                   {tab.label}
                 </Text>
               </Pressable>
@@ -532,7 +532,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
                   <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>Recent votes</Text>
                   <Pressable onPress={() => setActiveTab('votes')} hitSlop={8} accessibilityRole="button" accessibilityLabel={`View all ${totalVotes} votes`}>
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D' }}>All {totalVotes} →</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: tokenColors.success }}>All {totalVotes} →</Text>
                   </Pressable>
                 </View>
 
@@ -541,7 +541,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 ) : recentVotes.length === 0 ? (
                   <Text style={{ fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingVertical: spacing.xl }}>No recent votes recorded.</Text>
                 ) : (
-                  <View style={{ backgroundColor: '#F5F3EE', borderRadius: 16, overflow: 'hidden' }}>
+                  <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, overflow: 'hidden' }}>
                     {recentVotes.map((v, idx) => {
                       const rawName = v.division?.name || 'Unknown division';
                       const title = cleanDivisionTitle(rawName);
@@ -563,7 +563,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                           <View style={{ flex: 1, marginRight: spacing.md }}>
                             <Text style={{ fontSize: 14.5, fontWeight: '500', color: colors.text }} numberOfLines={2}>{title}</Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 3 }}>
-                              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>
+                              <Text style={{ fontSize: 12, color: tokenColors.textMuted }}>
                                 {v.division?.date ? timeAgo(v.division.date) : ''}
                               </Text>
                               {v.rebelled && (
@@ -580,7 +580,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             <Text style={{
                               fontSize: 12,
                               fontWeight: '700',
-                              color: isAye ? '#00843D' : isNo ? '#DC2626' : colors.textMuted,
+                              color: isAye ? tokenColors.success : isNo ? tokenColors.danger : colors.textMuted,
                             }}>
                               {isAye ? 'Aye' : isNo ? 'No' : v.vote_cast || '—'}
                             </Text>
@@ -618,7 +618,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                       {/* Score */}
                       <Text style={{
                         fontSize: 48, fontWeight: '800', lineHeight: 52,
-                        color: (hypocrisyData.overall_score ?? 0) > 66 ? '#DC3545' : (hypocrisyData.overall_score ?? 0) > 33 ? '#F59E0B' : '#00843D',
+                        color: (hypocrisyData.overall_score ?? 0) > 66 ? tokenColors.danger : (hypocrisyData.overall_score ?? 0) > 33 ? '#F59E0B' : tokenColors.success,
                       }}>
                         {hypocrisyData.overall_score}
                       </Text>
@@ -638,7 +638,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
                           {/* Position bar */}
                           <View style={{ marginVertical: 4 }}>
-                            <View style={{ height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, position: 'relative' }}>
+                            <View style={{ height: 6, backgroundColor: tokenColors.surfaceMuted, borderRadius: 3, position: 'relative' }}>
                               <View style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, backgroundColor: '#D1D5DB' }} />
                               <View style={{
                                 position: 'absolute', left: `${((topic.stated_position + 1) / 2) * 100}%`,
@@ -648,17 +648,17 @@ export function MemberProfileScreen({ route, navigation }: any) {
                               <View style={{
                                 position: 'absolute', left: `${((topic.voting_position + 1) / 2) * 100}%`,
                                 top: -4, width: 12, height: 12, borderRadius: 6,
-                                backgroundColor: '#DC3545', borderWidth: 2, borderColor: '#fff', marginLeft: -6,
+                                backgroundColor: tokenColors.danger, borderWidth: 2, borderColor: '#fff', marginLeft: -6,
                               }} />
                             </View>
                             <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: 6 }}>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                                 <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#2563EB' }} />
-                                <Text style={{ fontSize: 9, color: '#9CA3AF' }}>Said</Text>
+                                <Text style={{ fontSize: 9, color: tokenColors.textMuted }}>Said</Text>
                               </View>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#DC3545' }} />
-                                <Text style={{ fontSize: 9, color: '#9CA3AF' }}>Voted</Text>
+                                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tokenColors.danger }} />
+                                <Text style={{ fontSize: 9, color: tokenColors.textMuted }}>Voted</Text>
                               </View>
                             </View>
                           </View>
@@ -675,24 +675,24 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
                           {/* They voted */}
                           {topic.example_vote && (
-                            <View style={{ backgroundColor: '#F3F4F6', borderRadius: 8, padding: 10, marginTop: 4 }}>
-                              <Text style={{ fontSize: 10, fontWeight: '700', color: '#6B7280', marginBottom: 2 }}>They voted:</Text>
+                            <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: 8, padding: 10, marginTop: 4 }}>
+                              <Text style={{ fontSize: 10, fontWeight: '700', color: tokenColors.textMuted, marginBottom: 2 }}>They voted:</Text>
                               <Text style={{ fontSize: 12, color: '#1F2937', lineHeight: 18 }} numberOfLines={2}>
                                 {topic.example_vote.division_name}
                               </Text>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                                 <View style={{
-                                  backgroundColor: topic.example_vote.vote === 'aye' ? '#E8F5EE' : topic.example_vote.vote === 'no' ? '#FDECEA' : '#F3F4F6',
+                                  backgroundColor: topic.example_vote.vote === 'aye' ? tokenColors.accentMuted : topic.example_vote.vote === 'no' ? tokenColors.danger + '18' : tokenColors.surfaceMuted,
                                   borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2,
                                 }}>
                                   <Text style={{
                                     fontSize: 11, fontWeight: '700',
-                                    color: topic.example_vote.vote === 'aye' ? '#00843D' : topic.example_vote.vote === 'no' ? '#DC3545' : '#6B7280',
+                                    color: topic.example_vote.vote === 'aye' ? tokenColors.success : topic.example_vote.vote === 'no' ? tokenColors.danger : tokenColors.textMuted,
                                   }}>
                                     {topic.example_vote.vote === 'aye' ? 'Aye' : topic.example_vote.vote === 'no' ? 'No' : topic.example_vote.vote}
                                   </Text>
                                 </View>
-                                <Text style={{ fontSize: 10, color: '#9CA3AF' }}>{topic.example_vote.date}</Text>
+                                <Text style={{ fontSize: 10, color: tokenColors.textMuted }}>{topic.example_vote.date}</Text>
                               </View>
                             </View>
                           )}
@@ -703,7 +703,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                       <Pressable
                         onPress={() => navigation.navigate('HypocrisyDetail', { memberId: member!.id, memberName: `${member!.first_name} ${member!.last_name}` })}
                         style={{
-                          backgroundColor: '#00843D', borderRadius: 20, paddingHorizontal: 20,
+                          backgroundColor: tokenColors.success, borderRadius: 20, paddingHorizontal: 20,
                           paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm,
                         }}
                         accessibilityRole="button"
@@ -753,15 +753,15 @@ export function MemberProfileScreen({ route, navigation }: any) {
               </View>
 
               {/* ───── 10. SOURCES FOOTER ───── */}
-              <View style={{ backgroundColor: '#F5F3EE', borderRadius: 16, padding: spacing.lg, marginBottom: spacing.lg }}>
-                <Text style={{ fontSize: 12, color: '#6B7280', lineHeight: 18 }}>
+              <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: spacing.lg, marginBottom: spacing.lg }}>
+                <Text style={{ fontSize: 12, color: tokenColors.textMuted, lineHeight: 18 }}>
                   Sources — Parliament of Australia · OpenAustralia · AEC
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}>
-                  <Text style={{ fontSize: 12, color: '#9CA3AF' }}>Updated {timeAgo(new Date().toISOString())}</Text>
-                  <Text style={{ fontSize: 12, color: '#9CA3AF' }}>·</Text>
+                  <Text style={{ fontSize: 12, color: tokenColors.textMuted }}>Updated {timeAgo(new Date().toISOString())}</Text>
+                  <Text style={{ fontSize: 12, color: tokenColors.textMuted }}>·</Text>
                   <Pressable onPress={() => Linking.openURL('mailto:corrections@verity.run')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Report an issue via email">
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#00843D' }}>Report an issue</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: tokenColors.success }}>Report an issue</Text>
                   </Pressable>
                 </View>
               </View>
@@ -780,7 +780,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.md }}>
                       <View style={{
                         width: 32, height: 32, borderRadius: 16,
-                        backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center',
+                        backgroundColor: tokenColors.accentMuted, justifyContent: 'center', alignItems: 'center',
                       }}>
                         <Ionicons name="chatbubbles-outline" size={16} color="#00843D" />
                       </View>
@@ -874,7 +874,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             <Ionicons
                               name={isAye ? 'checkmark' : isNo ? 'close' : 'remove'}
                               size={16}
-                              color={isAye ? '#00843D' : isNo ? '#d32f2f' : '#9aabb8'}
+                              color={isAye ? tokenColors.success : isNo ? '#d32f2f' : tokenColors.textMuted}
                             />
                           </View>
                           <Pressable style={{ flex: 1 }} onPress={() => showGuessPrompt ? setGuessExpandedId(isGuessExpanded ? null : v.id) : undefined}>
@@ -887,7 +887,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                                 <Text style={{ fontSize: 10, color: '#b45309', backgroundColor: '#fef3c7', borderRadius: radius.sm - 2, paddingHorizontal: 6, paddingVertical: 1, fontWeight: '700' }}>Crossed floor</Text>
                               )}
                               {showGuessPrompt && !isGuessExpanded && !existingPrediction && (
-                                <Text style={{ fontSize: 10, color: '#00843D', fontWeight: '600' }}>Guess</Text>
+                                <Text style={{ fontSize: 10, color: tokenColors.success, fontWeight: '600' }}>Guess</Text>
                               )}
                               {existingPrediction?.was_correct === true && (
                                 <Ionicons name="checkmark-circle" size={12} color="#00843D" />
@@ -1036,7 +1036,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                         </View>
                         {c.role !== 'member' && (
                           <View style={{ backgroundColor: '#e8f5ee', borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 3 }}>
-                            <Text style={{ fontSize: 10, fontWeight: '700', color: '#00843D' }}>
+                            <Text style={{ fontSize: 10, fontWeight: '700', color: tokenColors.success }}>
                               {c.role.charAt(0).toUpperCase() + c.role.slice(1)}
                             </Text>
                           </View>
@@ -1084,17 +1084,17 @@ export function MemberProfileScreen({ route, navigation }: any) {
                           </Text>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                             <View style={{
-                              backgroundColor: isAye ? '#E8F5EE' : isNo ? '#FDECEA' : '#F3F4F6',
+                              backgroundColor: isAye ? tokenColors.accentMuted : isNo ? tokenColors.danger + '18' : tokenColors.surfaceMuted,
                               borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2,
                             }}>
                               <Text style={{
                                 fontSize: 11, fontWeight: '700',
-                                color: isAye ? '#00843D' : isNo ? '#DC3545' : '#6B7280',
+                                color: isAye ? tokenColors.success : isNo ? tokenColors.danger : tokenColors.textMuted,
                               }}>
                                 Voted {isAye ? 'Aye' : isNo ? 'No' : link.vote_cast}
                               </Text>
                             </View>
-                            {link.vote_date && <Text style={{ fontSize: 10, color: '#9CA3AF' }}>{link.vote_date}</Text>}
+                            {link.vote_date && <Text style={{ fontSize: 10, color: tokenColors.textMuted }}>{link.vote_date}</Text>}
                           </View>
                         </View>
                       </View>
@@ -1146,7 +1146,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                               </View>
                               <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
                                 <View style={{ borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: d.donor_type === 'union' ? '#e8f0fe' : d.donor_type === 'corporation' ? colors.cardAlt : colors.greenBg }}>
-                                  <Text style={{ fontSize: 10, fontWeight: '700', color: d.donor_type === 'union' ? '#0066CC' : d.donor_type === 'corporation' ? colors.textBody : '#00843D' }}>
+                                  <Text style={{ fontSize: 10, fontWeight: '700', color: d.donor_type === 'union' ? '#0066CC' : d.donor_type === 'corporation' ? colors.textBody : tokenColors.success }}>
                                     {DONOR_TYPE_LABELS[d.donor_type]}
                                   </Text>
                                 </View>
@@ -1187,7 +1187,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                               </View>
                               <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
                                 <View style={{ borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: d.donor_type === 'union' ? '#e8f0fe' : d.donor_type === 'corporation' ? colors.cardAlt : colors.greenBg }}>
-                                  <Text style={{ fontSize: 10, fontWeight: '700', color: d.donor_type === 'union' ? '#0066CC' : d.donor_type === 'corporation' ? colors.textBody : '#00843D' }}>
+                                  <Text style={{ fontSize: 10, fontWeight: '700', color: d.donor_type === 'union' ? '#0066CC' : d.donor_type === 'corporation' ? colors.textBody : tokenColors.success }}>
                                     {DONOR_TYPE_LABELS[d.donor_type ?? ''] ?? (d.donor_type || 'Other')}
                                   </Text>
                                 </View>
@@ -1265,7 +1265,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                         <Ionicons name="git-compare-outline" size={18} color="#4338CA" />
                         <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>Donations vs Voting</Text>
                       </View>
-                      <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 19, marginBottom: spacing.lg }}>
+                      <Text style={{ fontSize: 13, color: tokenColors.textMuted, lineHeight: 19, marginBottom: spacing.lg }}>
                         Showing how {member.first_name} {member.last_name} voted on bills related to their donors' industries.
                       </Text>
 
@@ -1279,7 +1279,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                                 {donor.industry && (
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
                                     <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: getIndustryColor(donor.industry) }} />
-                                    <Text style={{ fontSize: 12, color: '#6B7280' }}>{getIndustryLabel(donor.industry)}</Text>
+                                    <Text style={{ fontSize: 12, color: tokenColors.textMuted }}>{getIndustryLabel(donor.industry)}</Text>
                                   </View>
                                 )}
                               </View>
@@ -1289,12 +1289,12 @@ export function MemberProfileScreen({ route, navigation }: any) {
                               <View style={{ backgroundColor: '#EEF2FF', borderRadius: 8, padding: 10, marginTop: 4 }}>
                                 <Text style={{ fontSize: 13, color: '#4338CA', lineHeight: 18 }}>
                                   Voted <Text style={{ fontWeight: '700', color: '#059669' }}>YES</Text> on {iv.aye} and{' '}
-                                  <Text style={{ fontWeight: '700', color: '#DC2626' }}>NO</Text> on {iv.no}{' '}
+                                  <Text style={{ fontWeight: '700', color: tokenColors.danger }}>NO</Text> on {iv.no}{' '}
                                   {getIndustryLabel(donor.industry).toLowerCase()}-related bill{iv.aye + iv.no !== 1 ? 's' : ''}
                                 </Text>
                               </View>
                             ) : (
-                              <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4, fontStyle: 'italic' }}>No related votes found</Text>
+                              <Text style={{ fontSize: 12, color: tokenColors.textMuted, marginTop: 4, fontStyle: 'italic' }}>No related votes found</Text>
                             )}
                           </View>
                         );
@@ -1315,9 +1315,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
                         }}
                       >
                         <Ionicons name="share-outline" size={16} color="#00843D" />
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: '#00843D' }}>Share this analysis</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: tokenColors.success }}>Share this analysis</Text>
                       </Pressable>
-                      <Text style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16, marginTop: 4, paddingHorizontal: 8 }}>
+                      <Text style={{ fontSize: 11, color: tokenColors.textMuted, textAlign: 'center', lineHeight: 16, marginTop: 4, paddingHorizontal: 8 }}>
                         Correlation between donations and votes does not imply causation. All data from AEC declarations and APH voting records.
                       </Text>
                     </View>
@@ -1656,7 +1656,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
               </Text>
 
               <Pressable onPress={() => Linking.openURL('https://verity.run/methodology')} accessibilityRole="button" accessibilityLabel="Read the full methodology page">
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#00843D', marginTop: 8 }}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: tokenColors.success, marginTop: 8 }}>
                   Read the full methodology page →
                 </Text>
               </Pressable>

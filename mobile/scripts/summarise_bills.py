@@ -97,7 +97,7 @@ def main() -> None:
     args = parser.parse_args()
 
     db_url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_KEY"]
+    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     db = create_client(db_url, key)
 
     bills = fetch_unsummarised(db, args.limit)

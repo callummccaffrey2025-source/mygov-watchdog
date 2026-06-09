@@ -211,7 +211,7 @@ POSTS = [
 
 def main():
     url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_KEY"]
+    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     sb = create_client(url, key)
 
     # Count existing posts per member

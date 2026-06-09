@@ -126,7 +126,7 @@ def main():
         if arg == "--limit" and i + 1 < len(sys.argv):
             limit = int(sys.argv[i + 1])
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Get House members for matching
     r = sb.table("members").select("id,first_name,last_name,chamber").eq("is_active", True).execute()

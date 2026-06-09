@@ -34,7 +34,7 @@ log = logging.getLogger(__name__)
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_URL")
 ADMIN_PUSH_TOKEN = os.environ.get("ADMIN_PUSH_TOKEN")
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 STATUS_FILE = Path(__file__).parent / "pipeline_status.json"
 
 
@@ -70,11 +70,11 @@ def check_pipeline_status() -> list[str]:
 def check_data_freshness() -> list[str]:
     """Check Supabase for data freshness issues."""
     issues = []
-    if not SUPABASE_URL or not SUPABASE_KEY:
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
         return ["SUPABASE credentials not set"]
 
     try:
-        sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+        sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
         # Latest article age
         r = sb.table("news_articles").select("published_at").order(

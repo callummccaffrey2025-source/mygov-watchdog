@@ -62,7 +62,7 @@ def report(sb, window_hours: int, label: str):
 
 
 def main():
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     log.info("╔══════════════════════════════════════════════════════════╗")
     log.info("║  Verity News Clustering Quality Report                    ║")

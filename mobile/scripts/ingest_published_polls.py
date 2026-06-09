@@ -38,7 +38,7 @@ WIKI_PAGE = "Opinion polling for the next Australian federal election"
 HEADERS = {"User-Agent": "VerityApp/1.0 (civic data aggregator; contact@verity.au)"}
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL") or os.environ.get("EXPO_PUBLIC_SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 METHODOLOGY_MAP = {
     "Newspoll": "online panel",
@@ -317,11 +317,11 @@ def write_polls(polls: list[dict], dry_run: bool = True) -> int:
             log.info(f"  {p['pollster']:25s} {p['field_end_date']}  TPP: ALP {p['tpp_alp']}  LNP {p['tpp_lnp']}{onp_tpp}  primary ALP={p['primary_alp']} LNP={p['primary_lnp']} GRN={p['primary_grn']} ONP={p['primary_one_nation']} IND={p.get('primary_ind')} OTH={p.get('primary_other')}  n={p['sample_size']}")
         return len(polls)
 
-    if not SUPABASE_URL or not SUPABASE_KEY:
-        log.error("SUPABASE_URL and SUPABASE_KEY required for --write")
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+        log.error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required for --write")
         return 0
 
-    client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     written = 0
     for poll in polls:
         try:
@@ -336,9 +336,9 @@ def write_polls(polls: list[dict], dry_run: bool = True) -> int:
 
 
 def compute_aggregates():
-    if not SUPABASE_URL or not SUPABASE_KEY:
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
         return
-    client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     for window in [30, 60, 90]:
         try:
             client.rpc("calculate_poll_aggregate", {

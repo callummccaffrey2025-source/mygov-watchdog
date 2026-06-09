@@ -10,6 +10,7 @@ API docs: https://theyvoteforyou.org.au/help/data
 Idempotent: upserts on tvfy_id (divisions) and (division_id,tvfy_person_id) (division_votes).
 Pagination: 90-day date windows to stay under the 100-result-per-call limit.
 """
+import argparse
 import logging
 import os
 import sys
@@ -26,18 +27,18 @@ log = logging.getLogger(__name__)
 
 TVFY_BASE    = "https://theyvoteforyou.org.au/api/v1"
 HOUSES       = ["representatives", "senate"]
-START_DATE   = date(2022, 7, 1)   # 47th Parliament
+FULL_START   = date(2022, 7, 1)   # 47th Parliament
 WINDOW_DAYS  = 90
 DELAY        = 0.4                 # seconds between API calls
 VOTE_BATCH   = 100
 
 
 def get_tvfy_key() -> str:
-    key = os.environ.get("TVFY_API_KEY") or os.environ.get("THEYVOTEFORYOU_API_KEY")
+    key = os.environ.get("THEYVOTEFORYOU_API_KEY")
     if not key:
         log.error(
-            "Missing TVFY_API_KEY. Add it to your .env file:\n"
-            "  TVFY_API_KEY=your_key_here\n"
+            "Missing THEYVOTEFORYOU_API_KEY. Add it to your .env file:\n"
+            "  THEYVOTEFORYOU_API_KEY=your_key_here\n"
             "Get a key at https://theyvoteforyou.org.au/api_keys"
         )
         sys.exit(1)
@@ -108,10 +109,25 @@ def build_member_lookup(db) -> dict[tuple[str, str], str]:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Ingest vote/division data from TheyVoteForYou")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--recent", type=int, metavar="N",
+                       help="Only fetch divisions from the last N days (default: 30)")
+    group.add_argument("--all", action="store_true",
+                       help="Full ingestion from 47th Parliament start")
+    args = parser.parse_args()
+
+    # Default to --recent 30 if neither flag is given
+    if args.all:
+        start_date = FULL_START
+    else:
+        days = args.recent if args.recent else 30
+        start_date = date.today() - timedelta(days=days)
+
     sb_url = os.environ.get("SUPABASE_URL") or os.environ.get("EXPO_PUBLIC_SUPABASE_URL")
     sb_key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
     if not sb_url or not sb_key:
-        log.error("Missing SUPABASE_URL / SUPABASE_KEY")
+        log.error("Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY")
         sys.exit(1)
 
     tvfy_key     = get_tvfy_key()
@@ -122,6 +138,8 @@ def main() -> None:
     existing_result  = db.table("divisions").select("tvfy_id").execute()
     existing_ids: set[int] = {row["tvfy_id"] for row in existing_result.data}
     log.info("Existing divisions in DB: %d", len(existing_ids))
+    log.info("Fetching from %s to today (%s mode)", start_date.isoformat(),
+             "full" if args.all else f"recent {(date.today() - start_date).days}d")
 
     total_divisions = 0
     total_votes     = 0
@@ -130,7 +148,7 @@ def main() -> None:
 
     for house in HOUSES:
         log.info("══ %s ═══════════════════════════════════════", house)
-        window_start = START_DATE
+        window_start = start_date
         while window_start <= today:
             window_end = min(window_start + timedelta(days=WINDOW_DAYS - 1), today)
 

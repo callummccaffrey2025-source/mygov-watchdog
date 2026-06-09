@@ -96,7 +96,7 @@ def main() -> None:
     args = parser.parse_args()
 
     db_url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_KEY"]
+    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
     if not anthropic_key:
         log.error("ANTHROPIC_API_KEY not set.")

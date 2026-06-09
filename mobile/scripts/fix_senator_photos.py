@@ -149,7 +149,7 @@ def match_and_update(db, scraped: list[dict], dry_run: bool) -> None:
 
 def main() -> None:
     url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_KEY"]
+    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     db = create_client(url, key)
     dry_run = "--dry-run" in sys.argv
 

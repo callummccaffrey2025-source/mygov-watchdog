@@ -146,7 +146,7 @@ def extract_policies(url: str) -> list[dict]:
 def main():
     dry_run = "--dry-run" in sys.argv
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Get party IDs from DB
     r = sb.table("parties").select("id,name,short_name").execute()

@@ -61,7 +61,7 @@ def main():
     args = parser.parse_args()
 
     url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_KEY"]
+    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     sb = create_client(url, key)
 
     # ── Step 1: Backfill news_articles ─────────────────────────────────────

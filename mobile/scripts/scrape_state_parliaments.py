@@ -290,7 +290,7 @@ def main():
         if arg == "--state" and i + 1 < len(sys.argv):
             target_state = sys.argv[i + 1].upper()
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     states_to_run = {target_state: FETCHERS[target_state]} if target_state and target_state in FETCHERS else FETCHERS
 

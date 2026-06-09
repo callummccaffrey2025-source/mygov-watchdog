@@ -394,9 +394,9 @@ def compute_civic(
 
 def get_supabase():
     url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_KEY")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
-        log.error("Missing SUPABASE_URL or SUPABASE_KEY in .env")
+        log.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env")
         raise SystemExit(1)
     return create_client(url, key)
 

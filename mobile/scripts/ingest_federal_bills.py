@@ -470,7 +470,7 @@ def main() -> None:
     fetch_all = "--all" in sys.argv
 
     url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_KEY"]
+    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     db = create_client(url, key)
 
     start_time = time.time()

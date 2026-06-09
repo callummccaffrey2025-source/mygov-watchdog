@@ -131,7 +131,7 @@ def fetch_community_postcodes() -> dict[str, list[str]]:
 
 def main() -> None:
     db_url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_KEY"]
+    key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     db = create_client(db_url, key)
 
     # Try sources in order

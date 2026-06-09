@@ -292,9 +292,9 @@ def main() -> None:
     # Supabase setup
     from supabase import create_client
     url = os.environ.get("SUPABASE_URL") or os.environ.get("EXPO_PUBLIC_SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
-        log.error("Missing SUPABASE_URL / SUPABASE_KEY in environment")
+        log.error("Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in environment")
         sys.exit(1)
     db = create_client(url, key)
 

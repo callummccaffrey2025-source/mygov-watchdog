@@ -27,8 +27,8 @@ NOW = datetime.now(tz=timezone.utc)
 # ---------------------------------------------------------------------------
 
 SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
-ANON_KEY = os.environ.get("EXPO_PUBLIC_SUPABASE_ANON_KEY", SUPABASE_KEY)
+SUPABASE_SERVICE_ROLE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+ANON_KEY = os.environ.get("EXPO_PUBLIC_SUPABASE_ANON_KEY", SUPABASE_SERVICE_ROLE_KEY)
 TVFY_KEY = os.environ.get("THEYVOTEFORYOU_API_KEY", "")
 OA_KEY = os.environ.get("OPENAUSTRALIA_API_KEY", "")
 NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY", "")
@@ -179,7 +179,7 @@ def log_run(sb, status: str, details: str) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+    sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     results = [check_endpoint(ep) for ep in ENDPOINTS]
 

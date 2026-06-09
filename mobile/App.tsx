@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import AsyncStorage from './lib/storage';
 import { Linking, Platform } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
@@ -23,21 +23,26 @@ import { HomeScreen } from './screens/HomeScreen';
 import { ExploreScreen } from './screens/ExploreScreen';
 import { LearnScreen } from './screens/LearnScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
-import { MemberProfileScreen } from './screens/MemberProfileScreen';
-import { BillDetailScreen } from './screens/BillDetailScreen';
-// ─── Essential supporting screens ──────────────────────────────────────────
-import { PartyProfileScreen } from './screens/PartyProfileScreen';
-import { OnboardingScreen } from './screens/OnboardingScreen';
-import { TopicBillsScreen } from './screens/TopicBillsScreen';
-import { BillListScreen } from './screens/BillListScreen';
-import { LearnModuleScreen } from './screens/LearnModuleScreen';
-import { LessonScreen } from './screens/LessonScreen';
-import { WriteToMPScreen } from './screens/WriteToMPScreen';
-import { SubscriptionScreen } from './screens/SubscriptionScreen';
-import { AboutScreen } from './screens/AboutScreen';
-import { PrivacyPolicyScreen } from './screens/PrivacyPolicyScreen';
-import { TermsScreen } from './screens/TermsScreen';
-import { NotificationPreferencesScreen } from './screens/NotificationPreferencesScreen';
+// ─── Lazy-loaded screens (deferred until navigated to) ──────────────────
+const lazyNamed = <T extends Record<string, React.ComponentType<any>>>(
+  factory: () => Promise<T>,
+  name: keyof T,
+) => React.lazy(() => factory().then(m => ({ default: m[name] as React.ComponentType<any> })));
+
+const MemberProfileScreen = lazyNamed(() => import('./screens/MemberProfileScreen'), 'MemberProfileScreen');
+const BillDetailScreen = lazyNamed(() => import('./screens/BillDetailScreen'), 'BillDetailScreen');
+const PartyProfileScreen = lazyNamed(() => import('./screens/PartyProfileScreen'), 'PartyProfileScreen');
+const OnboardingScreen = lazyNamed(() => import('./screens/OnboardingScreen'), 'OnboardingScreen');
+const TopicBillsScreen = lazyNamed(() => import('./screens/TopicBillsScreen'), 'TopicBillsScreen');
+const BillListScreen = lazyNamed(() => import('./screens/BillListScreen'), 'BillListScreen');
+const LearnModuleScreen = lazyNamed(() => import('./screens/LearnModuleScreen'), 'LearnModuleScreen');
+const LessonScreen = lazyNamed(() => import('./screens/LessonScreen'), 'LessonScreen');
+const WriteToMPScreen = lazyNamed(() => import('./screens/WriteToMPScreen'), 'WriteToMPScreen');
+const SubscriptionScreen = lazyNamed(() => import('./screens/SubscriptionScreen'), 'SubscriptionScreen');
+const AboutScreen = lazyNamed(() => import('./screens/AboutScreen'), 'AboutScreen');
+const PrivacyPolicyScreen = lazyNamed(() => import('./screens/PrivacyPolicyScreen'), 'PrivacyPolicyScreen');
+const TermsScreen = lazyNamed(() => import('./screens/TermsScreen'), 'TermsScreen');
+const NotificationPreferencesScreen = lazyNamed(() => import('./screens/NotificationPreferencesScreen'), 'NotificationPreferencesScreen');
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
 import { initFeatureFlags } from './lib/featureFlags';
@@ -347,27 +352,29 @@ function App() {
               onPress={handleBannerPress}
               onDismiss={() => setBannerNotif(null)}
             />
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="Main" component={HomeTabs} />
-              {/* Core drill-downs */}
-              <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
-              <Stack.Screen name="BillDetail" component={BillDetailScreen} />
-              <Stack.Screen name="PartyProfile" component={PartyProfileScreen} />
-              {/* Explore drill-downs */}
-              <Stack.Screen name="TopicBills" component={TopicBillsScreen} />
-              <Stack.Screen name="BillList" component={BillListScreen} />
-              {/* Learn flow */}
-              <Stack.Screen name="LearnModule" component={LearnModuleScreen} />
-              <Stack.Screen name="Lesson" component={LessonScreen} />
-              {/* Actions */}
-              <Stack.Screen name="WriteToMP" component={WriteToMPScreen} />
-              {/* Settings & legal */}
-              <Stack.Screen name="Subscription" component={SubscriptionScreen} />
-              <Stack.Screen name="About" component={AboutScreen} />
-              <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-              <Stack.Screen name="Terms" component={TermsScreen} />
-              <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
-            </Stack.Navigator>
+            <Suspense fallback={null}>
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Main" component={HomeTabs} />
+                {/* Core drill-downs */}
+                <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
+                <Stack.Screen name="BillDetail" component={BillDetailScreen} />
+                <Stack.Screen name="PartyProfile" component={PartyProfileScreen} />
+                {/* Explore drill-downs */}
+                <Stack.Screen name="TopicBills" component={TopicBillsScreen} />
+                <Stack.Screen name="BillList" component={BillListScreen} />
+                {/* Learn flow */}
+                <Stack.Screen name="LearnModule" component={LearnModuleScreen} />
+                <Stack.Screen name="Lesson" component={LessonScreen} />
+                {/* Actions */}
+                <Stack.Screen name="WriteToMP" component={WriteToMPScreen} />
+                {/* Settings & legal */}
+                <Stack.Screen name="Subscription" component={SubscriptionScreen} />
+                <Stack.Screen name="About" component={AboutScreen} />
+                <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+                <Stack.Screen name="Terms" component={TermsScreen} />
+                <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
+              </Stack.Navigator>
+            </Suspense>
             <AppNotificationGate />
           </NavigationContainer>
         </UserProvider>

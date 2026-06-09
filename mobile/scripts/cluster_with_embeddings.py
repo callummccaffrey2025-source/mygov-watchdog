@@ -12,7 +12,7 @@ This is a SAFETY-FIRST merge:
 - Updates news_story_articles junction rows to point to the canonical story
 
 Required env vars:
-  SUPABASE_URL, SUPABASE_KEY
+  SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
   PINECONE_API_KEY, PINECONE_HOST (or PINECONE_INDEX)
   ANTHROPIC_API_KEY (for embeddings via Voyage/OpenAI if Pinecone inference unused)
 
@@ -206,7 +206,7 @@ def main():
     parser.add_argument("--min-count", type=int, default=1, help="Only merge lone stories (article_count=1)")
     args = parser.parse_args()
 
-    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     # Ensure stories_merged table exists (silent skip if not)
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=args.hours)).isoformat()

@@ -52,7 +52,7 @@ def init(agent_name: str, *, use_production: bool = False) -> Client:
         load_dotenv(AGENTS_ENV, override=True)
 
     url = os.environ.get("SUPABASE_URL", "")
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY", "")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
     # Safety check: block production access unless explicitly opted in
     if PRODUCTION_REF in url and not use_production:
