@@ -77,6 +77,13 @@ If you cannot generate a valid poll that passes all three guardrails, return:
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  // ── Auth: internal/cron only — caller must present the service role key.
+  // Without this, anyone with the public anon key can burn Anthropic credits.
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+  if (!token || token !== SUPABASE_SERVICE_ROLE_KEY) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+
   if (!ANTHROPIC_API_KEY) {
     return jsonResponse({ error: 'ANTHROPIC_API_KEY not configured' }, 503);
   }

@@ -322,6 +322,13 @@ const INGESTERS: Record<string, (sb: any, limit: number, offset: number) => Prom
 };
 
 Deno.serve(async (req: Request) => {
+  // ── Auth: internal/cron only — caller must present the service role key ──
+  {
+    const __token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+    if (!__token || __token !== Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    }
+  }
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405, headers: { "Content-Type": "application/json" },

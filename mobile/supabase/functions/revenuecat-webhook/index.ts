@@ -23,6 +23,25 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
+  // ── Auth: only RevenueCat may call this — otherwise anyone can grant
+  // themselves Pro by posting a fake INITIAL_PURCHASE event.
+  // Set the same value in: RevenueCat dashboard → Webhooks → Authorization header,
+  // and `supabase secrets set REVENUECAT_WEBHOOK_SECRET=...`
+  const expectedSecret = Deno.env.get("REVENUECAT_WEBHOOK_SECRET");
+  if (!expectedSecret) {
+    return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  const gotAuth = req.headers.get("Authorization") ?? "";
+  if (gotAuth !== expectedSecret && gotAuth !== `Bearer ${expectedSecret}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   let payload: RevenueCatPayload;
   try {
     payload = (await req.json()) as RevenueCatPayload;

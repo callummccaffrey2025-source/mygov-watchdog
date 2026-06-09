@@ -11,6 +11,14 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // ── Auth: internal/cron only — caller must present the service role key ──
+  {
+    const __token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+    if (!__token || __token !== Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    }
+  }
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

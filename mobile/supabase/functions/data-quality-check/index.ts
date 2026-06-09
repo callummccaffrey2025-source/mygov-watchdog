@@ -27,6 +27,13 @@ interface Check {
 }
 
 Deno.serve(async (_req: Request) => {
+  // ── Auth: internal/cron only — caller must present the service role key ──
+  {
+    const __token = (_req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+    if (!__token || __token !== Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    }
+  }
   const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   const checks: Check[] = [];
 
