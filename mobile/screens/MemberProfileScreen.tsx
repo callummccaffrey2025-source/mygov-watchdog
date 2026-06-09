@@ -242,7 +242,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 } catch {}
               }
             }}
-            tintColor="#00843D"
+            tintColor={tokenColors.accent}
           />
         }
       >
@@ -287,24 +287,24 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 <Image source={{ uri: member.photo_url }} style={{ width: 96, height: 96 }} accessibilityLabel={`Photo of ${displayName}`} />
               ) : (
                 <View style={{ width: 96, height: 96, justifyContent: 'center', alignItems: 'center', backgroundColor: partyColour + '33' }}>
-                  <Text style={{ fontSize: 32, fontWeight: '700', color: partyColour }}>
+                  <AppText variant="title" style={{ fontSize: 32, color: partyColour }}>
                     {member.first_name[0]}{member.last_name[0]}
-                  </Text>
+                  </AppText>
                 </View>
               )}
             </View>
 
             {/* Name + verified */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.md }}>
-              <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>{displayName}</Text>
-              <Ionicons name="checkmark-circle" size={20} color="#1D9BF0" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md }}>
+              <AppText variant="title" style={{ color: colors.text }}>{displayName}</AppText>
+              <Ionicons name="checkmark-circle" size={20} color={tokenColors.accent} />
             </View>
 
             {/* Ministerial role */}
             {member.ministerial_role && (
-              <Text style={{ fontSize: 15, fontWeight: '600', color: partyColour, marginTop: 2, textAlign: 'center', paddingHorizontal: 20 }} numberOfLines={2}>
+              <AppText variant="callout" style={{ color: partyColour, marginTop: spacing.xs, textAlign: 'center', paddingHorizontal: spacing.xl }} numberOfLines={2}>
                 {member.ministerial_role}
-              </Text>
+              </AppText>
             )}
 
             {/* Party badge */}
@@ -312,16 +312,16 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
             {/* Meta */}
             {member.electorate && (
-              <Text style={{ fontSize: 13, color: colors.textBody, marginTop: spacing.xs }}>
+              <AppText variant="label" style={{ color: colors.textBody, marginTop: spacing.xs }}>
                 {member.electorate.name} · {member.chamber === 'senate' ? 'Senator' : 'MP'} · {member.electorate.state}
-              </Text>
+              </AppText>
             )}
           </View>
         </View>
 
         {/* ───── 2. PRIMARY CTA ROW ───── */}
-        <View style={{ flexDirection: 'row', paddingHorizontal: spacing.lg + 4, paddingVertical: spacing.lg, gap: spacing.md, backgroundColor: colors.background }}>
-          <Pressable
+        <View style={{ flexDirection: 'row', paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, gap: spacing.md, backgroundColor: colors.background }}>
+          <PressableScale
             onPress={() => requireAuth('follow this MP', toggleFollow)}
             accessibilityRole="button"
             accessibilityLabel={followingMP ? `Unfollow ${displayName}` : `Follow ${displayName}`}
@@ -331,17 +331,17 @@ export function MemberProfileScreen({ route, navigation }: any) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: spacing.sm,
-              backgroundColor: followingMP ? '#006B31' : tokenColors.success,
-              borderRadius: 100,
+              backgroundColor: followingMP ? '#006B31' : tokenColors.accent,
+              borderRadius: radius.pill,
               paddingVertical: spacing.md,
             }}
           >
-            <Ionicons name={followingMP ? 'eye' : 'eye-outline'} size={16} color="#ffffff" />
-            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: '#ffffff' }}>
+            <Ionicons name={followingMP ? 'eye' : 'eye-outline'} size={16} color={tokenColors.textInverse} />
+            <AppText variant="label" style={{ color: tokenColors.textInverse }}>
               {followingMP ? 'Watching' : 'Watch'}
-            </Text>
-          </Pressable>
-          <Pressable
+            </AppText>
+          </PressableScale>
+          <PressableScale
             onPress={() => requireAuth('write to your MP', () => navigation.navigate('WriteToMP', { member }))}
             accessibilityRole="button"
             accessibilityLabel={`Write to ${member.first_name}`}
@@ -352,18 +352,18 @@ export function MemberProfileScreen({ route, navigation }: any) {
               justifyContent: 'center',
               gap: spacing.sm,
               backgroundColor: colors.background,
-              borderRadius: 100,
+              borderRadius: radius.pill,
               paddingVertical: spacing.md,
               borderWidth: 1.5,
-              borderColor: tokenColors.success,
+              borderColor: tokenColors.accent,
             }}
           >
-            <Ionicons name="mail-outline" size={16} color="#00843D" />
-            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: tokenColors.success }}>
+            <Ionicons name="mail-outline" size={16} color={tokenColors.accent} />
+            <AppText variant="label" style={{ color: tokenColors.accent }}>
               Write to {member.first_name}
-            </Text>
-          </Pressable>
-          <Pressable
+            </AppText>
+          </PressableScale>
+          <PressableScale
             onPress={() => navigation.navigate('MatchResult', { memberId: member.id })}
             accessibilityRole="button"
             accessibilityLabel={`Match with ${member.first_name}`}
@@ -374,110 +374,110 @@ export function MemberProfileScreen({ route, navigation }: any) {
               justifyContent: 'center',
               gap: spacing.sm,
               backgroundColor: colors.background,
-              borderRadius: 100,
+              borderRadius: radius.pill,
               paddingVertical: spacing.md,
               borderWidth: 1.5,
-              borderColor: tokenColors.success,
+              borderColor: tokenColors.accent,
             }}
           >
-            <Ionicons name="git-compare-outline" size={16} color="#00843D" />
-            <Text style={{ fontSize: 13 + 1, fontWeight: '600', color: tokenColors.success }}>
+            <Ionicons name="git-compare-outline" size={16} color={tokenColors.accent} />
+            <AppText variant="label" style={{ color: tokenColors.accent }}>
               Match
-            </Text>
-          </Pressable>
+            </AppText>
+          </PressableScale>
         </View>
 
         {/* ───── 3. PARTICIPATION INDEX SECTION ───── */}
         {!votesLoading && (
-          <View style={{ paddingHorizontal: spacing.lg + 4, marginBottom: spacing.lg }}>
+          <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.lg }}>
             {/* Header */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>Participation Index</Text>
-              <Pressable onPress={handleShareParticipation} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share participation index" style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Ionicons name="share-outline" size={16} color="#00843D" />
-                <Text style={{ fontSize: 13, fontWeight: '600', color: tokenColors.success }}>Share</Text>
-              </Pressable>
+              <AppText variant="heading" style={{ color: colors.text }}>Participation Index</AppText>
+              <PressableScale onPress={handleShareParticipation} accessibilityRole="button" accessibilityLabel="Share participation index" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                <Ionicons name="share-outline" size={16} color={tokenColors.accent} />
+                <AppText variant="label" style={{ color: tokenColors.accent }}>Share</AppText>
+              </PressableScale>
             </View>
-            <Text style={{ fontSize: 12, color: tokenColors.textMuted, marginBottom: spacing.lg, lineHeight: 17 }}>
+            <AppText variant="caption" color="textMuted" style={{ marginBottom: spacing.lg }}>
               Parliamentary participation from public APH records. Not a judgment of effectiveness or virtue.
-            </Text>
+            </AppText>
 
             {/* ───── 4. CONTEXT CARD ───── */}
             {isMinisterOrChair && (
-              <View style={{ backgroundColor: '#E7EEFF', borderRadius: 16, padding: spacing.lg, marginBottom: spacing.lg, flexDirection: 'row', gap: spacing.sm }}>
-                <Ionicons name="briefcase-outline" size={16} color="#4338CA" style={{ marginTop: 2 }} />
+              <View style={{ backgroundColor: tokenColors.accentMuted, borderRadius: radius.md, padding: spacing.lg, marginBottom: spacing.lg, flexDirection: 'row', gap: spacing.sm }}>
+                <Ionicons name="briefcase-outline" size={16} color={tokenColors.accent} style={{ marginTop: 2 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#4338CA', marginBottom: 2 }}>
+                  <AppText variant="label" style={{ color: tokenColors.accent, marginBottom: spacing.xs }}>
                     {member.ministerial_role ? 'Read these numbers with ministerial context' : 'Committee leadership context'}
-                  </Text>
-                  <Text style={{ fontSize: 12, color: '#3730A3', lineHeight: 17 }}>
+                  </AppText>
+                  <AppText variant="caption" style={{ color: tokenColors.accent }}>
                     {member.ministerial_role
                       ? `${member.first_name} runs a department as ${member.ministerial_role}. Ministers typically give fewer speeches and can miss divisions for cabinet duties. Their "party loyalty" is structural, not voluntary.`
                       : `${member.first_name} chairs ${participationIndex.chairCount} committee${participationIndex.chairCount !== 1 ? 's' : ''}. Committee chairs spend significant time in hearings and inquiries rather than the main chamber.`
                     }
-                  </Text>
+                  </AppText>
                 </View>
               </View>
             )}
 
             {/* Low sample warning */}
             {participationIndex.isLowSample && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FEF3C7', borderRadius: 8, padding: 10, marginBottom: spacing.md }}>
-                <Ionicons name="information-circle" size={14} color="#D97706" />
-                <Text style={{ flex: 1, fontSize: 12, color: '#92400E' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: tokenColors.warning + '1A', borderRadius: radius.sm, padding: spacing.md, marginBottom: spacing.md }}>
+                <Ionicons name="information-circle" size={14} color={tokenColors.warning} />
+                <AppText variant="caption" style={{ flex: 1, color: tokenColors.warning }}>
                   Small sample ({participationIndex.totalVotes} votes) — these numbers will change as more data is recorded.
-                </Text>
+                </AppText>
               </View>
             )}
 
             {/* ───── 5. FOUR STAT CARDS (2x2) ───── */}
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
-              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: 14 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-                  <Ionicons name="checkmark-done-outline" size={12} color="#6B7280" />
-                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: tokenColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 }}>Attendance</Text>
+            <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md }}>
+              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.md, padding: spacing.lg }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm }}>
+                  <Ionicons name="checkmark-done-outline" size={12} color={tokenColors.textMuted} />
+                  <AppText variant="caption" color="textMuted" style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>Attendance</AppText>
                 </View>
-                <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>{participationIndex.attendanceRate}%</Text>
-                <Text style={{ fontSize: 11, color: tokenColors.textMuted, marginTop: 2 }}>of {participationIndex.totalVotes} recorded votes</Text>
+                <AppText variant="display" tabular style={{ color: colors.text }}>{participationIndex.attendanceRate}%</AppText>
+                <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>of {participationIndex.totalVotes} recorded votes</AppText>
               </View>
-              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: 14 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-                  <Ionicons name="mic-outline" size={12} color="#6B7280" />
-                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: tokenColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 }}>Activity</Text>
+              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.md, padding: spacing.lg }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm }}>
+                  <Ionicons name="mic-outline" size={12} color={tokenColors.textMuted} />
+                  <AppText variant="caption" color="textMuted" style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>Activity</AppText>
                 </View>
-                <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>{participationIndex.parliamentaryActivity}</Text>
-                <Text style={{ fontSize: 11, color: tokenColors.textMuted, marginTop: 2 }}>{participationIndex.speechesCount} speeches · {participationIndex.questionsCount} questions</Text>
+                <AppText variant="display" tabular style={{ color: colors.text }}>{participationIndex.parliamentaryActivity}</AppText>
+                <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>{participationIndex.speechesCount} speeches · {participationIndex.questionsCount} questions</AppText>
               </View>
             </View>
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: spacing.md }}>
-              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: 14 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-                  <Ionicons name="git-branch-outline" size={12} color="#6B7280" />
-                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: tokenColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 }}>Independence</Text>
+            <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md }}>
+              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.md, padding: spacing.lg }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm }}>
+                  <Ionicons name="git-branch-outline" size={12} color={tokenColors.textMuted} />
+                  <AppText variant="caption" color="textMuted" style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>Independence</AppText>
                 </View>
-                <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>{participationIndex.independenceRate}%</Text>
-                <Text style={{ fontSize: 11, color: tokenColors.textMuted, marginTop: 2 }}>{participationIndex.rebelVotes === 1 ? 'crossed floor once' : `crossed floor ${participationIndex.rebelVotes} times`}</Text>
+                <AppText variant="display" tabular style={{ color: colors.text }}>{participationIndex.independenceRate}%</AppText>
+                <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>{participationIndex.rebelVotes === 1 ? 'crossed floor once' : `crossed floor ${participationIndex.rebelVotes} times`}</AppText>
               </View>
-              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: 14 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-                  <Ionicons name="people-outline" size={12} color="#6B7280" />
-                  <Text style={{ fontSize: 10.5, fontWeight: '600', color: tokenColors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 }}>Committees</Text>
+              <View style={{ flex: 1, backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.md, padding: spacing.lg }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm }}>
+                  <Ionicons name="people-outline" size={12} color={tokenColors.textMuted} />
+                  <AppText variant="caption" color="textMuted" style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>Committees</AppText>
                 </View>
-                <Text style={{ fontSize: 28, fontWeight: '700', color: colors.text }}>{participationIndex.committeeCount}</Text>
-                <Text style={{ fontSize: 11, color: tokenColors.textMuted, marginTop: 2 }}>{participationIndex.chairCount > 0 ? `${participationIndex.chairCount} as chair/deputy` : 'member roles'}</Text>
+                <AppText variant="display" tabular style={{ color: colors.text }}>{participationIndex.committeeCount}</AppText>
+                <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>{participationIndex.chairCount > 0 ? `${participationIndex.chairCount} as chair/deputy` : 'member roles'}</AppText>
               </View>
             </View>
 
             {/* ───── 6. METHODOLOGY FOOTER BAR ───── */}
-            <Pressable
+            <PressableScale
               onPress={() => setShowMethodology(true)}
               accessibilityRole="button"
               accessibilityLabel="View methodology"
-              style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+              style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             >
-              <Text style={{ fontSize: 12, color: tokenColors.textMuted }}>Methodology v1.0 · Wilson 95% CI</Text>
-              <Text style={{ fontSize: 12.5, fontWeight: '600', color: tokenColors.success }}>How we calculate →</Text>
-            </Pressable>
+              <AppText variant="caption" color="textMuted">Methodology v1.0 · Wilson 95% CI</AppText>
+              <AppText variant="caption" style={{ color: tokenColors.accent }}>How we calculate →</AppText>
+            </PressableScale>
           </View>
         )}
 
@@ -501,28 +501,28 @@ export function MemberProfileScreen({ route, navigation }: any) {
         <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.sm }}>
             {TABS.map(tab => (
-              <Pressable
+              <PressableScale
                 key={tab.id}
                 onPress={() => setActiveTab(tab.id)}
                 accessibilityRole="button"
                 accessibilityLabel={`${tab.label} tab`}
                 style={{
-                  paddingVertical: spacing.md + 2,
+                  paddingVertical: spacing.md,
                   paddingHorizontal: spacing.lg,
                   borderBottomWidth: activeTab === tab.id ? 2 : 0,
-                  borderBottomColor: activeTab === tab.id ? tokenColors.success : 'transparent',
+                  borderBottomColor: activeTab === tab.id ? tokenColors.accent : 'transparent',
                 }}
               >
-                <Text style={{ fontSize: 13 + 1, fontWeight: '500', color: activeTab === tab.id ? tokenColors.success : colors.textMuted }}>
+                <AppText variant="label" style={{ color: activeTab === tab.id ? tokenColors.accent : colors.textMuted }}>
                   {tab.label}
-                </Text>
-              </Pressable>
+                </AppText>
+              </PressableScale>
             ))}
           </ScrollView>
         </View>
 
         {/* ───── TAB CONTENT ───── */}
-        <View style={{ padding: spacing.lg + 4 }}>
+        <View style={{ padding: spacing.xl }}>
 
           {/* ═══════ OVERVIEW TAB ═══════ */}
           {activeTab === 'overview' && (
@@ -530,18 +530,18 @@ export function MemberProfileScreen({ route, navigation }: any) {
               {/* ───── 8. RECENT VOTES SECTION ───── */}
               <View style={{ marginBottom: spacing.xl }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
-                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>Recent votes</Text>
-                  <Pressable onPress={() => setActiveTab('votes')} hitSlop={8} accessibilityRole="button" accessibilityLabel={`View all ${totalVotes} votes`}>
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: tokenColors.success }}>All {totalVotes} →</Text>
-                  </Pressable>
+                  <AppText variant="heading" style={{ color: colors.text }}>Recent votes</AppText>
+                  <PressableScale onPress={() => setActiveTab('votes')} accessibilityRole="button" accessibilityLabel={`View all ${totalVotes} votes`}>
+                    <AppText variant="label" tabular style={{ color: tokenColors.accent }}>All {totalVotes} →</AppText>
+                  </PressableScale>
                 </View>
 
                 {votesLoading ? (
                   [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={16} style={{ marginBottom: 8 }} />)
                 ) : recentVotes.length === 0 ? (
-                  <Text style={{ fontSize: 13, color: colors.textMuted, textAlign: 'center', paddingVertical: spacing.xl }}>No recent votes recorded.</Text>
+                  <AppText variant="label" style={{ color: colors.textMuted, textAlign: 'center', paddingVertical: spacing.xl }}>No recent votes recorded.</AppText>
                 ) : (
-                  <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, overflow: 'hidden' }}>
+                  <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.md, overflow: 'hidden' }}>
                     {recentVotes.map((v, idx) => {
                       const rawName = v.division?.name || 'Unknown division';
                       const title = cleanDivisionTitle(rawName);
@@ -555,35 +555,34 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             paddingHorizontal: spacing.lg,
-                            paddingVertical: spacing.md + 2,
+                            paddingVertical: spacing.md,
                             borderBottomWidth: idx < recentVotes.length - 1 ? 0.5 : 0,
-                            borderBottomColor: '#E5E2DB',
+                            borderBottomColor: tokenColors.border,
                           }}
                         >
                           <View style={{ flex: 1, marginRight: spacing.md }}>
-                            <Text style={{ fontSize: 14.5, fontWeight: '500', color: colors.text }} numberOfLines={2}>{title}</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 3 }}>
-                              <Text style={{ fontSize: 12, color: tokenColors.textMuted }}>
+                            <AppText variant="callout" style={{ color: colors.text }} numberOfLines={2}>{title}</AppText>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs }}>
+                              <AppText variant="caption" color="textMuted">
                                 {v.division?.date ? timeAgo(v.division.date) : ''}
-                              </Text>
+                              </AppText>
                               {v.rebelled && (
-                                <Text style={{ fontSize: 10, color: '#b45309', backgroundColor: '#fef3c7', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1, fontWeight: '700' }}>Crossed floor</Text>
+                                <AppText variant="caption" style={{ color: tokenColors.warning, backgroundColor: tokenColors.warning + '1A', borderRadius: spacing.xs, paddingHorizontal: spacing.sm, paddingVertical: 1 }}>Crossed floor</AppText>
                               )}
                             </View>
                           </View>
                           <View style={{
-                            backgroundColor: isAye ? 'rgba(0,132,61,0.12)' : isNo ? 'rgba(220,38,38,0.12)' : colors.cardAlt,
-                            borderRadius: 6,
-                            paddingHorizontal: 10,
-                            paddingVertical: 4,
+                            backgroundColor: isAye ? tokenColors.success + '1A' : isNo ? tokenColors.danger + '1A' : tokenColors.surfaceMuted,
+                            borderRadius: radius.sm,
+                            paddingHorizontal: spacing.sm,
+                            paddingVertical: spacing.xs,
                           }}>
-                            <Text style={{
-                              fontSize: 12,
+                            <AppText variant="caption" tabular style={{
                               fontWeight: '700',
                               color: isAye ? tokenColors.success : isNo ? tokenColors.danger : colors.textMuted,
                             }}>
-                              {isAye ? 'Aye' : isNo ? 'No' : v.vote_cast || '—'}
-                            </Text>
+                              {isAye ? 'Aye' : isNo ? 'No' : v.vote_cast || '\u2014'}
+                            </AppText>
                           </View>
                         </View>
                       );
@@ -606,8 +605,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   }}>
                     {/* Section header */}
                     <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8 }}>Consistency Index</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                        <AppText variant="caption" style={{ color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8 }}>Consistency Index</AppText>
                       </View>
                       <Pressable onPress={() => setShareHypocrisy(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share Consistency Index">
                         <Ionicons name="share-outline" size={16} color={colors.textMuted} />
@@ -616,15 +615,15 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
                     <View style={{ padding: spacing.lg, alignItems: 'center' }}>
                       {/* Score */}
-                      <Text style={{
-                        fontSize: 48, fontWeight: '800', lineHeight: 52,
-                        color: (hypocrisyData.overall_score ?? 0) > 66 ? tokenColors.danger : (hypocrisyData.overall_score ?? 0) > 33 ? '#F59E0B' : tokenColors.success,
+                      <AppText variant="display" tabular style={{
+                        fontSize: 48, lineHeight: 52,
+                        color: (hypocrisyData.overall_score ?? 0) > 66 ? tokenColors.danger : (hypocrisyData.overall_score ?? 0) > 33 ? tokenColors.warning : tokenColors.success,
                       }}>
                         {hypocrisyData.overall_score}
-                      </Text>
-                      <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: spacing.md }}>
+                      </AppText>
+                      <AppText variant="caption" tabular style={{ color: colors.textMuted, marginBottom: spacing.md }}>
                         #{hypocrisyData.rank_among_mps} of {hypocrisyData.total_mps_scored} MPs
-                      </Text>
+                      </AppText>
 
                       {/* Top 3 topics */}
                       {(hypocrisyData.top_topics ?? []).slice(0, 3).map((topic, i) => (
@@ -700,17 +699,17 @@ export function MemberProfileScreen({ route, navigation }: any) {
                       ))}
 
                       {/* See full breakdown */}
-                      <Pressable
+                      <PressableScale
                         onPress={() => navigation.navigate('HypocrisyDetail', { memberId: member!.id, memberName: `${member!.first_name} ${member!.last_name}` })}
                         style={{
-                          backgroundColor: tokenColors.success, borderRadius: 20, paddingHorizontal: 20,
-                          paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm,
+                          backgroundColor: tokenColors.accent, borderRadius: radius.pill, paddingHorizontal: spacing.xl,
+                          paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm,
                         }}
                         accessibilityRole="button"
                       >
-                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>See full breakdown</Text>
-                        <Ionicons name="arrow-forward" size={16} color="#fff" />
-                      </Pressable>
+                        <AppText variant="label" style={{ color: tokenColors.onAccent }}>See full breakdown</AppText>
+                        <Ionicons name="arrow-forward" size={16} color={tokenColors.onAccent} />
+                      </PressableScale>
                     </View>
                   </View>
                 </View>
@@ -741,35 +740,35 @@ export function MemberProfileScreen({ route, navigation }: any) {
 
               {/* ───── 9. SECONDARY CHIPS ROW ───── */}
               <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.xl }}>
-                <Pressable
+                <PressableScale
                   onPress={() => setShowMethodology(true)}
                   accessibilityRole="button"
                   accessibilityLabel="Read methodology"
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#E7EEFF', borderRadius: 10, paddingVertical: spacing.md }}
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, backgroundColor: tokenColors.accentMuted, borderRadius: radius.sm, paddingVertical: spacing.md }}
                 >
-                  <Ionicons name="book-outline" size={15} color="#4F46E5" />
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: '#4F46E5' }}>Read methodology</Text>
-                </Pressable>
+                  <Ionicons name="book-outline" size={15} color={tokenColors.accent} />
+                  <AppText variant="label" style={{ color: tokenColors.accent }}>Read methodology</AppText>
+                </PressableScale>
               </View>
 
               {/* ───── 10. SOURCES FOOTER ───── */}
-              <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: 16, padding: spacing.lg, marginBottom: spacing.lg }}>
-                <Text style={{ fontSize: 12, color: tokenColors.textMuted, lineHeight: 18 }}>
+              <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.md, padding: spacing.lg, marginBottom: spacing.lg }}>
+                <AppText variant="caption" color="textMuted">
                   Sources — Parliament of Australia · OpenAustralia · AEC
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}>
-                  <Text style={{ fontSize: 12, color: tokenColors.textMuted }}>Updated {timeAgo(new Date().toISOString())}</Text>
-                  <Text style={{ fontSize: 12, color: tokenColors.textMuted }}>·</Text>
-                  <Pressable onPress={() => Linking.openURL('mailto:corrections@verity.run')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Report an issue via email">
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: tokenColors.success }}>Report an issue</Text>
-                  </Pressable>
+                </AppText>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm }}>
+                  <AppText variant="caption" color="textMuted">Updated {timeAgo(new Date().toISOString())}</AppText>
+                  <AppText variant="caption" color="textMuted">·</AppText>
+                  <PressableScale onPress={() => Linking.openURL('mailto:corrections@verity.run')} accessibilityRole="button" accessibilityLabel="Report an issue via email">
+                    <AppText variant="caption" style={{ color: tokenColors.accent }}>Report an issue</AppText>
+                  </PressableScale>
                 </View>
               </View>
 
               {/* ───── IN THE CONVERSATION (public discourse from /last30days) ───── */}
               {discourseData && discourseData.sentiment_summary && discourseData.best_takes?.length > 0 && (
                 <View style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}>
-                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>In the conversation</Text>
+                  <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>In the conversation</AppText>
                   <View style={{
                     backgroundColor: '#FFFBF0',
                     borderRadius: radius.md,
@@ -782,7 +781,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                         width: 32, height: 32, borderRadius: 16,
                         backgroundColor: tokenColors.accentMuted, justifyContent: 'center', alignItems: 'center',
                       }}>
-                        <Ionicons name="chatbubbles-outline" size={16} color="#00843D" />
+                        <Ionicons name="chatbubbles-outline" size={16} color={tokenColors.accent} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 15, color: colors.text, fontStyle: 'italic', lineHeight: 21 }} numberOfLines={4}>
@@ -822,16 +821,16 @@ export function MemberProfileScreen({ route, navigation }: any) {
               ) : votes.length === 0 ? (
                 <View style={{ alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md }}>
                   <Ionicons name="document-text-outline" size={48} color={colors.textMuted} />
-                  <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text }}>No voting records yet</Text>
+                  <AppText variant="heading" style={{ color: colors.text }}>No voting records yet</AppText>
                   <Text style={{ fontSize: 15, color: colors.textBody, textAlign: 'center' }}>Votes will appear as division data is recorded.</Text>
                 </View>
               ) : (
                 <>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.greenBg, borderRadius: radius.sm, padding: spacing.md, marginBottom: spacing.md }}>
-                    <Ionicons name="stats-chart" size={16} color="#00843D" />
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: tokenColors.accentMuted, borderRadius: radius.sm, padding: spacing.md, marginBottom: spacing.md }}>
+                    <Ionicons name="stats-chart" size={16} color={tokenColors.accent} />
+                    <AppText variant="label" tabular style={{ color: colors.text }}>
                       Voted in {totalVotes} division{totalVotes !== 1 ? 's' : ''}{totalVotes > 0 ? ` · ${Math.round((ayeCount / totalVotes) * 100)}% aye rate` : ''}
-                    </Text>
+                    </AppText>
                   </View>
 
                   {/* Representation Gap */}
@@ -890,10 +889,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
                                 <Text style={{ fontSize: 10, color: tokenColors.success, fontWeight: '600' }}>Guess</Text>
                               )}
                               {existingPrediction?.was_correct === true && (
-                                <Ionicons name="checkmark-circle" size={12} color="#00843D" />
+                                <Ionicons name="checkmark-circle" size={12} color={tokenColors.accent} />
                               )}
                               {existingPrediction?.was_correct === false && (
-                                <Ionicons name="close-circle" size={12} color="#DC3545" />
+                                <Ionicons name="close-circle" size={12} color={tokenColors.danger} />
                               )}
                             </View>
                           </Pressable>
@@ -948,7 +947,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
               ) : hansardEntries.length === 0 ? (
                 <View style={{ alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md }}>
                   <Ionicons name="mic-outline" size={48} color={colors.textMuted} />
-                  <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text }}>No recent speeches</Text>
+                  <AppText variant="heading" style={{ color: colors.text }}>No recent speeches</AppText>
                   <Text style={{ fontSize: 15, color: colors.textBody, textAlign: 'center' }}>Speeches appear once Hansard data is loaded for this MP.</Text>
                 </View>
               ) : (
@@ -987,7 +986,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
           {activeTab === 'more' && (
             <>
               {/* ── About ── */}
-              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>About</Text>
+              <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>About</AppText>
               <View style={{ marginBottom: spacing.xl }}>
                 <View style={{ gap: spacing.xs }}>
                   <Text style={{ fontSize: 13 - 1, fontWeight: '600', textTransform: 'uppercase', color: colors.textMuted, marginTop: spacing.md }}>Chamber</Text>
@@ -1104,7 +1103,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
               )}
 
               {/* ── Funding ── */}
-              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>Funding</Text>
+              <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>Funding</AppText>
               <View style={{ marginBottom: spacing.xl }}>
                 {/* Funding sub-toggle */}
                 <View style={{ flexDirection: 'row', borderRadius: radius.sm, padding: 3, marginBottom: spacing.lg, backgroundColor: colors.cardAlt }}>
@@ -1314,7 +1313,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                           });
                         }}
                       >
-                        <Ionicons name="share-outline" size={16} color="#00843D" />
+                        <Ionicons name="share-outline" size={16} color={tokenColors.accent} />
                         <Text style={{ fontSize: 14, fontWeight: '600', color: tokenColors.success }}>Share this analysis</Text>
                       </Pressable>
                       <Text style={{ fontSize: 11, color: tokenColors.textMuted, textAlign: 'center', lineHeight: 16, marginTop: 4, paddingHorizontal: 8 }}>
@@ -1326,7 +1325,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
               </View>
 
               {/* ── Registered Interests ── */}
-              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>Registered Interests</Text>
+              <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>Registered Interests</AppText>
               <View style={{ marginBottom: spacing.xl }}>
                 {interestsLoading ? (
                   [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={10} style={{ marginBottom: 10 }} />)
@@ -1395,9 +1394,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
               {/* ── Demographics ── */}
               {demographics && member.electorate && (
                 <>
-                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>
+                  <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>
                     {member.electorate.name} Demographics
-                  </Text>
+                  </AppText>
                   <View style={{ marginBottom: spacing.xl }}>
                     <Text style={{ fontSize: 11, color: colors.textMuted, marginBottom: spacing.sm }}>Census 2021</Text>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -1448,9 +1447,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
               {/* ── Government Contracts ── */}
               {contractSummary.contract_count > 0 && member.electorate && (
                 <>
-                  <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>
+                  <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>
                     Federal Contracts in {member.electorate.name}
-                  </Text>
+                  </AppText>
                   <View style={{ marginBottom: spacing.xl }}>
                     <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
                       <View style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 10, flex: 1 }}>
@@ -1486,7 +1485,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
               )}
 
               {/* ── Watchlist / Contradictions ── */}
-              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: spacing.md }}>Watchlist</Text>
+              <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>Watchlist</AppText>
               <View style={{ marginBottom: spacing.xl }}>
                 {contradictionsLoading ? (
                   [1, 2, 3].map(i => <SkeletonLoader key={i} height={100} borderRadius={14} style={{ marginBottom: 10 }} />)

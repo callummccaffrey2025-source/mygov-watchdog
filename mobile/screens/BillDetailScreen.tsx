@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, ScrollView, Pressable, Share, Platform, RefreshControl, Linking, ActivityIndicator,
+  View, Text, ScrollView, Pressable, Share, Platform, RefreshControl, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,7 +10,7 @@ import { useUser } from '../context/UserContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
 import { PartyBadge } from '../components/PartyBadge';
-import { SkeletonLoader } from '../components/SkeletonLoader';
+import { Skeleton } from '../components/ui/Skeleton';
 import { supabase } from '../lib/supabase';
 import { decodeHtml } from '../utils/decodeHtml';
 import { timeAgo } from '../lib/timeAgo';
@@ -27,6 +27,7 @@ import { useBillHistory } from '../hooks/useBillHistory';
 import { enrichBill, type NarrativeStatus } from '../lib/billEnrichment';
 import { BillExplainerCard } from '../components/BillExplainer';
 import { spacing, radius, elevation, colors as tokenColors } from '../theme/tokens';
+import { PressableScale, AppText } from '../components/ui';
 import { hapticLight } from '../lib/haptics';
 
 // ── Interfaces ───────────────────────────────────────────────────────────────
@@ -117,9 +118,10 @@ function PersonalImpactCard({ billTitle, billSummary, billId, colors }: {
       </View>
 
       {loading && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 }}>
-          <ActivityIndicator size="small" color="#00843D" />
-          <Text style={{ fontSize: 13, color: colors.textMuted }}>Analysing impact...</Text>
+        <View style={{ paddingVertical: spacing.md, gap: spacing.sm }}>
+          <Skeleton width="100%" height={16} />
+          <Skeleton width="85%" height={16} />
+          <Skeleton width="60%" height={16} />
         </View>
       )}
 
@@ -225,18 +227,43 @@ export function BillDetailScreen({ route, navigation }: any) {
   // ── Early return ────────────────────────────────────────────────────────────
   if (!bill) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: billError ? 'center' : 'flex-start', alignItems: billError ? 'center' : 'stretch' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
         {billError ? (
-          <View style={{ alignItems: 'center', padding: 40 }}>
-            <Ionicons name="alert-circle-outline" size={48} color={colors.textMuted} />
-            <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, marginTop: 12 }}>Bill not found</Text>
-            <Text style={{ fontSize: 15, color: colors.textMuted, marginTop: 8, textAlign: 'center' }}>This bill may have been removed or is temporarily unavailable.</Text>
-            <Pressable onPress={() => navigation.goBack()} style={{ marginTop: 20, backgroundColor: tokenColors.success, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 }}>
-              <Text style={{ color: '#fff', fontWeight: '700' }}>Go back</Text>
-            </Pressable>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xxl }}>
+            <Ionicons name="alert-circle-outline" size={48} color={tokenColors.textMuted} />
+            <AppText variant="heading" style={{ marginTop: spacing.md }}>Bill not found</AppText>
+            <AppText variant="body" color="textSecondary" center style={{ marginTop: spacing.sm }}>
+              This bill may have been removed or is temporarily unavailable.
+            </AppText>
+            <PressableScale
+              onPress={() => navigation.goBack()}
+              style={{ marginTop: spacing.xl, backgroundColor: tokenColors.accent, borderRadius: radius.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.md }}
+            >
+              <AppText variant="label" color="textInverse">Go back</AppText>
+            </PressableScale>
           </View>
         ) : (
-          <SkeletonLoader width="100%" height={200} />
+          <View style={{ padding: spacing.xl, gap: spacing.xl }}>
+            {/* Bill skeleton: status pill + title + meta */}
+            <View style={{ gap: spacing.md }}>
+              <Skeleton width={80} height={24} borderRadius={radius.sm} />
+              <Skeleton width="90%" height={28} borderRadius={radius.sm} />
+              <Skeleton width="60%" height={20} borderRadius={radius.sm} />
+            </View>
+            {/* Progress tracker skeleton */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              {[1,2,3,4,5].map(i => (
+                <Skeleton key={i} width={32} height={32} borderRadius={16} />
+              ))}
+            </View>
+            {/* Summary card skeleton */}
+            <View style={{ backgroundColor: tokenColors.surface, borderRadius: radius.md, padding: spacing.lg, gap: spacing.sm, ...elevation.sm }}>
+              <Skeleton width={100} height={14} />
+              <Skeleton width="100%" height={16} />
+              <Skeleton width="85%" height={16} />
+              <Skeleton width="70%" height={16} />
+            </View>
+          </View>
         )}
       </SafeAreaView>
     );
@@ -605,8 +632,22 @@ export function BillDetailScreen({ route, navigation }: any) {
 
           {argsLoading ? (
             <>
-              <SkeletonLoader height={72} borderRadius={10} style={{ marginBottom: 8 }} />
-              <SkeletonLoader height={72} borderRadius={10} />
+              <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm }}>
+                <Skeleton width={18} height={18} borderRadius={9} />
+                <View style={{ flex: 1, gap: spacing.sm }}>
+                  <Skeleton width={30} height={10} />
+                  <Skeleton width="90%" height={14} />
+                  <Skeleton width="70%" height={14} />
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', gap: spacing.md }}>
+                <Skeleton width={18} height={18} borderRadius={9} />
+                <View style={{ flex: 1, gap: spacing.sm }}>
+                  <Skeleton width={50} height={10} />
+                  <Skeleton width="85%" height={14} />
+                  <Skeleton width="65%" height={14} />
+                </View>
+              </View>
             </>
           ) : forArgs.length === 0 && againstArgs.length === 0 ? (
             <View style={{
@@ -660,7 +701,14 @@ export function BillDetailScreen({ route, navigation }: any) {
           </Text>
 
           {divisionsLoading ? (
-            <SkeletonLoader height={80} borderRadius={10} />
+            <View style={{ backgroundColor: tokenColors.surface, borderRadius: radius.md, padding: spacing.lg, gap: spacing.md }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Skeleton width={36} height={24} />
+                <Skeleton width="100%" height={12} borderRadius={6} style={{ flex: 1 }} />
+                <Skeleton width={36} height={24} />
+              </View>
+              <Skeleton width={60} height={14} />
+            </View>
           ) : relatedDivisions.length > 0 ? (
             <>
               {/* Aggregate bar */}
