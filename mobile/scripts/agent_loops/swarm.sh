@@ -20,6 +20,16 @@
 set -uo pipefail
 
 PROJECT_DIR="${HOME}/verity/mobile"
+
+# Cron's PATH lacks nvm — resolve the claude CLI explicitly. nvm paths are
+# node-version-specific, so search instead of hardcoding one.
+if ! command -v claude >/dev/null 2>&1; then
+  CLAUDE_BIN=$(ls -t "$HOME"/.nvm/versions/node/*/bin/claude 2>/dev/null | head -1)
+  if [[ -n "${CLAUDE_BIN:-}" ]]; then
+    export PATH="$(dirname "$CLAUDE_BIN"):$PATH"
+  fi
+fi
+
 LOG_DIR="${HOME}/verity/logs/swarm"
 STATE_FILE="${PROJECT_DIR}/scripts/agent_loops/.swarm_state.json"
 TASK_FILE="${PROJECT_DIR}/SPRINT.md"

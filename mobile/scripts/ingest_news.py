@@ -1231,16 +1231,45 @@ def backfill_full_text(sb, limit: int = 100) -> None:
     log.info("Full text extraction: %d extracted, %d failed", extracted, failed)
 
 
+def prune_old_news(sb, days: int = 30) -> int:
+    """Bounded replacement for --fresh: drop articles older than `days` and
+    their story-junction rows. Never wipes whole tables, so a mid-run crash
+    can't leave the app empty."""
+    cutoff = (datetime.now(tz=timezone.utc) - timedelta(days=days)).isoformat()
+    old = (
+        sb.table("news_articles")
+        .select("id")
+        .lt("published_at", cutoff)
+        .neq("published_at", "")
+        .execute()
+    )
+    ids = [r["id"] for r in (old.data or [])]
+    for i in range(0, len(ids), 100):
+        chunk = ids[i : i + 100]
+        sb.table("news_story_articles").delete().in_("article_id", chunk).execute()
+        sb.table("news_articles").delete().in_("id", chunk).execute()
+    if ids:
+        log.info("Pruned %d articles older than %d days", len(ids), days)
+    return len(ids)
+
+
 def main():
     fresh = "--fresh" in sys.argv
     sb = get_supabase()
 
     if fresh:
+        # Manual use only — never wire this into cron/orchestrator defaults:
+        # a mid-run crash after this point leaves the app with zero news.
         log.info("--fresh: clearing all news data...")
         sb.table("news_story_articles").delete().neq("id", 0).execute()
         sb.table("news_articles").delete().neq("id", 0).execute()
         sb.table("news_stories").delete().neq("id", 0).execute()
         log.info("Tables cleared.")
+    else:
+        try:
+            prune_old_news(sb)
+        except Exception as e:
+            log.warning("Prune failed (non-fatal): %s", e)
 
     cutoff = datetime.now(tz=timezone.utc) - timedelta(days=14)
 

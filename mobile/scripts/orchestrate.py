@@ -36,11 +36,22 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from dotenv import load_dotenv
-
 SCRIPTS_DIR = Path(__file__).parent
 PROJECT_DIR = SCRIPTS_DIR.parent
-load_dotenv(PROJECT_DIR / ".env")
+
+# Cron environments may resolve a python without python-dotenv (this killed the
+# 2026-06-09 cycle). Fall back to a minimal .env parser rather than dying.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_DIR / ".env")
+except ImportError:
+    env_file = PROJECT_DIR / ".env"
+    if env_file.exists():
+        for line in env_file.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, _, value = line.partition("=")
+                os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 logging.basicConfig(
     level=logging.INFO,
@@ -55,7 +66,10 @@ RETRY_DELAY = 30
 
 # Pipeline stages — order matters
 STAGES = {
-    "news": {"script": "ingest_news.py", "args": ["--fresh"], "stage": 1},
+    # Incremental by default — never --fresh here: it wipes all three news
+    # tables before re-ingesting, so a mid-run crash leaves the app empty.
+    # ingest_news.py prunes articles older than 30 days instead.
+    "news": {"script": "ingest_news.py", "args": [], "stage": 1},
     "votes": {"script": "ingest_votes.py", "args": ["--recent", "7"], "stage": 1},
     "summaries": {"script": "generate_ai_summaries.py", "args": [], "stage": 2},
     "health": {"script": "data_monitor.py", "args": [], "stage": 3},
