@@ -12,6 +12,7 @@ import { AppText } from '../components/ui/AppText';
 import { Card } from '../components/ui/Card';
 import { PressableScale } from '../components/ui/PressableScale';
 import { Skeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
 
 function TodaysQuestion() {
   const [poll, setPoll] = useState<any>(null);
@@ -201,15 +202,13 @@ export function LearnScreen({ navigation }: any) {
         }
         renderItem={renderModulePair}
         ListEmptyComponent={
-          <View style={{ alignItems: 'center', paddingTop: spacing.xxxl }}>
-            <Ionicons name="school-outline" size={48} color={tokenColors.textMuted} />
-            <AppText variant="heading" style={{ marginTop: spacing.md }}>
-              Lessons loading
-            </AppText>
-            <AppText variant="body" color="textMuted" center style={{ marginTop: spacing.xs }}>
-              Pull to refresh if content doesn't appear.
-            </AppText>
-          </View>
+          <EmptyState
+            icon={<Ionicons name="school-outline" size={48} color={tokenColors.textMuted} />}
+            title="No lessons available"
+            message="Pull to refresh if content doesn't appear. New modules are added regularly."
+            actionLabel="Refresh"
+            onAction={refresh}
+          />
         }
         ListFooterComponent={
           currentEvents.length > 0 ? (

@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { Bill } from '../hooks/useBills';
 import { useBillDivisions } from '../hooks/useBillDivisions';
 import { useUser } from '../context/UserContext';
@@ -340,7 +341,7 @@ export function BillDetailScreen({ route, navigation }: any) {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: spacing.xxl }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={false} onRefresh={async () => {
@@ -355,22 +356,23 @@ export function BillDetailScreen({ route, navigation }: any) {
       >
         {/* ═══ 1. HEADER ═══ */}
         <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
-          {/* Narrative status row */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.md }}>
+          {/* Status badge */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md }}>
             <View style={{
-              flexDirection: 'row', alignItems: 'center', gap: 5,
-              backgroundColor: enrichment.statusColor + '14',
-              paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+              backgroundColor: enrichment.narrativeStatus === 'became_law' ? tokenColors.success : tokenColors.surfaceMuted,
+              paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 6,
             }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: enrichment.statusColor }} />
-              <Text style={{ fontSize: 13, fontWeight: '700', color: enrichment.statusColor }}>
-                {enrichment.isLive ? 'Live' : enrichment.narrativeStatus === 'became_law' ? 'Passed' : enrichment.narrativeStatus === 'defeated' ? 'Defeated' : 'Archived'}
-              </Text>
+              <AppText variant="caption" style={{
+                fontWeight: '700',
+                color: enrichment.narrativeStatus === 'became_law' ? '#FFFFFF' : tokenColors.textSecondary,
+              }}>
+                {enrichment.isLive ? 'Introduced' : enrichment.narrativeStatus === 'became_law' ? 'Passed' : enrichment.narrativeStatus === 'defeated' ? 'Defeated' : 'Archived'}
+              </AppText>
             </View>
             {enrichment.narrativeLabel ? (
-              <Text style={{ fontSize: 13, color: colors.textMuted, flex: 1 }} numberOfLines={1}>
+              <AppText variant="caption" color="textMuted" style={{ flex: 1 }} numberOfLines={1}>
                 {enrichment.narrativeLabel}
-              </Text>
+              </AppText>
             ) : null}
           </View>
 
@@ -385,10 +387,10 @@ export function BillDetailScreen({ route, navigation }: any) {
             </View>
           ) : null}
 
-          {/* Title */}
-          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, lineHeight: 30, marginBottom: spacing.md }}>
+          {/* Title — H1 */}
+          <AppText variant="title" style={{ color: colors.text, marginBottom: spacing.md }} numberOfLines={3}>
             {bill.title}
-          </Text>
+          </AppText>
 
           {/* Meta row */}
           <View style={{ gap: 6 }}>
@@ -661,34 +663,41 @@ export function BillDetailScreen({ route, navigation }: any) {
             </View>
           ) : (
             <>
-              {forArgs.map((a, i) => (
-                <View key={a.id ?? `for-${i}`} style={{
-                  flexDirection: 'row', gap: 12,
-                  backgroundColor: tokenColors.accentMuted, borderRadius: 10, padding: 14, marginBottom: 8,
+              {/* Side-by-side For/Against cards */}
+              <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm }}>
+                {/* For card */}
+                <View style={{
+                  flex: 1, backgroundColor: tokenColors.accentMuted,
+                  borderRadius: radius.md, padding: spacing.lg,
                 }}>
-                  <Ionicons name="checkmark-circle" size={18} color="#00843D" style={{ marginTop: 2 }} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontWeight: '800', color: tokenColors.success, letterSpacing: 0.5, marginBottom: 4 }}>FOR</Text>
-                    <Text style={{ fontSize: 14, color: colors.text, lineHeight: 21 }}>{a.argument_text}</Text>
-                  </View>
+                  <AppText variant="caption" style={{ fontWeight: '700', color: tokenColors.success, letterSpacing: 0.5, marginBottom: spacing.sm }}>FOR</AppText>
+                  {forArgs.length > 0 ? forArgs.slice(0, 3).map((a, i) => (
+                    <AppText key={a.id ?? `for-${i}`} variant="caption" style={{ color: tokenColors.textPrimary, lineHeight: 18, marginBottom: spacing.xs }}>
+                      {'\u2022'} {a.argument_text}
+                    </AppText>
+                  )) : (
+                    <AppText variant="caption" color="textMuted">No arguments compiled yet</AppText>
+                  )}
                 </View>
-              ))}
-              {againstArgs.map((a, i) => (
-                <View key={a.id ?? `against-${i}`} style={{
-                  flexDirection: 'row', gap: 12,
-                  backgroundColor: '#FDECEA', borderRadius: 10, padding: 14, marginBottom: 8,
+                {/* Against card */}
+                <View style={{
+                  flex: 1, backgroundColor: '#FEF2F2',
+                  borderRadius: radius.md, padding: spacing.lg,
                 }}>
-                  <Ionicons name="close-circle" size={18} color="#DC3545" style={{ marginTop: 2 }} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontWeight: '800', color: tokenColors.danger, letterSpacing: 0.5, marginBottom: 4 }}>AGAINST</Text>
-                    <Text style={{ fontSize: 14, color: colors.text, lineHeight: 21 }}>{a.argument_text}</Text>
-                  </View>
+                  <AppText variant="caption" style={{ fontWeight: '700', color: tokenColors.danger, letterSpacing: 0.5, marginBottom: spacing.sm }}>AGAINST</AppText>
+                  {againstArgs.length > 0 ? againstArgs.slice(0, 3).map((a, i) => (
+                    <AppText key={a.id ?? `against-${i}`} variant="caption" style={{ color: tokenColors.textPrimary, lineHeight: 18, marginBottom: spacing.xs }}>
+                      {'\u2022'} {a.argument_text}
+                    </AppText>
+                  )) : (
+                    <AppText variant="caption" color="textMuted">No arguments compiled yet</AppText>
+                  )}
                 </View>
-              ))}
+              </View>
               {/* AI disclaimer */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                <Ionicons name="information-circle-outline" size={12} color={colors.textMuted} />
-                <Text style={{ fontSize: 11, color: colors.textMuted }}>AI-generated summary. Verify with official parliamentary records.</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
+                <Ionicons name="information-circle-outline" size={12} color={tokenColors.textMuted} />
+                <AppText variant="caption" color="textMuted">AI-generated summary. Verify with official parliamentary records.</AppText>
               </View>
             </>
           )}
@@ -718,12 +727,12 @@ export function BillDetailScreen({ route, navigation }: any) {
                     <Text style={{ fontSize: 18, fontWeight: '800', color: tokenColors.success }}>{divAyeTotal}</Text>
                     <Text style={{ fontSize: 10, color: colors.textMuted }}>Ayes</Text>
                   </View>
-                  <View style={{ flex: 1, height: 12, borderRadius: 6, overflow: 'hidden', backgroundColor: colors.cardAlt, flexDirection: 'row' }}>
+                  <View style={{ flex: 1, height: 8, borderRadius: 4, overflow: 'hidden', backgroundColor: tokenColors.surfaceMuted, flexDirection: 'row' }}>
                     {divAyeTotal + divNoTotal > 0 && (
-                      <View style={{ flex: divAyeTotal, backgroundColor: tokenColors.success }} />
+                      <View style={{ flex: divAyeTotal, backgroundColor: tokenColors.success, borderTopLeftRadius: 4, borderBottomLeftRadius: 4 }} />
                     )}
                     {divNoTotal > 0 && (
-                      <View style={{ flex: divNoTotal, backgroundColor: tokenColors.danger }} />
+                      <View style={{ flex: divNoTotal, backgroundColor: tokenColors.danger, borderTopRightRadius: 4, borderBottomRightRadius: 4 }} />
                     )}
                   </View>
                   <View style={{ alignItems: 'flex-end', minWidth: 36 }}>
@@ -746,30 +755,37 @@ export function BillDetailScreen({ route, navigation }: any) {
                 </View>
               </View>
 
-              {/* Your MP's vote */}
-              {myMP && (() => {
-                // Check divisions for MP vote data
-                return (
-                  <View style={{
-                    backgroundColor: colors.surface, borderRadius: radius.sm,
-                    padding: spacing.md, marginBottom: spacing.sm,
-                    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-                  }}>
-                    <Ionicons name="person-outline" size={16} color="#00843D" />
-                    <Text style={{ fontSize: 13, color: colors.textBody, flex: 1 }}>
-                      See how {myMP.first_name} {myMP.last_name} voted on the MP profile.
-                    </Text>
-                    <Pressable
-                      onPress={() => navigation.navigate('MemberProfile', { member: myMP })}
-                      hitSlop={8}
-                      accessibilityRole="button"
-                      accessibilityLabel={`View ${myMP.first_name} ${myMP.last_name}'s profile`}
-                    >
-                      <Text style={{ fontSize: 13, fontWeight: '600', color: tokenColors.success }}>View</Text>
-                    </Pressable>
+              {/* Your MP's vote — highlighted card */}
+              {myMP && (
+                <PressableScale
+                  onPress={() => navigation.navigate('MemberProfile', { member: myMP })}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View ${myMP.first_name} ${myMP.last_name}'s vote`}
+                  style={{
+                    backgroundColor: tokenColors.accentMuted, borderRadius: radius.md,
+                    padding: spacing.lg, marginBottom: spacing.sm,
+                    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+                    ...elevation.sm,
+                  }}
+                >
+                  {myMP.photo_url ? (
+                    <Image source={{ uri: myMP.photo_url }} style={{ width: 32, height: 32, borderRadius: 16 }} contentFit="cover" />
+                  ) : (
+                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: tokenColors.surfaceMuted, justifyContent: 'center', alignItems: 'center' }}>
+                      <AppText variant="caption" style={{ fontWeight: '700' }}>{myMP.first_name[0]}{myMP.last_name[0]}</AppText>
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <AppText variant="body" style={{ fontWeight: '600' }}>
+                      Your MP: {myMP.first_name} {myMP.last_name}
+                    </AppText>
+                    <AppText variant="caption" color="textMuted">
+                      See how they voted on this bill
+                    </AppText>
                   </View>
-                );
-              })()}
+                  <Ionicons name="chevron-forward" size={16} color={tokenColors.accent} />
+                </PressableScale>
+              )}
 
               {/* Division list */}
               {relatedDivisions.map(d => {

@@ -246,8 +246,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
           />
         }
       >
-        {/* ───── 1. PINK HEADER ───── */}
-        <View style={{ backgroundColor: partyColour + '18', paddingBottom: spacing.xl }}>
+        {/* ───── 1. HERO HEADER ───── */}
+        <View style={{ backgroundColor: partyColour + '1A', paddingBottom: spacing.xxl }}>
           {/* Nav: back + share/bookmark */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.lg }}>
             <Pressable
@@ -280,43 +280,73 @@ export function MemberProfileScreen({ route, navigation }: any) {
             </View>
           </View>
 
-          {/* Avatar */}
-          <View style={{ alignItems: 'center', marginTop: spacing.lg }}>
-            <View style={{ borderRadius: 48, borderWidth: 3, borderColor: partyColour, overflow: 'hidden' }}>
+          {/* Avatar — 120px circle, white border, shadow */}
+          <View style={{ alignItems: 'center', marginTop: spacing.xl }}>
+            <View style={{
+              width: 120, height: 120, borderRadius: 60,
+              borderWidth: 3, borderColor: '#FFFFFF',
+              overflow: 'hidden',
+              ...elevation.md,
+            }}>
               {member.photo_url ? (
-                <Image source={{ uri: member.photo_url }} style={{ width: 96, height: 96 }} accessibilityLabel={`Photo of ${displayName}`} />
+                <Image source={{ uri: member.photo_url }} style={{ width: 120, height: 120 }} contentFit="cover" accessibilityLabel={`Photo of ${displayName}`} />
               ) : (
-                <View style={{ width: 96, height: 96, justifyContent: 'center', alignItems: 'center', backgroundColor: partyColour + '33' }}>
-                  <AppText variant="title" style={{ fontSize: 32, color: partyColour }}>
+                <View style={{ width: 120, height: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: partyColour + '33' }}>
+                  <AppText variant="display" style={{ color: partyColour }}>
                     {member.first_name[0]}{member.last_name[0]}
                   </AppText>
                 </View>
               )}
             </View>
 
-            {/* Name + verified */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md }}>
-              <AppText variant="title" style={{ color: colors.text }}>{displayName}</AppText>
-              <Ionicons name="checkmark-circle" size={20} color={tokenColors.accent} />
-            </View>
+            {/* Name in H1 */}
+            <AppText variant="title" style={{ color: colors.text, marginTop: spacing.lg, textAlign: 'center' }}>{displayName}</AppText>
 
-            {/* Ministerial role */}
+            {/* Party + electorate in Caption */}
+            <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs, textAlign: 'center' }}>
+              {party?.short_name || party?.name || ''}{member.electorate ? ` · ${member.electorate.name}` : ''}{member.electorate?.state ? ` · ${member.electorate.state}` : ''}
+            </AppText>
+
+            {/* Ministerial role as green badge */}
             {member.ministerial_role && (
-              <AppText variant="callout" style={{ color: partyColour, marginTop: spacing.xs, textAlign: 'center', paddingHorizontal: spacing.xl }} numberOfLines={2}>
-                {member.ministerial_role}
-              </AppText>
-            )}
-
-            {/* Party badge */}
-            {party && <View style={{ marginTop: spacing.sm }}><PartyBadge name={party.name} colour={party.colour} /></View>}
-
-            {/* Meta */}
-            {member.electorate && (
-              <AppText variant="label" style={{ color: colors.textBody, marginTop: spacing.xs }}>
-                {member.electorate.name} · {member.chamber === 'senate' ? 'Senator' : 'MP'} · {member.electorate.state}
-              </AppText>
+              <View style={{
+                backgroundColor: tokenColors.success + '1A',
+                borderRadius: 6,
+                paddingHorizontal: spacing.sm, paddingVertical: spacing.xs,
+                marginTop: spacing.sm,
+              }}>
+                <AppText variant="caption" style={{ color: tokenColors.success, fontWeight: '600' }}>
+                  {member.ministerial_role}
+                </AppText>
+              </View>
             )}
           </View>
+
+          {/* ───── STATS ROW — horizontal pill badges ───── */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: spacing.xl, gap: spacing.md, marginTop: spacing.xl }}
+          >
+            <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center' }}>
+              <AppText variant="body" style={{ fontWeight: '600' }} tabular>{totalVotes}</AppText>
+              <AppText variant="caption" color="textMuted">Votes</AppText>
+            </View>
+            <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center' }}>
+              <AppText variant="body" style={{ fontWeight: '600' }} tabular>{hansardEntries.length}</AppText>
+              <AppText variant="caption" color="textMuted">Speeches</AppText>
+            </View>
+            <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center' }}>
+              <AppText variant="body" style={{ fontWeight: '600' }} tabular>{committees.length}</AppText>
+              <AppText variant="caption" color="textMuted">Committees</AppText>
+            </View>
+            {participationIndex.independenceRate > 0 && (
+              <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, alignItems: 'center' }}>
+                <AppText variant="body" style={{ fontWeight: '600' }} tabular>{participationIndex.independenceRate}%</AppText>
+                <AppText variant="caption" color="textMuted">Rebellion</AppText>
+              </View>
+            )}
+          </ScrollView>
         </View>
 
         {/* ───── 2. PRIMARY CTA ROW ───── */}
@@ -498,8 +528,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
         )}
 
         {/* ───── 7. TAB BAR ───── */}
-        <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.sm }}>
+        <View style={{ borderBottomWidth: 0.5, borderBottomColor: tokenColors.border }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.lg }}>
             {TABS.map(tab => (
               <PressableScale
                 key={tab.id}
@@ -507,13 +537,14 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 accessibilityRole="button"
                 accessibilityLabel={`${tab.label} tab`}
                 style={{
-                  paddingVertical: spacing.md,
+                  height: 48,
+                  justifyContent: 'center',
                   paddingHorizontal: spacing.lg,
-                  borderBottomWidth: activeTab === tab.id ? 2 : 0,
-                  borderBottomColor: activeTab === tab.id ? tokenColors.accent : 'transparent',
+                  borderBottomWidth: activeTab === tab.id ? 3 : 0,
+                  borderBottomColor: activeTab === tab.id ? tokenColors.success : 'transparent',
                 }}
               >
-                <AppText variant="label" style={{ color: activeTab === tab.id ? tokenColors.accent : colors.textMuted }}>
+                <AppText variant="label" style={{ color: activeTab === tab.id ? tokenColors.success : tokenColors.textMuted }}>
                   {tab.label}
                 </AppText>
               </PressableScale>

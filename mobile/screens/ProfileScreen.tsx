@@ -318,67 +318,131 @@ export function ProfileScreen({ navigation }: any) {
     );
   }
 
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+    : '';
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.title, { color: colors.text }]}>Profile</Text>
+      <ScrollView contentContainerStyle={{ paddingBottom: SPACING.xxxl }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-        {/* User info */}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <View style={styles.avatarRow}>
-            <View style={[styles.avatar, { backgroundColor: colors.green }]}>
-              <Text style={styles.avatarInitials}>
-                {(user?.email?.[0] ?? '?').toUpperCase()}
-              </Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.email, { color: colors.text }]}>{user?.email}</Text>
-              <Text style={[styles.joined, { color: colors.textMuted }]}>Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' }) : ''}</Text>
-            </View>
+        {/* ═══ 1. AVATAR HERO ═══ */}
+        <View style={{ alignItems: 'center', paddingTop: SPACING.xxxl, paddingBottom: SPACING.xl }}>
+          <View style={{
+            width: 80, height: 80, borderRadius: 40,
+            borderWidth: 3, borderColor: '#00843D',
+            backgroundColor: '#00843D', justifyContent: 'center', alignItems: 'center',
+          }}>
+            <Text style={{ fontSize: 28, fontWeight: FONT_WEIGHT.bold, color: '#FFFFFF' }}>
+              {(user?.email?.[0] ?? '?').toUpperCase()}
+            </Text>
           </View>
+          <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text, marginTop: SPACING.md }}>
+            {user?.email?.split('@')[0] || 'You'}
+          </Text>
+          {myMP?.electorate?.name && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginTop: SPACING.xs }}>
+              <Ionicons name="map-outline" size={14} color={colors.textMuted} />
+              <Text style={{ fontSize: 13, color: colors.textMuted }}>{myMP.electorate.name}</Text>
+            </View>
+          )}
+          {memberSince ? (
+            <Text style={{ fontSize: 11, fontWeight: '500', color: colors.textMuted, marginTop: SPACING.xs }}>
+              Member since {memberSince}
+            </Text>
+          ) : null}
         </View>
 
-        {/* Your Verity Stats */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Verity Stats</Text>
-          <View style={{ flexDirection: 'row', gap: SPACING.sm, flexWrap: 'wrap' }}>
-            {[
-              { label: 'Articles Read', value: articlesRead, icon: 'newspaper-outline' as const },
-              { label: 'MPs Followed', value: mpsFollowed, icon: 'people-outline' as const },
-              { label: 'Days Active', value: daysActive, icon: 'calendar-outline' as const },
-              ...(streakDays > 0 ? [{ label: 'Day Streak', value: streakDays, icon: 'flame-outline' as const }] : []),
-            ].map((stat) => (
-              <View
-                key={stat.label}
-                style={{
-                  flex: 1,
-                  backgroundColor: colors.surface,
-                  borderRadius: BORDER_RADIUS.md + 2,
-                  padding: SPACING.md,
-                  alignItems: 'center',
-                  gap: SPACING.xs,
-                }}
-              >
-                <Ionicons name={stat.icon} size={22} color="#00843D" />
-                <Text style={{ fontSize: FONT_SIZE.heading, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>
-                  {stat.value}
-                </Text>
-                <Text style={{ fontSize: FONT_SIZE.small - 1, color: colors.textMuted, textAlign: 'center' }}>
-                  {stat.label}
-                </Text>
-              </View>
+        {/* ═══ 2. CIVIC STATS — 3 equal cards ═══ */}
+        <View style={{ flexDirection: 'row', gap: SPACING.md, paddingHorizontal: SPACING.xl, marginBottom: SPACING.xxl }}>
+          {[
+            { label: 'Bills tracked', value: articlesRead },
+            { label: 'Votes viewed', value: mpsFollowed },
+            { label: 'Days active', value: daysActive },
+          ].map(stat => (
+            <View key={stat.label} style={{
+              flex: 1, backgroundColor: colors.surface, borderRadius: 14,
+              padding: SPACING.md, alignItems: 'center',
+              shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1,
+            }}>
+              <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>{stat.value}</Text>
+              <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: SPACING.xs, textAlign: 'center' }}>{stat.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* ═══ 3. QUICK ACTIONS ═══ */}
+        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xxl }}>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm }}>
+            Quick Actions
+          </Text>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 }}>
+            {([
+              { icon: 'bookmark-outline', label: 'Saved Items', screen: 'Saved' },
+              { icon: 'notifications-outline', label: 'Notification Preferences', screen: 'NotificationPreferences' },
+              { icon: 'pricetags-outline', label: 'Your Topics', screen: 'ManageTopics' },
+              { icon: 'mail-outline', label: 'Write to MP', screen: 'WriteToMP', params: myMP ? { member: myMP } : undefined },
+              { icon: 'diamond-outline', label: 'Subscription', screen: 'Subscription' },
+            ] as const).map((item, i, arr) => (
+              <React.Fragment key={item.label}>
+                <Pressable
+                  onPress={() => navigation.navigate(item.screen, (item as any).params)}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
+                  style={{ flexDirection: 'row', alignItems: 'center', height: 56, paddingHorizontal: SPACING.lg, gap: SPACING.md }}
+                >
+                  <Ionicons name={item.icon as any} size={20} color={colors.textBody} />
+                  <Text style={{ flex: 1, fontSize: 15, color: colors.text }}>{item.label}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                </Pressable>
+                {i < arr.length - 1 && (
+                  <View style={{ height: 0.5, backgroundColor: colors.border, marginLeft: SPACING.lg + SPACING.md + 20 }} />
+                )}
+              </React.Fragment>
             ))}
           </View>
         </View>
 
-        {/* Postcode */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Location</Text>
-          <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.label, { color: colors.textMuted }]}>Postcode</Text>
-            <View style={styles.postcodeRow}>
+        {/* ═══ 4. SETTINGS ═══ */}
+        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xxl }}>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm }}>
+            Settings
+          </Text>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 }}>
+            {([
+              { icon: 'book-outline', label: 'How Verity Works', screen: 'Methodology' },
+              { icon: 'shield-outline', label: 'Privacy Policy', screen: 'PrivacyPolicy' },
+              { icon: 'document-text-outline', label: 'Terms of Service', screen: 'Terms' },
+              { icon: 'information-circle-outline', label: 'About Verity', screen: 'About' },
+            ] as const).map((item, i, arr) => (
+              <React.Fragment key={item.label}>
+                <Pressable
+                  onPress={() => navigation.navigate(item.screen)}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
+                  style={{ flexDirection: 'row', alignItems: 'center', height: 56, paddingHorizontal: SPACING.lg, gap: SPACING.md }}
+                >
+                  <Ionicons name={item.icon as any} size={20} color={colors.textBody} />
+                  <Text style={{ flex: 1, fontSize: 15, color: colors.text }}>{item.label}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                </Pressable>
+                {i < arr.length - 1 && (
+                  <View style={{ height: 0.5, backgroundColor: colors.border, marginLeft: SPACING.lg + SPACING.md + 20 }} />
+                )}
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
+
+        {/* ═══ POSTCODE ═══ */}
+        <View style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.xxl }}>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm }}>
+            Your Location
+          </Text>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: SPACING.lg, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 }}>
+            <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
               <TextInput
-                style={[styles.postcodeInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                style={{ flex: 1, borderRadius: 8, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, fontSize: 15, borderWidth: 1, backgroundColor: colors.background, borderColor: colors.border, color: colors.text }}
                 value={postcodeEdit}
                 onChangeText={setPostcodeEdit}
                 keyboardType="number-pad"
@@ -399,150 +463,45 @@ export function ProfileScreen({ navigation }: any) {
                   </View>
                 </InputAccessoryView>
               )}
-              <Pressable style={styles.saveBtn} onPress={handleSavePostcode} accessibilityRole="button" accessibilityLabel="Save postcode">
-                <Text style={styles.saveBtnText}>Save</Text>
+              <Pressable
+                style={{ backgroundColor: '#00843D', borderRadius: 8, paddingHorizontal: SPACING.lg, justifyContent: 'center' }}
+                onPress={handleSavePostcode}
+                accessibilityRole="button"
+                accessibilityLabel="Save postcode"
+              >
+                <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 14 }}>Save</Text>
               </Pressable>
             </View>
-            {myMP && (
-              <Pressable style={[styles.mpRow, { borderTopColor: colors.border }]} onPress={() => navigation.navigate('MemberProfile', { member: myMP })} accessibilityRole="button" accessibilityLabel={`View ${myMP.first_name} ${myMP.last_name}'s profile`}>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Your MP</Text>
-                <Text style={[styles.mpName, { color: colors.text }]}>{myMP.first_name} {myMP.last_name}</Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-              </Pressable>
-            )}
           </View>
         </View>
 
-        {/* Civic Score */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Civic Score</Text>
-          <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <View style={styles.scoreRow}>
-              <View style={[styles.scoreRing, { borderColor: colour }]}>
-                <Text style={[styles.scoreNum, { color: colour }]}>{score}</Text>
-                <Text style={[styles.scorePts, { color: colors.textMuted }]}>pts</Text>
-              </View>
-              <View style={styles.scoreInfo}>
-                <View style={[styles.levelBadge, { backgroundColor: colour + '18' }]}>
-                  <Text style={[styles.levelText, { color: colour }]}>{level}</Text>
-                </View>
-                <View style={styles.scoreBreakdown}>
-                  <Text style={[styles.breakdownItem, { color: colors.textBody }]}>📄 {engData?.bills_read ?? 0} bills read</Text>
-                  <Text style={[styles.breakdownItem, { color: colors.textBody }]}>🗳️ {engData?.polls_voted ?? 0} polls voted</Text>
-                  <Text style={[styles.breakdownItem, { color: colors.textBody }]}>👍 {engData?.reactions_given ?? 0} reactions</Text>
-                  <Text style={[styles.breakdownItem, { color: colors.textBody }]}>📅 {engData?.days_active ?? 0} days active</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Phone verification CTA — deferred, see docs/BACKLOG.md */}
-
-        {/* Settings */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Settings</Text>
-          <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Saved')} accessibilityRole="button" accessibilityLabel="Saved Items">
-              <Ionicons name="bookmark-outline" size={20} color={colors.textBody} />
-              <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Saved Items</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </Pressable>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Subscription')} accessibilityRole="button" accessibilityLabel="Upgrade to Pro">
-              <Text style={styles.crownIcon}>👑</Text>
-              <Text style={[styles.settingLabel, { flex: 1, color: '#00843D', fontWeight: '700' }]}>Upgrade to Pro</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </Pressable>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('NotificationPreferences')} accessibilityRole="button" accessibilityLabel="Notification Preferences">
-              <Ionicons name="notifications-outline" size={20} color={colors.textBody} />
-              <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Notification Preferences</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </Pressable>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('ManageTopics')} accessibilityRole="button" accessibilityLabel="Manage Topics">
-              <Ionicons name="pricetags-outline" size={20} color={colors.textBody} />
-              <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Manage Topics</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </Pressable>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Methodology')} accessibilityRole="button" accessibilityLabel="How Verity Works">
-              <Ionicons name="book-outline" size={20} color={colors.textBody} />
-              <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>How Verity Works</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </Pressable>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('PrivacyPolicy')} accessibilityRole="button" accessibilityLabel="Privacy Policy">
-              <Ionicons name="shield-outline" size={20} color={colors.textBody} />
-              <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Privacy Policy</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </Pressable>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('Terms')} accessibilityRole="button" accessibilityLabel="Terms of Service">
-              <Ionicons name="document-text-outline" size={20} color={colors.textBody} />
-              <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>Terms of Service</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </Pressable>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Pressable style={styles.settingRow} onPress={() => navigation.navigate('About')} accessibilityRole="button" accessibilityLabel="About Verity">
-              <Ionicons name="information-circle-outline" size={20} color={colors.textBody} />
-              <Text style={[styles.settingLabel, { flex: 1, color: colors.text }]}>About Verity</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Legal & Support */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Support</Text>
-          <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Pressable
-              style={styles.linkRow}
-              onPress={() => Linking.openURL('mailto:support@verity.au?subject=Issue%20Report')}
-              accessibilityRole="button"
-              accessibilityLabel="Report an Issue"
-            >
-              <Text style={[styles.linkText, { color: colors.text }]}>Report an Issue</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Admin: Poll management */}
-        <Pressable
-          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, borderRadius: BORDER_RADIUS.md + 2, borderWidth: 1.5, borderColor: '#00843D', padding: SPACING.md + 2, marginBottom: SPACING.md }}
-          onPress={() => navigation.navigate('AdminPolls')}
-          accessibilityRole="button"
-          accessibilityLabel="Poll Admin"
-        >
-          <Ionicons name="shield-outline" size={16} color="#00843D" />
-          <Text style={{ fontSize: FONT_SIZE.small + 1, fontWeight: FONT_WEIGHT.semibold, color: '#00843D' }}>Poll Admin</Text>
-        </Pressable>
-
-        {/* Sign out */}
-        <Pressable style={[styles.signOutBtn, { backgroundColor: colors.redBg }]} onPress={signOut} accessibilityRole="button" accessibilityLabel="Sign Out">
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </Pressable>
-
-        {/* Delete account */}
-        {user && (
+        {/* ═══ 5. SIGN OUT ═══ */}
+        <View style={{ paddingHorizontal: SPACING.xl }}>
           <Pressable
-            style={styles.deleteAccountBtn}
-            onPress={handleDeleteAccount}
+            onPress={signOut}
             accessibilityRole="button"
-            accessibilityLabel="Delete Account"
+            accessibilityLabel="Sign Out"
+            style={{ height: 48, justifyContent: 'center', alignItems: 'center' }}
           >
-            <Ionicons name="trash-outline" size={14} color={colors.textMuted} />
-            <Text style={[styles.deleteAccountText, { color: colors.textMuted }]}>
-              Delete Account
-            </Text>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: '#DC3545' }}>Sign Out</Text>
           </Pressable>
-        )}
 
-        <Text style={[styles.version, { color: colors.borderStrong }]}>
-          Verity v{Constants.expoConfig?.version ?? '1.0.0'}
-        </Text>
+          {user && (
+            <Pressable
+              onPress={handleDeleteAccount}
+              accessibilityRole="button"
+              accessibilityLabel="Delete Account"
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.xs, paddingVertical: SPACING.md, marginTop: SPACING.sm }}
+            >
+              <Ionicons name="trash-outline" size={14} color={colors.textMuted} />
+              <Text style={{ fontSize: 13, fontWeight: '500', color: colors.textMuted }}>Delete Account</Text>
+            </Pressable>
+          )}
+
+          <Text style={{ textAlign: 'center', fontSize: 11, color: colors.borderStrong, marginTop: SPACING.lg }}>
+            Verity v{Constants.expoConfig?.version ?? '1.0.0'}
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

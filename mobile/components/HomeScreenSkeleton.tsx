@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import { SkeletonLoader } from './SkeletonLoader';
+import { Skeleton } from './ui/Skeleton';
+import { spacing, radius, colors as tokenColors } from '../theme/tokens';
 
 const FACTS = [
   'Australia has compulsory voting — over 96% turnout.',
@@ -19,41 +20,62 @@ export function HomeScreenSkeleton() {
   }, []);
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16 }} showsVerticalScrollIndicator={false}>
-      {/* Hero area */}
-      <SkeletonLoader width="100%" height={180} borderRadius={16} style={{ marginBottom: 16 }} />
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: spacing.lg }} showsVerticalScrollIndicator={false}>
+      {/* Hero: greeting + date */}
+      <View style={{ gap: spacing.sm, marginBottom: spacing.xl }}>
+        <Skeleton width="60%" height={34} borderRadius={radius.sm} />
+        <Skeleton width="45%" height={16} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
+          <Skeleton width={8} height={8} borderRadius={4} />
+          <Skeleton width={140} height={12} />
+        </View>
+      </View>
 
-      {/* MP card */}
-      <SkeletonLoader width="100%" height={80} borderRadius={14} style={{ marginBottom: 20 }} />
+      {/* Section header */}
+      <Skeleton width={150} height={13} style={{ marginBottom: spacing.md }} />
 
-      {/* Daily Brief card */}
-      <SkeletonLoader width="100%" height={100} borderRadius={14} style={{ marginBottom: 16 }} />
+      {/* MP card skeleton: avatar + text side by side */}
+      <View style={{ backgroundColor: tokenColors.surface, borderRadius: radius.md, padding: spacing.lg, marginBottom: spacing.xl }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <Skeleton width={54} height={54} borderRadius={radius.lg} />
+          <View style={{ flex: 1, gap: spacing.sm }}>
+            <Skeleton width="70%" height={16} />
+            <Skeleton width="50%" height={12} />
+          </View>
+        </View>
+        <Skeleton width="100%" height={40} borderRadius={radius.sm} style={{ marginTop: spacing.md }} />
+        <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+          <Skeleton width="48%" height={40} borderRadius={radius.pill} />
+          <Skeleton width="48%" height={40} borderRadius={radius.pill} />
+        </View>
+      </View>
+
+      {/* Bill swipe card skeleton */}
+      <Skeleton width={120} height={13} style={{ marginBottom: spacing.md }} />
+      <View style={{ backgroundColor: tokenColors.surface, borderRadius: radius.md, padding: spacing.lg, marginBottom: spacing.xl }}>
+        <Skeleton width={100} height={20} borderRadius={radius.sm} style={{ marginBottom: spacing.md }} />
+        <Skeleton width="90%" height={20} style={{ marginBottom: spacing.sm }} />
+        <Skeleton width="70%" height={14} style={{ marginBottom: spacing.lg }} />
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <Skeleton width="40%" height={40} borderRadius={radius.pill} />
+          <Skeleton width="40%" height={40} borderRadius={radius.pill} />
+        </View>
+      </View>
 
       {/* Civic fact while loading */}
-      <View style={{ alignItems: 'center', paddingVertical: 12, marginBottom: 16 }}>
-        <Text style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 19, fontStyle: 'italic', paddingHorizontal: 16 }}>
+      <View style={{ alignItems: 'center', paddingVertical: spacing.md, marginBottom: spacing.lg }}>
+        <Text style={{ fontSize: 13, color: tokenColors.textMuted, textAlign: 'center', lineHeight: 19, fontStyle: 'italic', paddingHorizontal: spacing.lg }}>
           {FACTS[factIdx]}
         </Text>
       </View>
 
-      {/* Section header */}
-      <SkeletonLoader width={140} height={18} style={{ marginBottom: 12 }} />
-
-      {/* News card skeletons */}
-      {[1, 2, 3].map(i => (
-        <View key={i} style={{ flexDirection: 'row', marginBottom: 16, gap: 12 }}>
-          <View style={{ flex: 1, gap: 8 }}>
-            <SkeletonLoader width="90%" height={14} borderRadius={6} />
-            <SkeletonLoader width="70%" height={14} borderRadius={6} />
-            <SkeletonLoader width="40%" height={12} borderRadius={6} />
-          </View>
-          <SkeletonLoader width={88} height={88} borderRadius={10} />
-        </View>
-      ))}
-
       {/* Vote card skeletons */}
+      <Skeleton width={140} height={13} style={{ marginBottom: spacing.md }} />
       {[1, 2].map(i => (
-        <SkeletonLoader key={i} width="100%" height={72} borderRadius={12} style={{ marginBottom: 10 }} />
+        <View key={i} style={{ backgroundColor: tokenColors.surface, borderRadius: radius.md, padding: spacing.lg, marginBottom: spacing.sm }}>
+          <Skeleton width="85%" height={14} style={{ marginBottom: spacing.sm }} />
+          <Skeleton width="50%" height={12} />
+        </View>
       ))}
     </ScrollView>
   );

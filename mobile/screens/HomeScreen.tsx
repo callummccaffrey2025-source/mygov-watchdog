@@ -12,12 +12,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../context/UserContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
-import { SkeletonLoader } from '../components/SkeletonLoader';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useVotes } from '../hooks/useVotes';
 import { timeAgo } from '../lib/timeAgo';
-import { spacing, radius, colors as tokenColors } from '../theme/tokens';
+import { spacing, radius, elevation, colors as tokenColors } from '../theme/tokens';
 import { PressableScale, AppText, Card } from '../components/ui';
 import { hapticLight } from '../lib/haptics';
 import { HomeScreenSkeleton } from '../components/HomeScreenSkeleton';
@@ -25,6 +26,7 @@ import { AuthPromptSheet } from '../components/AuthPromptSheet';
 import { useAuthGate } from '../hooks/useAuthGate';
 import { useSittingCalendar } from '../hooks/useSittingCalendar';
 import { useBillSwipe } from '../hooks/useBillSwipe';
+import { useDailyBrief } from '../hooks/useDailyBrief';
 import * as Haptics from 'expo-haptics';
 import { track } from '../lib/analytics';
 import { useLearnModules } from '../hooks/useLearnModules';
@@ -74,8 +76,8 @@ function SectionHeader({
   onRightPress?: () => void;
 }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md }}>
-      <AppText variant="label" color="textMuted">{label}</AppText>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.xxl, marginBottom: spacing.sm }}>
+      <AppText variant="label" color="textMuted" style={{ fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</AppText>
       {rightLabel && onRightPress && (
         <PressableScale onPress={onRightPress} accessibilityRole="button" accessibilityLabel={rightLabel}>
           <AppText variant="label" color="accent">{rightLabel}</AppText>
@@ -89,7 +91,7 @@ function SectionHeader({
 
 function SectionDivider() {
   return (
-    <View style={{ height: 1, backgroundColor: tokenColors.border, marginHorizontal: spacing.lg, marginTop: spacing.xl, opacity: 0.5 }} />
+    <View style={{ height: 1, backgroundColor: tokenColors.border, marginHorizontal: spacing.lg, marginTop: spacing.xxl, opacity: 0.5 }} />
   );
 }
 
@@ -114,6 +116,7 @@ export function HomeScreen({ navigation }: any) {
   const { votes: mpVotes } = useVotes(myMP?.id ?? null);
   const { isSittingToday, nextSitting } = useSittingCalendar();
   const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
+  const { brief: dailyBrief } = useDailyBrief();
 
   // ── MP recent substantive votes ──
   const mpRecentVotes = useMemo(() => {
@@ -175,7 +178,7 @@ export function HomeScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.background }} edges={['bottom']}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: spacing.xl }}
+        contentContainerStyle={{ paddingBottom: spacing.xxxl }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokenColors.accent} colors={[tokenColors.accent]} />
         }
@@ -183,7 +186,7 @@ export function HomeScreen({ navigation }: any) {
         keyboardShouldPersistTaps="handled"
       >
         {/* ═══ 1. HERO ═══ */}
-        <View style={{ backgroundColor: tokenColors.background, paddingTop: spacing.md, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl }}>
+        <View style={{ backgroundColor: tokenColors.background, paddingTop: spacing.xxxl, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl }}>
           {/* Top bar: Verity wordmark + icons */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl }}>
             <AppText variant="heading" style={{ letterSpacing: 2, color: tokenColors.accent }}>
@@ -200,7 +203,7 @@ export function HomeScreen({ navigation }: any) {
           </View>
 
           {/* Greeting */}
-          <AppText variant="display">{greeting}</AppText>
+          <AppText variant="display" style={{ fontSize: 32 }}>{greeting}</AppText>
           <AppText variant="body" color="textMuted" style={{ marginTop: spacing.xs }}>
             {myMP
               ? `${dateStr} · ${electorateName ?? ''}`
@@ -214,10 +217,48 @@ export function HomeScreen({ navigation }: any) {
               {isSittingToday ? 'Parliament is sitting' : `In recess${nextSitting ? ` · resumes ${formatParliamentDate(nextSitting)}` : ''}`}
             </AppText>
           </View>
+
+          {/* Daily Brief hero card */}
+          <PressableScale
+            onPress={() => navigation.navigate('DailyBrief')}
+            accessibilityRole="button"
+            accessibilityLabel="Read today's daily brief"
+            style={{ marginTop: spacing.xl }}
+          >
+            <LinearGradient
+              colors={['#00843D', '#006B31']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                borderRadius: radius.md,
+                padding: 20,
+                ...elevation.md,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
+                <Ionicons name="newspaper-outline" size={16} color="rgba(255,255,255,0.7)" />
+                <AppText variant="label" style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                  Daily Brief
+                </AppText>
+              </View>
+              <AppText variant="heading" style={{ color: '#FFFFFF', marginBottom: spacing.sm }}>
+                {dailyBrief?.ai_text?.what_happened?.[0]?.headline
+                  ?? 'Your morning briefing is ready'}
+              </AppText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  {dailyBrief?.date ?? dateStr}
+                </AppText>
+                <AppText variant="caption" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                  Read today's brief {'\u2192'}
+                </AppText>
+              </View>
+            </LinearGradient>
+          </PressableScale>
         </View>
 
         {/* ═══ 2. YOUR REPRESENTATIVE ═══ */}
-        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
+        <View style={{ paddingHorizontal: spacing.xl }}>
           <SectionHeader
             label="YOUR REPRESENTATIVE"
             rightLabel={postcode ? 'Change' : undefined}
@@ -236,7 +277,7 @@ export function HomeScreen({ navigation }: any) {
                   <Ionicons name="location-outline" size={22} color={tokenColors.accent} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <AppText variant="callout" style={{ fontWeight: '700' }}>Set your electorate</AppText>
+                  <AppText variant="heading" style={{ fontSize: 15 }}>Set your electorate</AppText>
                   <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
                     Enter your postcode to find your MP
                   </AppText>
@@ -286,7 +327,20 @@ export function HomeScreen({ navigation }: any) {
               </View>
             </Card>
           ) : mpLoading ? (
-            <SkeletonLoader height={130} borderRadius={radius.md} />
+            <Card>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                <Skeleton width={54} height={54} borderRadius={radius.lg} />
+                <View style={{ flex: 1, gap: spacing.sm }}>
+                  <Skeleton width="65%" height={16} />
+                  <Skeleton width="45%" height={12} />
+                </View>
+              </View>
+              <Skeleton width="100%" height={36} borderRadius={radius.sm} style={{ marginTop: spacing.md }} />
+              <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+                <Skeleton width="48%" height={40} borderRadius={radius.pill} />
+                <Skeleton width="48%" height={40} borderRadius={radius.pill} />
+              </View>
+            </Card>
           ) : myMP ? (
             /* MP card */
             <Card elevated>
@@ -317,7 +371,7 @@ export function HomeScreen({ navigation }: any) {
 
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-                    <AppText variant="callout" style={{ fontWeight: '700' }}>
+                    <AppText variant="callout" style={{ fontWeight: '600' }}>
                       {myMP.first_name} {myMP.last_name}
                     </AppText>
                     <Ionicons name="checkmark-circle" size={14} color={tokenColors.success} />
@@ -330,7 +384,7 @@ export function HomeScreen({ navigation }: any) {
                   {myMP.ministerial_role && (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
                       <View style={{ backgroundColor: tokenColors.accentMuted, borderRadius: spacing.xs, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}>
-                        <AppText variant="caption" style={{ fontSize: 10, fontWeight: '600', color: tokenColors.success }}>{myMP.ministerial_role}</AppText>
+                        <AppText variant="caption" style={{ color: tokenColors.success }}>{myMP.ministerial_role}</AppText>
                       </View>
                     </View>
                   )}
@@ -364,7 +418,7 @@ export function HomeScreen({ navigation }: any) {
                       Voted {lastVote.cast === 'aye' ? 'Aye' : 'No'} · {smartTruncate(lastVote.name, 30)}
                     </AppText>
                     <AppText variant="caption" style={{
-                      fontSize: 11, marginTop: spacing.xs,
+                      marginTop: spacing.xs,
                       color: lastVote.cast === 'aye' ? tokenColors.success + 'A6' : tokenColors.danger + 'A6',
                     }}>
                       Last session · {timeAgo(lastVote.date)}
@@ -433,7 +487,7 @@ export function HomeScreen({ navigation }: any) {
         {/* ═══ 3. HAVE YOUR SAY — Bill Swipe ═══ */}
         {currentBill && (
           <>
-            <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
+            <View style={{ paddingHorizontal: spacing.xl }}>
               <SectionHeader label="HAVE YOUR SAY" rightLabel={`${billsRemaining} bills`} />
               <AppText variant="caption" color="textMuted" style={{ marginBottom: spacing.md }}>
                 Swipe on bills currently before parliament
@@ -444,7 +498,7 @@ export function HomeScreen({ navigation }: any) {
                 {/* Status + chamber */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md }}>
                   <View style={{ backgroundColor: tokenColors.accentMuted, borderRadius: spacing.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}>
-                    <AppText variant="caption" style={{ fontSize: 10, fontWeight: '700', color: tokenColors.accent, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <AppText variant="caption" style={{ color: tokenColors.accent, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       {currentBill.current_status ?? 'Before Parliament'}
                     </AppText>
                   </View>
@@ -462,7 +516,7 @@ export function HomeScreen({ navigation }: any) {
 
                 {/* TLDR explainer */}
                 {currentBill.tldr && (
-                  <AppText variant="body" color="textSecondary" style={{ fontSize: 14, lineHeight: 20, marginBottom: spacing.lg }}>
+                  <AppText variant="callout" color="textSecondary" style={{ marginBottom: spacing.lg }}>
                     {currentBill.tldr}
                   </AppText>
                 )}
@@ -576,20 +630,20 @@ export function HomeScreen({ navigation }: any) {
 
         {/* ═══ 5. MP RECENT VOTES ═══ */}
         {myMP && mpRecentVotes.length > 0 && (
-          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: spacing.md }}>
-              <AppText variant="heading">
-                How {myMP.first_name} voted
-              </AppText>
-              <PressableScale onPress={() => navigation.navigate('MemberProfile', { member: myMP })} accessibilityRole="button" accessibilityLabel="View all votes">
-                <AppText variant="label" color="accent">All votes</AppText>
-              </PressableScale>
-            </View>
+          <View style={{ paddingHorizontal: spacing.xl }}>
+            <SectionHeader
+              label={`HOW ${myMP.first_name.toUpperCase()} VOTED`}
+              rightLabel="All votes"
+              onRightPress={() => navigation.navigate('MemberProfile', { member: myMP })}
+            />
 
             <Card elevated>
               {mpRecentVotes.map((vote, i) => {
                 const divName = vote.division ? cleanDivisionName(vote.division.name) : 'Unknown';
                 const isAye = vote.vote_cast === 'aye';
+                const ayeCount = vote.division?.aye_votes ?? 0;
+                const noCount = vote.division?.no_votes ?? 0;
+                const totalVotes = ayeCount + noCount;
                 return (
                   <PressableScale
                     key={vote.id}
@@ -598,25 +652,32 @@ export function HomeScreen({ navigation }: any) {
                     accessibilityLabel={`${myMP.first_name} voted ${isAye ? 'aye' : 'no'} on ${divName}`}
                     style={{
                       paddingVertical: spacing.md,
-                      borderBottomWidth: i < mpRecentVotes.length - 1 ? 1 : 0,
+                      borderBottomWidth: i < mpRecentVotes.length - 1 ? 0.5 : 0,
                       borderBottomColor: tokenColors.border,
+                      marginLeft: spacing.lg,
                     }}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                       <View style={{ flex: 1, marginRight: spacing.sm }}>
-                        <AppText variant="callout" style={{ fontSize: 14, lineHeight: 18 }} numberOfLines={2}>
+                        <AppText variant="body" style={{ fontWeight: '600' }} numberOfLines={2}>
                           {divName}
                         </AppText>
                         <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
-                          {vote.division?.chamber === 'senate' ? 'Senate' : 'House'} · {vote.division?.date ? timeAgo(vote.division.date) : ''}
+                          {vote.division?.date ? timeAgo(vote.division.date) : ''}
                         </AppText>
+                        {/* Aye/No mini bar */}
+                        {totalVotes > 0 && (
+                          <View style={{ flexDirection: 'row', height: 4, borderRadius: 2, overflow: 'hidden', marginTop: spacing.sm }}>
+                            <View style={{ flex: ayeCount || 0.01, backgroundColor: tokenColors.success, borderTopLeftRadius: 2, borderBottomLeftRadius: 2 }} />
+                            <View style={{ flex: noCount || 0.01, backgroundColor: tokenColors.danger, borderTopRightRadius: 2, borderBottomRightRadius: 2 }} />
+                          </View>
+                        )}
                       </View>
-                      {/* Aye/No pill */}
+                      {/* Aye/No badge */}
                       <View style={{
                         backgroundColor: isAye ? tokenColors.success + '1A' : tokenColors.danger + '1A',
-                        borderRadius: radius.sm,
+                        borderRadius: 6,
                         paddingHorizontal: spacing.sm, paddingVertical: spacing.xs,
-                        marginRight: spacing.sm,
                       }}>
                         <AppText variant="caption" tabular style={{
                           fontWeight: '700', letterSpacing: 0.5,
@@ -625,28 +686,11 @@ export function HomeScreen({ navigation }: any) {
                           {isAye ? 'AYE' : 'NO'}
                         </AppText>
                       </View>
-                      {/* Share button */}
-                      <PressableScale
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          navigation.navigate('MemberProfile', {
-                            member: myMP,
-                            shareVote: { divisionName: divName, voteCast: vote.vote_cast, date: vote.division?.date },
-                          });
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Share ${myMP.first_name}'s vote`}
-                        style={{ padding: spacing.xs }}
-                      >
-                        <Ionicons name="share-outline" size={16} color={tokenColors.textMuted} />
-                      </PressableScale>
                     </View>
                   </PressableScale>
                 );
               })}
             </Card>
-
-            <SectionDivider />
           </View>
         )}
 
@@ -675,7 +719,8 @@ function ContinueLearningCard({ navigation }: { navigation: any }) {
   const progress = totalLessons > 0 ? completedLessons / totalLessons : 0;
 
   return (
-    <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
+    <View style={{ paddingHorizontal: spacing.xl }}>
+      <SectionHeader label="CONTINUE LEARNING" />
       <Card onPress={() => navigation.navigate('Learn')} elevated>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
           <View style={{
@@ -685,11 +730,11 @@ function ContinueLearningCard({ navigation }: { navigation: any }) {
             <Ionicons name="school" size={20} color={tokenColors.accent} />
           </View>
           <View style={{ flex: 1 }}>
-            <AppText variant="caption" style={{ fontWeight: '600', color: tokenColors.accent, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-              Continue Learning
-            </AppText>
-            <AppText variant="callout" style={{ fontWeight: '700', marginTop: 1 }}>
+            <AppText variant="body" style={{ fontWeight: '600' }}>
               {nextModule.title}
+            </AppText>
+            <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
+              {nextModule.lesson_count} lessons
             </AppText>
           </View>
           <Ionicons name="arrow-forward" size={16} color={tokenColors.textMuted} />

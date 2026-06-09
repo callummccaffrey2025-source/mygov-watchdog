@@ -7,7 +7,7 @@ import { SearchBar } from '../components/SearchBar';
 import { CategoryChip } from '../components/CategoryChip';
 import { BillCard } from '../components/BillCard';
 import { MemberCard } from '../components/MemberCard';
-import { SkeletonLoader } from '../components/SkeletonLoader';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useMembers, Member } from '../hooks/useMembers';
 import { useBills } from '../hooks/useBills';
 import { useParties, Party } from '../hooks/useParties';
@@ -18,9 +18,9 @@ import { useSubscription } from '../hooks/useSubscription';
 import { useCouncils } from '../hooks/useCouncils';
 import { useStateMembers, useStateBills } from '../hooks/useStateParliament';
 import { useTheme } from '../context/ThemeContext';
-import { EmptyState } from '../components/EmptyState';
+import { EmptyState } from '../components/ui/EmptyState';
 import { track } from '../lib/analytics';
-import { spacing, radius, elevation, typography } from '../theme/tokens';
+import { spacing, radius, elevation, typography, colors as tokenColors } from '../theme/tokens';
 import { AppText } from '../components/ui/AppText';
 import { PressableScale } from '../components/ui/PressableScale';
 import { Card } from '../components/ui/Card';
@@ -35,7 +35,7 @@ const PartyCard = ({ party, onPress }: { party: Party; onPress: () => void }) =>
     : label.split(' ').map((w: string) => w[0] ?? '').filter(Boolean).join('').toUpperCase().slice(0, 3) || label[0].toUpperCase();
   return (
     <PressableScale
-      style={{ width: 92, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colour + '18', ...elevation.sm }}
+      style={{ width: 92, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colour + '18', borderWidth: 1, borderColor: tokenColors.border }}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`View ${party.name} party profile`}
@@ -256,7 +256,7 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
                             <View style={{ flex: ayeCount, backgroundColor: colors.green }} />
                             <View style={{ flex: noCount, backgroundColor: colors.red }} />
                           </View>
-                          <AppText variant="label">AYE {ayeCount} · NO {noCount}</AppText>
+                          <AppText variant="label" tabular>AYE {ayeCount} · NO {noCount}</AppText>
                         </View>
                       )}
                       {/* Top votes */}
@@ -321,21 +321,21 @@ function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => vo
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CATEGORIES = [
-  { key: 'housing', label: 'Housing', icon: '🏠' },
-  { key: 'healthcare', label: 'Healthcare', icon: '🏥' },
-  { key: 'economy', label: 'Economy', icon: '💰' },
-  { key: 'climate', label: 'Climate', icon: '🌿' },
-  { key: 'immigration', label: 'Immigration', icon: '✈️' },
-  { key: 'defence', label: 'Defence', icon: '🛡️' },
-  { key: 'education', label: 'Education', icon: '📚' },
-  { key: 'cost_of_living', label: 'Cost of Living', icon: '🛒' },
-  { key: 'indigenous',      label: 'Indigenous Affairs', icon: '🪃' },
-  { key: 'technology',      label: 'Technology',          icon: '💻' },
-  { key: 'agriculture',     label: 'Agriculture',         icon: '🌾' },
-  { key: 'infrastructure',  label: 'Infrastructure',      icon: '🚧' },
-  { key: 'foreign_policy',  label: 'Foreign Policy',      icon: '🌏' },
-  { key: 'justice',         label: 'Justice',             icon: '⚖️' },
+const CATEGORIES: { key: string; label: string; icon: string; bg: string; text: string }[] = [
+  { key: 'housing', label: 'Housing', icon: 'home-outline', bg: '#FAECE7', text: '#712B13' },
+  { key: 'healthcare', label: 'Healthcare', icon: 'medkit-outline', bg: '#EEEDFE', text: '#3C3489' },
+  { key: 'economy', label: 'Economy', icon: 'trending-up-outline', bg: '#FAEEDA', text: '#633806' },
+  { key: 'climate', label: 'Climate', icon: 'leaf-outline', bg: '#E1F5EE', text: '#085041' },
+  { key: 'immigration', label: 'Immigration', icon: 'airplane-outline', bg: '#FBEAF0', text: '#72243E' },
+  { key: 'defence', label: 'Defence', icon: 'shield-outline', bg: '#FCEBEB', text: '#791F1F' },
+  { key: 'education', label: 'Education', icon: 'school-outline', bg: '#EAF3DE', text: '#27500A' },
+  { key: 'cost_of_living', label: 'Cost of Living', icon: 'cart-outline', bg: '#FAEEDA', text: '#633806' },
+  { key: 'indigenous', label: 'Indigenous Affairs', icon: 'earth-outline', bg: '#FAECE7', text: '#712B13' },
+  { key: 'technology', label: 'Technology', icon: 'hardware-chip-outline', bg: '#E6F1FB', text: '#0C447C' },
+  { key: 'agriculture', label: 'Agriculture', icon: 'flower-outline', bg: '#EAF3DE', text: '#27500A' },
+  { key: 'infrastructure', label: 'Infrastructure', icon: 'construct-outline', bg: '#F1EFE8', text: '#444441' },
+  { key: 'foreign_policy', label: 'Foreign Policy', icon: 'globe-outline', bg: '#E6F1FB', text: '#0C447C' },
+  { key: 'justice', label: 'Justice', icon: 'scale-outline', bg: '#F1EFE8', text: '#444441' },
 ];
 
 const TOPIC_BORDER_COLORS: Record<string, string> = {
@@ -427,16 +427,40 @@ export function ExploreScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: spacing.xl, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: spacing.xxxl }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.green} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tokenColors.accent} />}
       >
-        <AppText variant="title" style={{ color: colors.text, marginBottom: spacing.lg }}>Explore</AppText>
-
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Search MPs, bills, parties..." />
+        {/* ═══ SEARCH BAR HERO ═══ */}
+        <View style={{ paddingHorizontal: spacing.xl, paddingTop: spacing.xxxl, paddingBottom: spacing.lg }}>
+          <View style={{
+            flexDirection: 'row', alignItems: 'center',
+            height: 48, backgroundColor: tokenColors.surfaceMuted,
+            borderRadius: radius.md, paddingHorizontal: spacing.lg, gap: spacing.sm,
+          }}>
+            <Ionicons name="search" size={20} color={tokenColors.textMuted} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search MPs, bills, parties\u2026"
+              placeholderTextColor={tokenColors.textMuted}
+              style={{
+                flex: 1, fontSize: 15, color: tokenColors.textPrimary,
+                paddingVertical: 0,
+              }}
+              returnKeyType="search"
+              accessibilityLabel="Search MPs, bills, parties"
+            />
+            {query.length > 0 && (
+              <PressableScale onPress={() => setQuery('')} accessibilityRole="button" accessibilityLabel="Clear search">
+                <Ionicons name="close-circle" size={18} color={tokenColors.textMuted} />
+              </PressableScale>
+            )}
+          </View>
+        </View>
 
         {/* State filters */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: spacing.md, marginBottom: spacing.xl }} contentContainerStyle={{ paddingBottom: spacing.xs }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.lg }} contentContainerStyle={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.xs }}>
           {STATES.map(s => (
             <CategoryChip key={s} label={s} active={activeState === s} onPress={() => setActiveState(s)} />
           ))}
@@ -456,9 +480,17 @@ export function ExploreScreen({ navigation }: any) {
             <View style={{ marginBottom: spacing.xxl }}>
               <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>NSW Members</AppText>
               {stateMembersLoading ? (
-                [1, 2, 3].map(i => <SkeletonLoader key={i} height={60} borderRadius={10} style={{ marginBottom: spacing.sm }} />)
+                [1, 2, 3].map(i => (
+                  <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm }}>
+                    <Skeleton width={36} height={36} borderRadius={18} />
+                    <View style={{ flex: 1, gap: spacing.sm }}>
+                      <Skeleton width="60%" height={16} />
+                      <Skeleton width="40%" height={12} />
+                    </View>
+                  </View>
+                ))
               ) : stateMembers.length === 0 ? (
-                <AppText variant="body" style={{ color: colors.textMuted, textAlign: 'center', marginTop: 40 }}>{hasQuery ? `No members matching "${debouncedQuery}"` : 'No members found.'}</AppText>
+                <AppText variant="body" style={{ color: colors.textMuted, textAlign: 'center', marginTop: spacing.xxxl }}>{hasQuery ? `No members matching "${debouncedQuery}"` : 'No members found.'}</AppText>
               ) : (
                 stateMembers.map(m => (
                   <View key={m.id} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
@@ -481,9 +513,17 @@ export function ExploreScreen({ navigation }: any) {
             <View style={{ marginBottom: spacing.xxl }}>
               <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>NSW Bills</AppText>
               {stateBillsLoading ? (
-                [1, 2, 3].map(i => <SkeletonLoader key={i} height={72} borderRadius={10} style={{ marginBottom: spacing.sm }} />)
+                [1, 2, 3].map(i => (
+                  <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, paddingVertical: spacing.sm }}>
+                    <Skeleton width={30} height={20} borderRadius={radius.sm} />
+                    <View style={{ flex: 1, gap: spacing.sm }}>
+                      <Skeleton width="85%" height={16} />
+                      <Skeleton width="50%" height={12} />
+                    </View>
+                  </View>
+                ))
               ) : stateBills.length === 0 ? (
-                <AppText variant="body" style={{ color: colors.textMuted, textAlign: 'center', marginTop: 40 }}>{hasQuery ? `No bills matching "${debouncedQuery}"` : 'No bills found.'}</AppText>
+                <AppText variant="body" style={{ color: colors.textMuted, textAlign: 'center', marginTop: spacing.xxxl }}>{hasQuery ? `No bills matching "${debouncedQuery}"` : 'No bills found.'}</AppText>
               ) : (
                 stateBills.map(b => (
                   <View key={b.id} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
@@ -532,101 +572,117 @@ export function ExploreScreen({ navigation }: any) {
             )}
             {filteredParties.length === 0 && members.length === 0 && bills.length === 0 && !membersLoading && !billsLoading && (
               <EmptyState
-                icon="🔍"
+                icon={<Ionicons name="search-outline" size={48} color={tokenColors.textMuted} />}
                 title="No results found"
-                subtitle={`Try a different search term`}
+                message="Try a different search term or browse by topic below."
               />
             )}
           </View>
         ) : (
           /* Federal Browse */
-          <View>
-            {/* Parties */}
-            <View style={{ marginBottom: spacing.xxl }}>
-              <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>Parties</AppText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
-                {partiesLoading
-                  ? [1, 2, 3].map(i => <SkeletonLoader key={i} width={90} height={90} borderRadius={12} style={{ marginRight: 10 }} />)
-                  : parties.map(party => (
-                    <PartyCard key={party.id} party={party} onPress={() => navigation.navigate('PartyProfile', { party })} />
-                  ))
-                }
-              </ScrollView>
-            </View>
-
-            {/* Browse by Topic */}
-            <View style={{ marginBottom: spacing.xxl }}>
-              <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>Browse by Topic</AppText>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-                {CATEGORIES.map(cat => (
-                  <PressableScale
-                    key={cat.key}
-                    style={{
-                      width: '47%',
-                      borderRadius: radius.md,
-                      padding: spacing.lg,
-                      alignItems: 'center',
-                      gap: spacing.sm,
-                      backgroundColor: colors.surface,
-                      borderLeftWidth: 4,
-                      borderLeftColor: TOPIC_BORDER_COLORS[cat.key] || '#6C757D',
-                      ...elevation.sm,
-                    }}
-                    onPress={() => navigation.navigate('TopicBills', { category: cat.key, label: cat.label })}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Browse ${cat.label} bills`}
-                  >
-                    <AppText style={{ fontSize: 28 }}>{cat.icon}</AppText>
-                    <AppText variant="label" style={{ color: colors.text }}>{cat.label}</AppText>
-                  </PressableScale>
-                ))}
-              </View>
-            </View>
-
-
-            {/* Export Data (Pro) */}
-            {isPro ? (
-              <Card style={{ marginBottom: spacing.sm, backgroundColor: colors.greenBg }}>
-                <AppText variant="callout" style={{ color: colors.textMuted, fontStyle: 'italic' }}>CSV export is not yet available.</AppText>
-              </Card>
-            ) : (
-              <Card style={{ alignItems: 'center', gap: spacing.sm, borderColor: colors.borderStrong, marginBottom: spacing.sm }}>
-                <Ionicons name="diamond-outline" size={28} color={colors.green} style={{ marginBottom: spacing.xs }} />
-                <AppText variant="heading" style={{ color: colors.text, fontSize: typography.callout.fontSize }}>Export Data</AppText>
-                <AppText variant="callout" style={{ color: colors.textBody, textAlign: 'center', lineHeight: 19 }}>
-                  Download voting records and bill data as CSV.
-                </AppText>
+          <View style={{ paddingHorizontal: spacing.xl }}>
+            {/* ═══ BROWSE BY TOPIC ═══ */}
+            <AppText variant="label" color="textMuted" style={{ fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: spacing.xxl, marginBottom: spacing.sm }}>
+              Browse by Topic
+            </AppText>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+              {CATEGORIES.map(cat => (
                 <PressableScale
-                  style={{ marginTop: spacing.xs, backgroundColor: colors.green, borderRadius: radius.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm }}
-                  onPress={() => navigation.navigate('Subscription')}
+                  key={cat.key}
+                  style={{
+                    width: '47%',
+                    height: 88,
+                    borderRadius: radius.md,
+                    padding: spacing.lg,
+                    justifyContent: 'flex-end',
+                    backgroundColor: cat.bg,
+                    ...elevation.sm,
+                  }}
+                  onPress={() => navigation.navigate('TopicBills', { category: cat.key, label: cat.label })}
                   accessibilityRole="button"
-                  accessibilityLabel="Unlock with Verity Pro"
+                  accessibilityLabel={`Browse ${cat.label} bills`}
                 >
-                  <AppText variant="label" style={{ color: '#ffffff' }}>Unlock with Verity Pro</AppText>
+                  <Ionicons name={cat.icon as any} size={24} color={cat.text} style={{ position: 'absolute', top: spacing.md, right: spacing.md }} />
+                  <AppText variant="heading" style={{ color: cat.text, fontSize: 15, fontWeight: '600' }} numberOfLines={2}>{cat.label}</AppText>
                 </PressableScale>
-              </Card>
-            )}
+              ))}
+            </View>
 
-            {/* Local Councils */}
-            {councils.length > 0 && (
-              <View style={{ marginBottom: spacing.xxl }}>
-                <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>Local Councils</AppText>
-                <FlashList
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  data={councils}
-                  keyExtractor={c => c.id}
-                  contentContainerStyle={{ gap: 10 }}
-                  renderItem={({ item: c }) => (
-                    <Card onPress={() => navigation.navigate('Council', { council: c })} style={{ width: 130, gap: spacing.sm }} padded={true}>
-                      <View style={{ alignSelf: 'flex-start', borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: colors.cardAlt }}>
-                        <AppText variant="caption" style={{ fontWeight: '700', color: colors.textBody }}>{c.state}</AppText>
-                      </View>
-                      <AppText variant="label" style={{ color: colors.text, lineHeight: 18 }} numberOfLines={2}>{c.name}</AppText>
-                    </Card>
-                  )}
-                />
+            {/* ═══ PARTIES ═══ */}
+            <AppText variant="label" color="textMuted" style={{ fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: spacing.xxl, marginBottom: spacing.sm }}>
+              Parties
+            </AppText>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.lg }}>
+              {partiesLoading
+                ? [1, 2, 3, 4].map(i => <Skeleton key={i} width={48} height={68} borderRadius={radius.pill} />)
+                : parties.map(p => {
+                    const colour = p.colour || '#9aabb8';
+                    const label = p.short_name || p.abbreviation || p.name;
+                    const initials = label.length <= 3
+                      ? label.toUpperCase()
+                      : label.split(' ').map((w: string) => w[0] ?? '').filter(Boolean).join('').toUpperCase().slice(0, 3) || label[0].toUpperCase();
+                    return (
+                      <PressableScale
+                        key={p.id}
+                        onPress={() => navigation.navigate('PartyProfile', { party: p })}
+                        accessibilityRole="button"
+                        accessibilityLabel={`View ${p.name} party profile`}
+                        style={{ alignItems: 'center', width: 64 }}
+                      >
+                        <View style={{
+                          width: 48, height: 48, borderRadius: 24,
+                          backgroundColor: colour,
+                          justifyContent: 'center', alignItems: 'center',
+                          ...elevation.sm,
+                        }}>
+                          <AppText variant="caption" style={{ color: '#FFFFFF', fontWeight: '700', letterSpacing: 0.5 }}>{initials}</AppText>
+                        </View>
+                        <AppText variant="caption" color="textSecondary" style={{ marginTop: spacing.xs, textAlign: 'center' }} numberOfLines={1}>{label}</AppText>
+                      </PressableScale>
+                    );
+                  })
+              }
+            </ScrollView>
+
+            {/* ═══ VERIFY A CLAIM ═══ */}
+            <PressableScale
+              onPress={() => navigation.navigate('VerifyClaim')}
+              accessibilityRole="button"
+              accessibilityLabel="Verify a claim"
+              style={{
+                marginTop: spacing.xxl,
+                backgroundColor: tokenColors.success,
+                borderRadius: radius.md,
+                padding: spacing.lg,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Ionicons name="shield-checkmark-outline" size={20} color="#FFFFFF" />
+                <AppText variant="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>Verify a Claim</AppText>
               </View>
+              <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+            </PressableScale>
+
+            {/* ═══ LOCAL COUNCILS ═══ */}
+            {councils.length > 0 && (
+              <>
+                <AppText variant="label" color="textMuted" style={{ fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: spacing.xxl, marginBottom: spacing.sm }}>
+                  Local Councils
+                </AppText>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.md }}>
+                  {councils.map(c => (
+                    <Card key={c.id} onPress={() => navigation.navigate('Council', { council: c })} style={{ width: 130, gap: spacing.sm }} padded={true}>
+                      <View style={{ alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: tokenColors.surfaceMuted }}>
+                        <AppText variant="caption" style={{ fontWeight: '700', color: tokenColors.textSecondary }}>{c.state}</AppText>
+                      </View>
+                      <AppText variant="label" style={{ lineHeight: 18 }} numberOfLines={2}>{c.name}</AppText>
+                    </Card>
+                  ))}
+                </ScrollView>
+              </>
             )}
           </View>
         )}
