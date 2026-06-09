@@ -179,6 +179,21 @@ export function OnboardingScreen({ onComplete }: Props) {
           <Text style={[styles.body, { color: colors.textBody }]}>
             Every vote your MP casts in parliament, explained in plain English. The receipts, delivered weekly.
           </Text>
+          {/* Data proof — credibility before asking for anything */}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 32, marginTop: 24 }}>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text }}>225</Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted }}>MPs tracked</Text>
+            </View>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text }}>146k+</Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted }}>votes recorded</Text>
+            </View>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text }}>6,260</Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted }}>bills</Text>
+            </View>
+          </View>
         </View>
         <View style={styles.footer}>
           <Pressable style={styles.btn} onPress={() => setStep(2)} accessibilityRole="button" accessibilityLabel="Get Started">

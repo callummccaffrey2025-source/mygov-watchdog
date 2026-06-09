@@ -268,66 +268,85 @@ export function HomeScreen({ navigation }: any) {
           />
 
           {!postcode ? (
-            /* Empty state: set electorate */
-            <Card elevated>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
-                <View style={{
-                  width: 44, height: 44, borderRadius: radius.lg,
-                  backgroundColor: tokenColors.accentMuted,
-                  justifyContent: 'center', alignItems: 'center',
-                }}>
-                  <Ionicons name="location-outline" size={22} color={tokenColors.accent} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <AppText variant="heading" style={{ fontSize: 15 }}>Set your electorate</AppText>
-                  <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
-                    Enter your postcode to find your MP
-                  </AppText>
+            /* Data hook BEFORE the postcode ask */
+            <View style={{ gap: spacing.lg }}>
+              {/* The hook: show what's inside */}
+              <View style={{
+                backgroundColor: tokenColors.textPrimary,
+                borderRadius: radius.md,
+                padding: spacing.xl,
+                gap: spacing.lg,
+              }}>
+                <AppText variant="heading" style={{ color: tokenColors.textInverse }}>
+                  Every vote your MP has ever cast, explained in plain English.
+                </AppText>
+
+                {/* Stats row */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <View style={{ alignItems: 'center' }}>
+                    <AppText variant="title" tabular style={{ color: tokenColors.textInverse }}>225</AppText>
+                    <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.5)' }}>MPs tracked</AppText>
+                  </View>
+                  <View style={{ alignItems: 'center' }}>
+                    <AppText variant="title" tabular style={{ color: tokenColors.textInverse }}>146k+</AppText>
+                    <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.5)' }}>votes recorded</AppText>
+                  </View>
+                  <View style={{ alignItems: 'center' }}>
+                    <AppText variant="title" tabular style={{ color: tokenColors.textInverse }}>6,260</AppText>
+                    <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.5)' }}>bills tracked</AppText>
+                  </View>
                 </View>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                <TextInput
-                  style={{
-                    flex: 1, height: 44, borderRadius: radius.sm,
-                    backgroundColor: tokenColors.surfaceMuted,
-                    paddingHorizontal: spacing.md,
-                    fontSize: 15, color: tokenColors.textPrimary,
-                  }}
-                  value={postcodeInput}
-                  onChangeText={setPostcodeInput}
-                  placeholder="Enter postcode"
-                  placeholderTextColor={tokenColors.textMuted}
-                  keyboardType="number-pad"
-                  maxLength={4}
-                  returnKeyType="done"
-                  onSubmitEditing={handleSetPostcode}
-                  inputAccessoryViewID="home-postcode-done"
-                  accessibilityLabel="Enter your postcode"
-                />
-                {Platform.OS === 'ios' && (
-                  <InputAccessoryView nativeID="home-postcode-done">
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: tokenColors.surfaceMuted, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderTopWidth: 0.5, borderTopColor: tokenColors.border }}>
-                      <PressableScale onPress={() => { Keyboard.dismiss(); handleSetPostcode(); }} accessibilityRole="button" accessibilityLabel="Done entering postcode">
-                        <AppText variant="callout" color="accent">Done</AppText>
-                      </PressableScale>
-                    </View>
-                  </InputAccessoryView>
-                )}
-                <PressableScale
-                  style={{
-                    height: 44, paddingHorizontal: spacing.lg,
-                    backgroundColor: tokenColors.accent,
-                    borderRadius: radius.sm,
-                    justifyContent: 'center', alignItems: 'center',
-                  }}
-                  onPress={handleSetPostcode}
-                  accessibilityRole="button"
-                  accessibilityLabel="Find MP"
-                >
-                  <AppText variant="label" style={{ color: tokenColors.onAccent }}>Find MP</AppText>
-                </PressableScale>
-              </View>
-            </Card>
+
+              {/* Postcode input — after they've seen the value */}
+              <Card elevated>
+                <AppText variant="callout" style={{ fontWeight: '600', marginBottom: spacing.sm }}>
+                  Find your MP
+                </AppText>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                  <TextInput
+                    style={{
+                      flex: 1, height: 48, borderRadius: radius.sm,
+                      backgroundColor: tokenColors.surfaceMuted,
+                      paddingHorizontal: spacing.md,
+                      fontSize: 16, color: tokenColors.textPrimary,
+                    }}
+                    value={postcodeInput}
+                    onChangeText={setPostcodeInput}
+                    placeholder="Your postcode"
+                    placeholderTextColor={tokenColors.textMuted}
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    returnKeyType="done"
+                    onSubmitEditing={handleSetPostcode}
+                    inputAccessoryViewID="home-postcode-done"
+                    accessibilityLabel="Enter your postcode"
+                  />
+                  {Platform.OS === 'ios' && (
+                    <InputAccessoryView nativeID="home-postcode-done">
+                      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: tokenColors.surfaceMuted, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderTopWidth: 0.5, borderTopColor: tokenColors.border }}>
+                        <PressableScale onPress={() => { Keyboard.dismiss(); handleSetPostcode(); }} accessibilityRole="button" accessibilityLabel="Done entering postcode">
+                          <AppText variant="callout" color="accent">Done</AppText>
+                        </PressableScale>
+                      </View>
+                    </InputAccessoryView>
+                  )}
+                  <PressableScale
+                    style={{
+                      height: 48, paddingHorizontal: spacing.xl,
+                      backgroundColor: tokenColors.accent,
+                      borderRadius: radius.sm,
+                      justifyContent: 'center', alignItems: 'center',
+                    }}
+                    onPress={handleSetPostcode}
+                    accessibilityRole="button"
+                    accessibilityLabel="Find my MP"
+                  >
+                    <AppText variant="label" style={{ color: tokenColors.onAccent }}>Find my MP</AppText>
+                  </PressableScale>
+                </View>
+              </Card>
+            </View>
           ) : mpLoading ? (
             <Card>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -713,45 +732,81 @@ function ContinueLearningCard({ navigation }: { navigation: any }) {
 
   const totalLessons = modules.reduce((sum, m) => sum + m.lesson_count, 0);
   const completedLessons = modules.reduce((sum, m) => sum + m.completed_count, 0);
-
-  // Find next incomplete module
   const nextModule = modules.find(m => m.completed_count < m.lesson_count && !m.is_current_events);
-  if (!nextModule) return null;
-
   const progress = totalLessons > 0 ? completedLessons / totalLessons : 0;
+  const hasStarted = completedLessons > 0;
 
   return (
     <View style={{ paddingHorizontal: spacing.xl }}>
-      <SectionHeader label="CONTINUE LEARNING" />
-      <Card onPress={() => navigation.navigate('Learn')} elevated>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
-          <View style={{
-            width: 40, height: 40, borderRadius: radius.sm,
-            backgroundColor: tokenColors.accentMuted, alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Ionicons name="school" size={20} color={tokenColors.accent} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <AppText variant="body" style={{ fontWeight: '600' }}>
-              {nextModule.title}
-            </AppText>
-            <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
-              {nextModule.lesson_count} lessons
-            </AppText>
-          </View>
-          <Ionicons name="arrow-forward" size={16} color={tokenColors.textMuted} />
-        </View>
+      <SectionHeader label="LEARN" />
 
-        {/* Progress bar */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-          <View style={{ flex: 1, height: spacing.xs, borderRadius: 2, backgroundColor: tokenColors.border, overflow: 'hidden' }}>
-            <View style={{ height: '100%', width: `${progress * 100}%`, backgroundColor: tokenColors.accent, borderRadius: 2 }} />
+      {!hasStarted ? (
+        /* First-time: show the hook, not just a progress bar */
+        <Card onPress={() => navigation.navigate('Learn')} elevated>
+          <View style={{ gap: spacing.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              <View style={{
+                width: 48, height: 48, borderRadius: radius.md,
+                backgroundColor: tokenColors.accentMuted, alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Ionicons name="school" size={24} color={tokenColors.accent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText variant="callout" style={{ fontWeight: '700' }}>
+                  How does Australian government actually work?
+                </AppText>
+                <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
+                  {totalLessons} lessons across {modules.filter(m => !m.is_current_events).length} topics
+                </AppText>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+              {modules.filter(m => !m.is_current_events).slice(0, 4).map(m => (
+                <View key={m.id} style={{
+                  backgroundColor: tokenColors.surfaceMuted,
+                  borderRadius: radius.sm,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.xs,
+                }}>
+                  <AppText variant="caption" color="textSecondary">{m.title}</AppText>
+                </View>
+              ))}
+            </View>
+            <AppText variant="label" color="accent">Start learning {'\u2192'}</AppText>
           </View>
-          <AppText variant="caption" color="textMuted" tabular>
-            {completedLessons}/{totalLessons}
-          </AppText>
-        </View>
-      </Card>
+        </Card>
+      ) : nextModule ? (
+        /* Returning user: show progress + next module */
+        <Card onPress={() => navigation.navigate('Learn')} elevated>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md }}>
+            <View style={{
+              width: 40, height: 40, borderRadius: radius.sm,
+              backgroundColor: tokenColors.accentMuted, alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Ionicons name="school" size={20} color={tokenColors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText variant="callout" style={{ fontWeight: '600' }}>
+                {nextModule.title}
+              </AppText>
+              <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
+                {nextModule.lesson_count - nextModule.completed_count} lessons remaining
+              </AppText>
+            </View>
+            <Ionicons name="arrow-forward" size={16} color={tokenColors.textMuted} />
+          </View>
+
+          {/* Progress bar */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <View style={{ flex: 1, height: spacing.xs, borderRadius: 2, backgroundColor: tokenColors.border, overflow: 'hidden' }}>
+              <View style={{ height: '100%', width: `${progress * 100}%`, backgroundColor: tokenColors.accent, borderRadius: 2 }} />
+            </View>
+            <AppText variant="caption" color="textMuted" tabular>
+              {completedLessons}/{totalLessons}
+            </AppText>
+          </View>
+        </Card>
+      ) : null}
     </View>
   );
 }
