@@ -43,6 +43,17 @@ const AboutScreen = lazyNamed(() => import('./screens/AboutScreen'), 'AboutScree
 const PrivacyPolicyScreen = lazyNamed(() => import('./screens/PrivacyPolicyScreen'), 'PrivacyPolicyScreen');
 const TermsScreen = lazyNamed(() => import('./screens/TermsScreen'), 'TermsScreen');
 const NotificationPreferencesScreen = lazyNamed(() => import('./screens/NotificationPreferencesScreen'), 'NotificationPreferencesScreen');
+const DailyBriefScreen = lazyNamed(() => import('./screens/DailyBriefScreen'), 'DailyBriefScreen');
+const ActivityScreen = lazyNamed(() => import('./screens/ActivityScreen'), 'ActivityScreen');
+const WatchlistScreen = lazyNamed(() => import('./screens/WatchlistScreen'), 'WatchlistScreen');
+const SavedScreen = lazyNamed(() => import('./screens/SavedScreen'), 'SavedScreen');
+const ManageTopicsScreen = lazyNamed(() => import('./screens/ManageTopicsScreen'), 'ManageTopicsScreen');
+const MethodologyScreen = lazyNamed(() => import('./screens/MethodologyScreen'), 'MethodologyScreen');
+const CouncilProfileScreen = lazyNamed(() => import('./screens/CouncilProfileScreen'), 'CouncilProfileScreen');
+const MatchResultScreen = lazyNamed(() => import('./screens/MatchResultScreen'), 'MatchResultScreen');
+const HypocrisyDetailScreen = lazyNamed(() => import('./screens/HypocrisyDetailScreen'), 'HypocrisyDetailScreen');
+const ContradictionDetailScreen = lazyNamed(() => import('./screens/ContradictionDetailScreen'), 'ContradictionDetailScreen');
+const CommunityPostDetailScreen = lazyNamed(() => import('./screens/CommunityPostDetailScreen'), 'CommunityPostDetailScreen');
 import { supabase } from './lib/supabase';
 import { initErrorReporting, sentryRoutingInstrumentation, withSentry } from './lib/errorReporting';
 import { initFeatureFlags } from './lib/featureFlags';
@@ -295,6 +306,9 @@ function App() {
       navigationRef.navigate('BillDetail', { billId: data.billId });
     } else if (data?.screen === 'member' && data.memberId) {
       navigationRef.navigate('MemberProfile', { memberId: data.memberId });
+    } else if (data?.screen === 'DailyBrief' || data?.screen === 'news') {
+      // Edge functions send DailyBrief taps; news stories surface inside the brief
+      navigationRef.navigate('DailyBrief');
     }
   };
 
@@ -373,6 +387,21 @@ function App() {
                 <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
                 <Stack.Screen name="Terms" component={TermsScreen} />
                 <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
+                {/* Home drill-downs */}
+                <Stack.Screen name="DailyBrief" component={DailyBriefScreen} />
+                <Stack.Screen name="Activity" component={ActivityScreen} />
+                <Stack.Screen name="Watchlist" component={WatchlistScreen} />
+                {/* Profile drill-downs */}
+                <Stack.Screen name="Saved" component={SavedScreen} />
+                <Stack.Screen name="ManageTopics" component={ManageTopicsScreen} />
+                <Stack.Screen name="Methodology" component={MethodologyScreen} />
+                <Stack.Screen name="CommunityPostDetail" component={CommunityPostDetailScreen} />
+                {/* Explore drill-downs */}
+                <Stack.Screen name="Council" component={CouncilProfileScreen} />
+                {/* MP profile drill-downs */}
+                <Stack.Screen name="MatchResult" component={MatchResultScreen} />
+                <Stack.Screen name="HypocrisyDetail" component={HypocrisyDetailScreen} />
+                <Stack.Screen name="ContradictionDetail" component={ContradictionDetailScreen} />
               </Stack.Navigator>
             </Suspense>
             <AppNotificationGate />

@@ -29,12 +29,12 @@ const TOPIC_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 
 export function TopicBillsScreen({ route, navigation }: any) {
   const { colors } = useTheme();
-  const { category, label } = route.params as { category: string; label: string };
+  const { category, label } = (route.params ?? {}) as { category?: string; label?: string };
   const { bills, loading } = useBills({ category, limit: 60 });
-  const iconName = TOPIC_ICONS[category] ?? 'document-text-outline';
+  const iconName = TOPIC_ICONS[category ?? ''] ?? 'document-text-outline';
 
   // Sort: live bills first, then recent, then archived
-  const sortedBills = useMemo(() => {
+  const { sortedBills, liveCount } = useMemo(() => {
     const live: Bill[] = [];
     const rest: Bill[] = [];
     bills.forEach(b => {
@@ -42,10 +42,8 @@ export function TopicBillsScreen({ route, navigation }: any) {
       if (e.isLive) live.push(b);
       else rest.push(b);
     });
-    return [...live, ...rest];
+    return { sortedBills: [...live, ...rest], liveCount: live.length };
   }, [bills]);
-
-  const liveCount = useMemo(() => sortedBills.filter(b => enrichBill(b).isLive).length, [sortedBills]);
 
   const renderItem = useCallback(({ item }: { item: Bill }) => {
     const e = enrichBill(item);

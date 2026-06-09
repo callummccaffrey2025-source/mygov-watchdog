@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../context/UserContext';
+import { useTheme } from '../context/ThemeContext';
 import { useElectorateByPostcode } from '../hooks/useElectorateByPostcode';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useVotes } from '../hooks/useVotes';
@@ -98,6 +99,7 @@ function SectionDivider() {
 // ── Main Screen ─────────────────────────────────────────────────────────
 
 export function HomeScreen({ navigation }: any) {
+  useTheme(); // subscribe so token colours follow the scheme
   const { postcode, setPostcode, user } = useUser();
   const [postcodeInput, setPostcodeInput] = useState(postcode || '');
   const [refreshing, setRefreshing] = useState(false);
@@ -107,16 +109,17 @@ export function HomeScreen({ navigation }: any) {
     if (postcode && !postcodeInput) setPostcodeInput(postcode);
   }, [postcode]);
   const { requireAuth, authSheetProps } = useAuthGate();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // ── Data hooks ──
   const electorateResult = useElectorateByPostcode(postcode);
   const { member: myMP, loading: mpLoading } = electorateResult;
   const electorateName = electorateResult.electorate?.name ?? null;
 
-  const { votes: mpVotes } = useVotes(myMP?.id ?? null);
+  const { votes: mpVotes } = useVotes(myMP?.id ?? null, refreshKey);
   const { isSittingToday, nextSitting } = useSittingCalendar();
   const { currentBill, remaining: billsRemaining, submitOpinion } = useBillSwipe();
-  const { brief: dailyBrief } = useDailyBrief();
+  const { brief: dailyBrief } = useDailyBrief(refreshKey);
 
   // ── MP recent substantive votes ──
   const mpRecentVotes = useMemo(() => {
@@ -126,7 +129,6 @@ export function HomeScreen({ navigation }: any) {
   }, [mpVotes]);
 
   // ── Refresh ──
-  const [refreshKey, setRefreshKey] = useState(0);
   const onRefresh = useCallback(async () => {
     hapticLight();
     setRefreshing(true);
@@ -205,8 +207,8 @@ export function HomeScreen({ navigation }: any) {
           {/* Greeting */}
           <AppText variant="display" style={{ fontSize: 32 }}>{greeting}</AppText>
           <AppText variant="body" color="textMuted" style={{ marginTop: spacing.xs }}>
-            {myMP
-              ? `${dateStr} · ${electorateName ?? ''}`
+            {myMP && electorateName
+              ? `${dateStr} · ${electorateName}`
               : dateStr}
           </AppText>
 

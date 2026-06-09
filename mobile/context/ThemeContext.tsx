@@ -1,5 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
+import { applyColorScheme } from '../theme/tokens';
 
 const COLORS_LIGHT = {
   background:   '#ffffff',
@@ -54,7 +55,9 @@ const ThemeContext = createContext<ThemeContextType>({
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
-  // Debug logging removed for production
+  // Keep the design-token palette in sync so static `tokenColors` imports
+  // resolve to the active scheme (must run before children render)
+  applyColorScheme(isDark);
   return (
     <ThemeContext.Provider value={{ colors: isDark ? COLORS_DARK : COLORS_LIGHT, isDark }}>
       {children}

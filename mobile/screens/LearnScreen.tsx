@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLearnModules, LearnModule } from '../hooks/useLearnModules';
 import { LessonCard } from '../components/LessonCard';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../context/ThemeContext';
 import { hapticLight } from '../lib/haptics';
 import { spacing, radius, colors as tokenColors } from '../theme/tokens';
 import { AppText } from '../components/ui/AppText';
@@ -19,6 +20,7 @@ function TodaysQuestion() {
   const [voted, setVoted] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const today = new Date().toISOString().split('T')[0];
       const { data } = await supabase
@@ -29,8 +31,9 @@ function TodaysQuestion() {
         .order('publish_date', { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (data) setPoll(data);
+      if (data && !cancelled) setPoll(data);
     })();
+    return () => { cancelled = true; };
   }, []);
 
   if (!poll) return null;
@@ -112,6 +115,7 @@ function TodaysQuestion() {
 }
 
 export function LearnScreen({ navigation }: any) {
+  useTheme(); // subscribe so token colours follow the scheme
   const { modules, loading, refresh } = useLearnModules();
 
   const coreModules = modules.filter(m => !m.is_current_events);

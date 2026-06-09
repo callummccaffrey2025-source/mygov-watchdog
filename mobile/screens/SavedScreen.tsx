@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useSavedItems, SaveContentType, SavedItem } from '../hooks/useSaves';
 import { supabase } from '../lib/supabase';
+import { findBillIdForDivision } from '../lib/divisionToBill';
 import { SkeletonLoader } from '../components/SkeletonLoader';
 import { EmptyState } from '../components/EmptyState';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
@@ -175,14 +176,17 @@ export function SavedScreen({ navigation }: any) {
     return () => { cancelled = true; };
   }, [items]);
 
-  const handlePress = (item: SavedItem) => {
+  const handlePress = async (item: SavedItem) => {
     switch (item.content_type) {
       case 'bill':
         navigation.navigate('BillDetail', { billId: item.content_id });
         break;
-      case 'vote':
-        navigation.navigate('BillDetail', { divisionId: item.content_id });
+      case 'vote': {
+        // Saved votes store a division id — resolve to the bill before navigating
+        const billId = await findBillIdForDivision(item.content_id);
+        if (billId) navigation.navigate('BillDetail', { billId });
         break;
+      }
       case 'post':
         navigation.navigate('CommunityPostDetail', { postId: item.content_id });
         break;

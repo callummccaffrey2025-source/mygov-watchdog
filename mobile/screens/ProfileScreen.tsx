@@ -209,22 +209,22 @@ export function ProfileScreen({ navigation }: any) {
           </Text>
 
           {/* Verify to participate card */}
-          <View style={{ width: '100%', backgroundColor: '#E8F5EE', borderRadius: 14, padding: 16, marginVertical: 12, borderLeftWidth: 4, borderLeftColor: '#00843D' }}>
+          <View style={{ width: '100%', backgroundColor: colors.greenBg, borderRadius: 14, padding: 16, marginVertical: 12, borderLeftWidth: 4, borderLeftColor: '#00843D' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <Ionicons name="shield-checkmark" size={18} color="#00843D" />
-              <Text style={{ fontSize: 15, fontWeight: '700', color: '#1A1A1A' }}>Verify your account</Text>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>Verify your account</Text>
             </View>
-            <Text style={{ fontSize: 13, color: '#374151', lineHeight: 20 }}>
+            <Text style={{ fontSize: 13, color: colors.textBody, lineHeight: 20 }}>
               Sign in to participate in polls, react to posts, and join your electorate's community. Browsing is always free.
             </Text>
           </View>
 
           <Text style={{ fontSize: 13, color: colors.textMuted, textAlign: 'center', marginBottom: 8 }}>
-            Join 12,400 Australians tracking their democracy
+            Your MP, your electorate, your parliament — all in one place
           </Text>
 
           {sent ? (
-            <View style={{ width: '100%', flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: '#E8F5EE', borderRadius: 12, padding: 16 }}>
+            <View style={{ width: '100%', flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: colors.greenBg, borderRadius: 12, padding: 16 }}>
               <Ionicons name="mail" size={24} color="#00843D" />
               <Text style={{ flex: 1, fontSize: 14, color: colors.text, lineHeight: 20 }}>
                 Check your email — we sent a sign-in link to {email.trim()}
@@ -356,8 +356,8 @@ export function ProfileScreen({ navigation }: any) {
         {/* ═══ 2. CIVIC STATS — 3 equal cards ═══ */}
         <View style={{ flexDirection: 'row', gap: SPACING.md, paddingHorizontal: SPACING.xl, marginBottom: SPACING.xxl }}>
           {[
-            { label: 'Bills tracked', value: articlesRead },
-            { label: 'Votes viewed', value: mpsFollowed },
+            { label: 'Articles read', value: articlesRead },
+            { label: 'MPs followed', value: mpsFollowed },
             { label: 'Days active', value: daysActive },
           ].map(stat => (
             <View key={stat.label} style={{

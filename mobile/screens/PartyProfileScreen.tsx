@@ -43,9 +43,49 @@ const COALITION_ALIASES: Record<string, string[]> = {
 
 // ── Component ───────────────────────────────────────────────────────────────
 
+// Accepts either a full party object (in-app navigation) or a partyId
+// (universal links: verity.au/party/:id) — resolves before mounting content.
 export function PartyProfileScreen({ route, navigation }: any) {
   const { colors } = useTheme();
-  const { party }: { party: Party } = route.params;
+  const initialParty: Party | undefined = route.params?.party;
+  const partyId: string | undefined = route.params?.partyId ?? initialParty?.id;
+  const [party, setParty] = useState<Party | null>(initialParty ?? null);
+  const [notFound, setNotFound] = useState(!partyId);
+
+  useEffect(() => {
+    if (party || !partyId) return;
+    let cancelled = false;
+    supabase.from('parties').select('*').eq('id', partyId).single().then(({ data, error }) => {
+      if (cancelled) return;
+      if (error || !data) setNotFound(true);
+      else setParty(data as Party);
+    });
+    return () => { cancelled = true; };
+  }, [partyId]);
+
+  if (notFound) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl }}>
+        <Ionicons name="alert-circle-outline" size={40} color={colors.textMuted} />
+        <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginTop: SPACING.md }}>Party not found</Text>
+        <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Go back" style={{ marginTop: SPACING.lg }}>
+          <Text style={{ color: '#00843D', fontWeight: '600' }}>Go back</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+  if (!party) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, padding: SPACING.xl }}>
+        <SkeletonLoader width="100%" height={120} />
+      </SafeAreaView>
+    );
+  }
+  return <PartyProfileContent party={party} navigation={navigation} />;
+}
+
+function PartyProfileContent({ party, navigation }: { party: Party; navigation: any }) {
+  const { colors } = useTheme();
   const { members, loading: membersLoading } = useMembers({ partyId: party.id });
   const [policies, setPolicies] = useState<{ category: string; summary_plain: string }[]>([]);
   const [policiesLoading, setPoliciesLoading] = useState(true);
@@ -234,7 +274,7 @@ export function PartyProfileScreen({ route, navigation }: any) {
           {(party as any).description && (
             <View style={{ marginBottom: SPACING.xl }}>
               <Text style={{ fontSize: FONT_SIZE.body, color: colors.textBody, lineHeight: 22 }}>
-                {(party as any).description}
+                {decodeHtml((party as any).description)}
               </Text>
               {((party as any).leader || (party as any).founded_year || (party as any).website_url) && (
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginTop: SPACING.md }}>

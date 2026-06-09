@@ -97,7 +97,15 @@ export const darkColors: Record<keyof typeof lightColors, string> = {
   info: '#5BA3D0',
 };
 
-export const colors: Record<string, string> = lightColors;
+// Mutable palette: ThemeProvider swaps the values in place via applyColorScheme()
+// so every `colors as tokenColors` import follows the active scheme. Consumers
+// must re-render to pick up a mid-session flip — components that read these
+// values should subscribe with useTheme().
+export const colors: Record<keyof typeof lightColors, string> = { ...lightColors };
+
+export function applyColorScheme(isDark: boolean) {
+  Object.assign(colors, isDark ? darkColors : lightColors);
+}
 
 // ─── MOTION ───────────────────────────────────────────────────────────────────
 export const motion = {

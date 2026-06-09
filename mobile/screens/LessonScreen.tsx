@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useLesson } from '../hooks/useLesson';
+import { useTheme } from '../context/ThemeContext';
 import { ContentBlock } from '../components/ContentBlock';
 import { spacing, radius, colors as tokenColors } from '../theme/tokens';
 import { AppText } from '../components/ui/AppText';
@@ -11,13 +12,19 @@ import { PressableScale } from '../components/ui/PressableScale';
 import { Skeleton } from '../components/ui/Skeleton';
 
 export function LessonScreen({ navigation, route }: any) {
-  const { lessonId, title } = route.params;
+  useTheme(); // subscribe so token colours follow the scheme
+  const { lessonId, title } = route.params ?? {};
   const { lesson, completed, loading, markComplete } = useLesson(lessonId);
   const [quizResults, setQuizResults] = useState<boolean[]>([]);
   const [isCompleting, setIsCompleting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const celebrationScale = useRef(new Animated.Value(0)).current;
   const celebrationOpacity = useRef(new Animated.Value(0)).current;
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(() => () => {
+    if (dismissTimer.current) clearTimeout(dismissTimer.current);
+  }, []);
 
   const totalQuizzes = lesson?.content_blocks.filter(b => b.type === 'quiz').length ?? 0;
 
@@ -41,10 +48,10 @@ export function LessonScreen({ navigation, route }: any) {
       Animated.timing(celebrationOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
     ]).start();
 
-    // Auto-dismiss after 1.5s
-    setTimeout(() => {
+    // Auto-dismiss after 1.5s — cleared on unmount; only pop if still focused
+    dismissTimer.current = setTimeout(() => {
       Animated.timing(celebrationOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start(() => {
-        navigation.goBack();
+        if (navigation.isFocused()) navigation.goBack();
       });
     }, 1500);
   };

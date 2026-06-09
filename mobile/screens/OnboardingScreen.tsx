@@ -116,11 +116,13 @@ export function OnboardingScreen({ onComplete }: Props) {
       await AsyncStorage.setItem('postcode', postcode);
     }
     if (deviceId) {
+      // ACT ranges (26xx, 29xx) must be checked before the NSW '2' prefix
       const stateFromPostcode = postcode ? (
+        postcode.startsWith('26') || postcode.startsWith('29') ? 'ACT' :
         postcode.startsWith('2') ? 'NSW' : postcode.startsWith('3') ? 'VIC' :
         postcode.startsWith('4') ? 'QLD' : postcode.startsWith('5') ? 'SA' :
         postcode.startsWith('6') ? 'WA' : postcode.startsWith('7') ? 'TAS' :
-        postcode.startsWith('0') ? 'NT' : postcode.startsWith('26') ? 'ACT' : null
+        postcode.startsWith('0') ? 'NT' : null
       ) : null;
 
       supabase.from('user_preferences').upsert(

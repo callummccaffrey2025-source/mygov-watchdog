@@ -11,8 +11,8 @@ import {
   Linking,
   Alert,
   Modal,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '../lib/storage';
@@ -40,8 +40,33 @@ const PRESET_SUBJECTS = [
   'Other',
 ];
 
+// Guard: ProfileScreen navigates here with no params when the user hasn't set
+// an electorate yet — show guidance instead of crashing on the destructure.
 export function WriteToMPScreen({ route, navigation }: any) {
-  const { member, fromBill }: { member: Member; fromBill?: FromBill } = route.params;
+  const { colors } = useTheme();
+  const member: Member | undefined = route.params?.member;
+  const fromBill: FromBill | undefined = route.params?.fromBill;
+
+  if (!member) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <Ionicons name="mail-open-outline" size={40} color={colors.textMuted} />
+        <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginTop: 12, textAlign: 'center' }}>
+          Set your electorate first
+        </Text>
+        <Text style={{ fontSize: 14, color: colors.textMuted, marginTop: 6, textAlign: 'center', lineHeight: 20 }}>
+          Add your postcode in your profile so Verity knows which MP represents you.
+        </Text>
+        <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Go back" style={{ marginTop: 16 }}>
+          <Text style={{ color: '#00843D', fontWeight: '600' }}>Go back</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+  return <WriteToMPContent member={member} fromBill={fromBill} navigation={navigation} />;
+}
+
+function WriteToMPContent({ member, fromBill, navigation }: { member: Member; fromBill?: FromBill; navigation: any }) {
   const { colors } = useTheme();
   const { user } = useUser();
   const [deviceId, setDeviceId] = useState<string | null>(null);
@@ -160,7 +185,7 @@ export function WriteToMPScreen({ route, navigation }: any) {
           <View style={[styles.mpCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={[styles.mpAvatar, { backgroundColor: partyColour + '22', borderColor: partyColour }]}>
               {member.photo_url ? (
-                <Image source={{ uri: member.photo_url }} style={styles.mpPhoto} accessibilityLabel={`Photo of ${displayName}`} />
+                <Image source={{ uri: member.photo_url }} style={styles.mpPhoto} contentFit="cover" transition={200} accessibilityLabel={`Photo of ${displayName}`} />
               ) : (
                 <Text style={[styles.mpInitials, { color: partyColour }]}>
                   {member.first_name[0]}{member.last_name[0]}
@@ -175,7 +200,10 @@ export function WriteToMPScreen({ route, navigation }: any) {
               {member.email ? (
                 <Text style={[styles.mpEmail, { color: colors.textMuted }]}>{member.email}</Text>
               ) : (
-                <Text style={styles.mpNoEmail}>⚠ No email on record</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                  <Ionicons name="warning-outline" size={12} color="#DC3545" />
+                  <Text style={styles.mpNoEmail}>No email on record</Text>
+                </View>
               )}
             </View>
           </View>

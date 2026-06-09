@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { ViewStyle, DimensionValue, Animated, Easing } from 'react-native';
+import { colors } from '../../theme/tokens';
+import { useTheme } from '../../context/ThemeContext';
 
 interface SkeletonProps {
   width?: DimensionValue;
@@ -14,6 +16,7 @@ export function Skeleton({
   borderRadius = 8,
   style,
 }: SkeletonProps) {
+  useTheme(); // subscribe so shimmer blocks follow the scheme
   const opacity = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export function Skeleton({
           width,
           height,
           borderRadius,
-          backgroundColor: '#E5E7EB',
+          backgroundColor: colors.surfaceMuted,
           opacity,
         },
         style,

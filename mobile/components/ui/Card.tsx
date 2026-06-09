@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ViewStyle, StyleProp } from 'react-native';
 import { colors, radius, spacing, elevation } from '../../theme/tokens';
+import { useTheme } from '../../context/ThemeContext';
 import { PressableScale } from './PressableScale';
 
 interface CardProps {
@@ -18,6 +19,7 @@ export function Card({
   elevated = false,
   style,
 }: CardProps) {
+  useTheme(); // subscribe so cards re-render when the scheme flips
   const base: ViewStyle = {
     backgroundColor: colors.surface,
     borderRadius: radius.md,

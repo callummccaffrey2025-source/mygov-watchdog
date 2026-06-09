@@ -12,6 +12,7 @@ const isExpoGo = Constants.appOwnership === 'expo';
 import { supabase } from '../lib/supabase';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
+import { SkeletonLoader } from '../components/SkeletonLoader';
 
 interface Prefs {
   new_bills: boolean;
@@ -42,6 +43,8 @@ const DEFAULT_PREFS: Prefs = {
 };
 
 const PREF_ITEMS: { key: keyof Prefs; label: string; desc: string; icon: string }[] = [
+  { key: 'daily_brief',        label: 'Daily Brief',             desc: 'Your morning summary of parliament',       icon: 'newspaper-outline' },
+  { key: 'breaking_news',      label: 'Breaking News',           desc: 'Major political developments as they happen', icon: 'flash-outline' },
   { key: 'new_bills',          label: 'New Bills in Parliament', desc: 'When significant bills are introduced',    icon: 'document-text-outline' },
   { key: 'mp_votes',           label: 'Your MP Voted',          desc: 'When your local MP votes on a bill',       icon: 'checkmark-done-outline' },
   { key: 'election_updates',   label: 'Election Updates',        desc: 'Election dates, calls, and results',       icon: 'flag-outline' },
@@ -191,7 +194,9 @@ export function NotificationPreferencesScreen({ navigation }: any) {
         <Text style={[styles.title, { color: colors.text }]}>Notifications</Text>
 
         {loading ? (
-          <ActivityIndicator color="#00843D" style={{ marginTop: 40 }} />
+          <View style={{ paddingHorizontal: 20, marginTop: 24, gap: 16 }}>
+            {[1, 2, 3, 4, 5].map(i => <SkeletonLoader key={i} height={56} borderRadius={12} />)}
+          </View>
         ) : (
           <>
             {/* Permission status */}

@@ -31,7 +31,7 @@ export function AboutScreen({ navigation }: any) {
           </View>
           <Text style={[styles.appName, { color: colors.text }]}>Verity</Text>
           <Text style={[styles.versionText, { color: colors.textMuted }]}>Version {version}</Text>
-          <Text style={[styles.builtIn, { color: colors.textMuted }]}>Built in Sydney, Australia 🇦🇺</Text>
+          <Text style={[styles.builtIn, { color: colors.textMuted }]}>Built in Sydney, Australia</Text>
         </View>
 
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
@@ -78,7 +78,7 @@ export function AboutScreen({ navigation }: any) {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Get in Touch</Text>
           <Pressable
             style={[styles.linkRow, { backgroundColor: colors.surface }]}
-            onPress={() => Linking.openURL('https://verity.au')}
+            onPress={() => Linking.openURL('https://verity.au').catch(() => {})}
             accessibilityLabel="Visit verity.au website"
             accessibilityRole="button"
           >
@@ -88,7 +88,7 @@ export function AboutScreen({ navigation }: any) {
           </Pressable>
           <Pressable
             style={[styles.linkRow, { backgroundColor: colors.surface }]}
-            onPress={() => Linking.openURL('mailto:hello@verity.au')}
+            onPress={() => Linking.openURL('mailto:hello@verity.au').catch(() => {})}
             accessibilityLabel="Email hello@verity.au"
             accessibilityRole="button"
           >
@@ -99,7 +99,7 @@ export function AboutScreen({ navigation }: any) {
         </View>
 
         <Text style={[styles.footerText, { color: colors.textMuted }]}>
-          Built with care for Australian democracy 🌿
+          Built with care for Australian democracy
         </Text>
       </ScrollView>
     </SafeAreaView>

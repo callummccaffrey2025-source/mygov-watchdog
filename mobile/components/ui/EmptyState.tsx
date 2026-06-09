@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { AppText } from './AppText';
 import { PressableScale } from './PressableScale';
 import { colors, spacing, radius } from '../../theme/tokens';
+import { useTheme } from '../../context/ThemeContext';
 
 interface EmptyStateProps {
   title: string;
@@ -19,6 +20,7 @@ export function EmptyState({
   actionLabel,
   onAction,
 }: EmptyStateProps) {
+  useTheme(); // subscribe so the action button follows the scheme
   return (
     <View
       style={{

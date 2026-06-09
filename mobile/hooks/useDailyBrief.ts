@@ -46,7 +46,7 @@ export interface DailyBriefData {
   ai_text: any | null;
 }
 
-export function useDailyBrief() {
+export function useDailyBrief(refreshToken = 0) {
   const [brief, setBrief] = useState<DailyBriefData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -214,7 +214,7 @@ export function useDailyBrief() {
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshToken]);
 
   return { brief, loading };
 }

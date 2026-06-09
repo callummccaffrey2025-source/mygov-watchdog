@@ -17,7 +17,7 @@ export interface DivisionVote {
   } | null;
 }
 
-export function useVotes(memberId: string | null) {
+export function useVotes(memberId: string | null, refreshToken = 0) {
   const [votes, setVotes] = useState<DivisionVote[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +54,7 @@ export function useVotes(memberId: string | null) {
     })();
 
     return () => { cancelled = true; };
-  }, [memberId]);
+  }, [memberId, refreshToken]);
 
   return { votes, loading };
 }

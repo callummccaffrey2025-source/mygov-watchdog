@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../context/ThemeContext';
 import AsyncStorage from '../lib/storage';
 import { spacing, radius, colors as tokenColors } from '../theme/tokens';
 import { AppText } from '../components/ui/AppText';
@@ -20,7 +21,8 @@ interface LessonItem {
 }
 
 export function LearnModuleScreen({ navigation, route }: any) {
-  const { moduleId, title } = route.params;
+  useTheme(); // subscribe so token colours follow the scheme
+  const { moduleId, title } = route.params ?? {};
   const { user } = useUser();
   const [lessons, setLessons] = useState<LessonItem[]>([]);
   const [loading, setLoading] = useState(true);

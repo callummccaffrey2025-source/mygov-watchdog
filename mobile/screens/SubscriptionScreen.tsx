@@ -26,18 +26,27 @@ export function SubscriptionScreen({ navigation }: any) {
   const [subscribing, setSubscribing] = React.useState(false);
   const [restoring, setRestoring] = React.useState(false);
   const [done, setDone] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleSubscribe = async () => {
     setSubscribing(true);
-    await subscribe();
+    setError(null);
+    const result = await subscribe();
     setSubscribing(false);
-    setDone(true);
+    if (result?.success) {
+      setDone(true);
+    } else if (result?.error && result.error !== 'cancelled') {
+      setError('Purchase failed. Please try again.');
+    }
   };
 
   const handleRestore = async () => {
     setRestoring(true);
-    await restore();
+    setError(null);
+    const restored = await restore();
     setRestoring(false);
+    if (restored) setDone(true);
+    else setError('No previous purchase found for this account.');
   };
 
   return (
@@ -50,7 +59,7 @@ export function SubscriptionScreen({ navigation }: any) {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Hero */}
-        <Text style={styles.crown}>👑</Text>
+        <Ionicons name="diamond" size={56} color="#00843D" style={{ marginTop: 16, marginBottom: 8 }} />
         <Text style={[styles.title, { color: colors.text }]}>Verity Pro</Text>
         <Text style={styles.price}>{(product as any)?.localizedPrice ?? '$4.99'} / month</Text>
         <Text style={styles.trial}>7-day free trial</Text>
@@ -84,6 +93,10 @@ export function SubscriptionScreen({ navigation }: any) {
             <Ionicons name="lock-closed-outline" size={18} color="#9aabb8" />
             <Text style={styles.signInText}>Sign in to start your free trial</Text>
           </View>
+        ) : loading ? (
+          <View style={{ height: 54, marginBottom: 16, justifyContent: 'center' }}>
+            <ActivityIndicator color="#00843D" />
+          </View>
         ) : isPro || done ? (
           <View style={styles.successCard}>
             <Ionicons name="checkmark-circle" size={28} color="#00843D" />
@@ -104,6 +117,10 @@ export function SubscriptionScreen({ navigation }: any) {
           </Pressable>
         )}
 
+        {error && (
+          <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>
+        )}
+
         <Pressable onPress={handleRestore} disabled={restoring} style={styles.restoreBtn} accessibilityLabel="Restore purchase" accessibilityRole="button">
           {restoring
             ? <ActivityIndicator color="#9aabb8" size="small" />
@@ -122,7 +139,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
   backBtn: { width: 40, height: 40, justifyContent: 'center' },
   content: { paddingHorizontal: 24, paddingBottom: 40, alignItems: 'center' },
-  crown: { fontSize: 64, marginTop: 16, marginBottom: 8 },
+  errorText: { color: '#DC3545', fontSize: 13, marginBottom: 12, textAlign: 'center' },
   title: { fontSize: 30, fontWeight: '800', color: '#1a2332', marginBottom: 6 },
   price: { fontSize: 22, fontWeight: '700', color: '#00843D', marginBottom: 4 },
   trial: { fontSize: 14, color: '#9aabb8', marginBottom: 32 },

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, Modal, TextInput, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, ScrollView, TextInput, RefreshControl } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,8 +11,6 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { useMembers, Member } from '../hooks/useMembers';
 import { useBills } from '../hooks/useBills';
 import { useParties, Party } from '../hooks/useParties';
-import { useMemberVotes } from '../hooks/useMemberVotes';
-import { useVotes } from '../hooks/useVotes';
 import { useUser } from '../context/UserContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { useCouncils } from '../hooks/useCouncils';
@@ -24,8 +22,6 @@ import { spacing, radius, elevation, typography, colors as tokenColors } from '.
 import { AppText } from '../components/ui/AppText';
 import { PressableScale } from '../components/ui/PressableScale';
 import { Card } from '../components/ui/Card';
-import { supabase } from '../lib/supabase';
-import { timeAgo } from '../lib/timeAgo';
 
 const PartyCard = ({ party, onPress }: { party: Party; onPress: () => void }) => {
   const colour = party.colour || '#9aabb8';
@@ -48,278 +44,6 @@ const PartyCard = ({ party, onPress }: { party: Party; onPress: () => void }) =>
   );
 };
 
-// ─── Verify Claims ────────────────────────────────────────────────────────────
-
-function VerifyModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { colors } = useTheme();
-  const { user } = useUser();
-  const [mpSearch, setMpSearch] = useState('');
-  const [selectedMP, setSelectedMP] = useState<Member | null>(null);
-  const [billSearch, setBillSearch] = useState('');
-  const [aiVerdict, setAiVerdict] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-
-  const { members } = useMembers(mpSearch.length > 1 ? { search: mpSearch, limit: 8 } : { limit: 0 });
-  const { votes, loading: votesLoading } = useMemberVotes(selectedMP?.id || null);
-  const { votes: divVotes, loading: divLoading } = useVotes(selectedMP?.id || null);
-
-  const filteredVotes = billSearch.length > 1
-    ? votes.filter(v => v.bill?.title.toLowerCase().includes(billSearch.toLowerCase()))
-    : votes.slice(0, 20);
-
-  // Improved keyword matching: split into words, match if ANY word appears in division name
-  const keywords = billSearch.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-  const divMatches = keywords.length > 0
-    ? divVotes.filter(v => {
-        const name = (v.division?.name || '').toLowerCase();
-        return keywords.some(kw => name.includes(kw));
-      })
-    : [];
-  const ayeCount = divMatches.filter(v => v.vote_cast === 'aye').length;
-  const noCount = divMatches.filter(v => v.vote_cast === 'no').length;
-  const total = ayeCount + noCount;
-  const top3Div = divMatches.slice(0, 3);
-  const showVerdict = divMatches.length > 0;
-
-  // ── AI verdict (debounced, with error feedback) ──
-  React.useEffect(() => {
-    if (!selectedMP || divMatches.length === 0 || billSearch.length < 2) {
-      setAiVerdict(null);
-      setAiLoading(false);
-      setAiError(null);
-      return;
-    }
-    if (!user) {
-      setAiError(null);
-      setAiLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setAiLoading(true);
-    setAiError(null);
-    const timer = setTimeout(async () => {
-      const mpName = `${selectedMP.first_name} ${selectedMP.last_name}`;
-      const votesPayload = divMatches.slice(0, 5).map(v => ({
-        name: v.division?.name ?? 'Unknown division',
-        vote: v.vote_cast ?? '',
-        date: v.division?.date ?? undefined,
-      }));
-      try {
-        const { data, error } = await supabase.functions.invoke('verify-claim', {
-          body: { mpName, claim: billSearch, votes: votesPayload },
-        });
-        if (cancelled) return;
-        if (error) {
-          const errMsg = typeof error === 'object' && error.message ? error.message : String(error);
-          if (errMsg.includes('Rate limit')) {
-            setAiError('Daily limit reached (10 claims/day). Try again tomorrow.');
-          } else {
-            setAiError(null);
-          }
-          setAiVerdict(null);
-        } else if (!data?.verdict) {
-          setAiVerdict(null);
-        } else {
-          setAiVerdict(data.verdict);
-        }
-      } catch {
-        if (!cancelled) { setAiVerdict(null); setAiError(null); }
-      } finally {
-        if (!cancelled) setAiLoading(false);
-      }
-    }, 800);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [selectedMP?.id, billSearch, divMatches.length, user?.id]);
-
-  const voteColour = (vote: string) =>
-    vote === 'aye' ? colors.green : vote === 'no' ? colors.red : colors.textMuted;
-
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.xl, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-            <Ionicons name="shield-checkmark" size={20} color={colors.green} />
-            <AppText variant="heading" style={{ color: colors.text }}>Verify a Claim</AppText>
-          </View>
-          <PressableScale onPress={() => { onClose(); setSelectedMP(null); setMpSearch(''); setBillSearch(''); }} accessibilityRole="button" accessibilityLabel="Close verify a claim">
-            <Ionicons name="close" size={24} color={colors.text} />
-          </PressableScale>
-        </View>
-
-        {!selectedMP ? (
-          <View style={{ flex: 1, padding: spacing.lg }}>
-            <AppText variant="label" style={{ color: colors.textBody, marginBottom: spacing.sm }}>Search for an MP or Senator</AppText>
-            <TextInput
-              style={{ borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: typography.body.fontSize, marginBottom: spacing.md, borderWidth: 1, backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }}
-              value={mpSearch}
-              onChangeText={setMpSearch}
-              placeholder='e.g. "Did Albanese vote for housing?"'
-              placeholderTextColor={colors.textMuted}
-              autoFocus
-              accessibilityLabel="Search for an MP or Senator"
-            />
-            <ScrollView keyboardShouldPersistTaps="handled">
-              {members.map(m => (
-                <PressableScale key={m.id} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border }} onPress={() => setSelectedMP(m)} accessibilityRole="button" accessibilityLabel={`Select ${m.first_name} ${m.last_name}`}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: m.party?.colour || colors.textMuted }} />
-                  <View>
-                    <AppText variant="callout" style={{ color: colors.text }}>{m.first_name} {m.last_name}</AppText>
-                    <AppText variant="caption" style={{ color: colors.textMuted, marginTop: 1 }}>{m.party?.short_name} · {m.electorate?.name}</AppText>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} style={{ marginLeft: 'auto' }} />
-                </PressableScale>
-              ))}
-            </ScrollView>
-          </View>
-        ) : (
-          <View style={{ flex: 1, padding: spacing.lg }}>
-            <PressableScale style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.md }} onPress={() => setSelectedMP(null)} accessibilityRole="button" accessibilityLabel="Change MP">
-              <Ionicons name="arrow-back" size={16} color={colors.green} />
-              <AppText variant="label" style={{ color: colors.green }}>Change MP</AppText>
-            </PressableScale>
-            <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>{selectedMP.first_name} {selectedMP.last_name}</AppText>
-            <TextInput
-              style={{ borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: typography.body.fontSize, marginBottom: spacing.md, borderWidth: 1, backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }}
-              value={billSearch}
-              onChangeText={setBillSearch}
-              placeholder="Search by bill topic..."
-              placeholderTextColor={colors.textMuted}
-              accessibilityLabel="Search by bill topic"
-            />
-            <ScrollView keyboardShouldPersistTaps="handled">
-              {votesLoading ? (
-                <AppText variant="callout" style={{ color: colors.textMuted, textAlign: 'center', marginTop: spacing.xl }}>Loading votes...</AppText>
-              ) : (
-                <>
-                  {/* AI verdict card */}
-                  {showVerdict && selectedMP && (aiLoading || aiVerdict || aiError) && (
-                    <View style={{ backgroundColor: colors.greenBg, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md, borderLeftWidth: 3, borderLeftColor: colors.green }}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-                          <Ionicons name="sparkles" size={14} color={colors.green} />
-                          <AppText variant="caption" style={{ color: colors.green, fontWeight: '700', letterSpacing: 0.8 }}>AI ANALYSIS</AppText>
-                        </View>
-                        {aiLoading && (
-                          <AppText variant="caption" style={{ fontStyle: 'italic' }}>Thinking...</AppText>
-                        )}
-                      </View>
-                      {aiError ? (
-                        <AppText variant="callout" style={{ color: colors.red }}>{aiError}</AppText>
-                      ) : aiVerdict ? (
-                        <>
-                          <AppText variant="callout" style={{ color: colors.text, lineHeight: 21 }}>{aiVerdict}</AppText>
-                          <AppText variant="caption" style={{ marginTop: spacing.sm, fontSize: 10 }}>AI-generated analysis by Claude. Not a fact-check. Verify with official records.</AppText>
-                        </>
-                      ) : null}
-                    </View>
-                  )}
-                  {/* Sign in prompt for AI analysis */}
-                  {showVerdict && !user && (
-                    <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md, borderLeftWidth: 3, borderLeftColor: colors.textMuted }}>
-                      <AppText variant="callout" style={{ color: colors.textMuted }}>
-                        Sign in to get AI-powered analysis of this claim.
-                      </AppText>
-                    </View>
-                  )}
-                  {showVerdict && selectedMP ? (
-                    <Card style={{ marginBottom: spacing.md }}>
-                      {/* MP name row */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
-                        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.greenBg, justifyContent: 'center', alignItems: 'center' }}>
-                          <AppText variant="callout" style={{ fontWeight: '700', color: colors.green }}>
-                            {selectedMP.first_name[0]}{selectedMP.last_name[0]}
-                          </AppText>
-                        </View>
-                        <View>
-                          <AppText variant="callout" style={{ fontWeight: '700', color: colors.text }}>
-                            {selectedMP.first_name} {selectedMP.last_name}
-                          </AppText>
-                          <AppText variant="caption" style={{ color: colors.textMuted, marginTop: 1 }}>
-                            {selectedMP.party?.name ?? ''} · {selectedMP.electorate?.name ?? ''}
-                          </AppText>
-                        </View>
-                      </View>
-                      {/* Summary */}
-                      <AppText variant="callout" style={{ color: colors.textBody, marginBottom: spacing.sm }}>
-                        Based on {total} recorded votes on "{billSearch.trim()}":
-                      </AppText>
-                      {/* Bar */}
-                      {total > 0 && (
-                        <View style={{ marginBottom: spacing.sm }}>
-                          <View style={{ flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: spacing.xs }}>
-                            <View style={{ flex: ayeCount, backgroundColor: colors.green }} />
-                            <View style={{ flex: noCount, backgroundColor: colors.red }} />
-                          </View>
-                          <AppText variant="label" tabular>AYE {ayeCount} · NO {noCount}</AppText>
-                        </View>
-                      )}
-                      {/* Top votes */}
-                      {top3Div.length > 0 && (
-                        <>
-                          <AppText variant="caption" style={{ color: colors.textMuted, textTransform: 'uppercase', marginBottom: spacing.xs }}>Top votes:</AppText>
-                          {top3Div.map((v, i) => (
-                            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
-                              <View style={{ borderRadius: radius.sm, paddingHorizontal: spacing.xs, paddingVertical: 2, backgroundColor: v.vote_cast === 'aye' ? colors.green + '18' : colors.red + '18' }}>
-                                <AppText variant="caption" style={{ fontWeight: '700', color: v.vote_cast === 'aye' ? colors.green : colors.red }}>
-                                  {(v.vote_cast ?? '').toUpperCase()}
-                                </AppText>
-                              </View>
-                              <AppText variant="label" style={{ flex: 1, color: colors.textBody }} numberOfLines={1}>
-                                {v.division?.name ?? 'Unknown division'}
-                              </AppText>
-                            </View>
-                          ))}
-                        </>
-                      )}
-                      {/* Disclaimer */}
-                      <AppText variant="caption" style={{ color: colors.textMuted, marginTop: spacing.sm }}>
-                        Based on division voting records only. May not capture the full picture.
-                      </AppText>
-                    </Card>
-                  ) : null}
-                  {filteredVotes.length === 0 && !showVerdict ? (
-                    <View style={{ alignItems: 'center', paddingTop: spacing.xl }}>
-                      <Ionicons name="search-outline" size={32} color={colors.textMuted} />
-                      <AppText variant="callout" style={{ color: colors.textMuted, textAlign: 'center', marginTop: spacing.lg }}>
-                        {billSearch.length > 1
-                          ? `No voting records match "${billSearch}". Try broader terms like "health", "tax", or "climate".`
-                          : `Enter a topic to check ${selectedMP?.first_name}'s voting record.`}
-                      </AppText>
-                    </View>
-                  ) : (
-                    filteredVotes.map(v => (
-                      <View key={v.id} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-                        <View style={{ borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, minWidth: 48, alignItems: 'center', marginTop: 2, backgroundColor: voteColour(v.vote) }}>
-                          <AppText variant="caption" style={{ fontWeight: '700', color: '#ffffff' }}>{v.vote.toUpperCase()}</AppText>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <AppText variant="callout" style={{ color: colors.text, lineHeight: 19 }} numberOfLines={2}>
-                            {v.bill?.title || 'Unknown bill'}
-                          </AppText>
-                          <AppText variant="caption" style={{ color: colors.textMuted, marginTop: 2 }}>
-                            {timeAgo(v.created_at)}
-                          </AppText>
-                        </View>
-                      </View>
-                    ))
-                  )}
-                </>
-              )}
-            </ScrollView>
-          </View>
-        )}
-      </SafeAreaView>
-    </Modal>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 const CATEGORIES: { key: string; label: string; icon: string; bg: string; text: string }[] = [
   { key: 'housing', label: 'Housing', icon: 'home-outline', bg: '#FAECE7', text: '#712B13' },
@@ -402,7 +126,7 @@ export function ExploreScreen({ navigation }: any) {
   const { parties: allParties, loading: partiesLoading } = useParties();
   // Only show parties with a colour (the 9 seeded major parties, not role placeholders)
   const PARTY_PRIORITY = ['labor', 'liberal', 'greens', 'nationals'];
-  const parties = allParties.filter(p => p.colour).sort((a, b) => {
+  const parties = useMemo(() => allParties.filter(p => p.colour).sort((a, b) => {
     const aKey = (a.name + ' ' + (a.short_name || '')).toLowerCase();
     const bKey = (b.name + ' ' + (b.short_name || '')).toLowerCase();
     const aIdx = PARTY_PRIORITY.findIndex(p => aKey.includes(p));
@@ -410,7 +134,7 @@ export function ExploreScreen({ navigation }: any) {
     const aRank = aIdx === -1 ? 99 : aIdx;
     const bRank = bIdx === -1 ? 99 : bIdx;
     return aRank - bRank;
-  });
+  }), [allParties]);
 
   const filteredParties = hasQuery
     ? parties.filter(p => {
@@ -643,28 +367,6 @@ export function ExploreScreen({ navigation }: any) {
                   })
               }
             </ScrollView>
-
-            {/* ═══ VERIFY A CLAIM ═══ */}
-            <PressableScale
-              onPress={() => navigation.navigate('VerifyClaim')}
-              accessibilityRole="button"
-              accessibilityLabel="Verify a claim"
-              style={{
-                marginTop: spacing.xxl,
-                backgroundColor: tokenColors.success,
-                borderRadius: radius.md,
-                padding: spacing.lg,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                <Ionicons name="shield-checkmark-outline" size={20} color="#FFFFFF" />
-                <AppText variant="body" style={{ color: '#FFFFFF', fontWeight: '600' }}>Verify a Claim</AppText>
-              </View>
-              <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-            </PressableScale>
 
             {/* ═══ LOCAL COUNCILS ═══ */}
             {councils.length > 0 && (

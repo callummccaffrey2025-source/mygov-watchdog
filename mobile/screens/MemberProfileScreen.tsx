@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, Linking, Share, Platform, RefreshControl, Modal } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,6 +42,7 @@ import { useGovernmentContracts } from '../hooks/useGovernmentContracts';
 import { spacing, radius, elevation, colors as tokenColors } from '../theme/tokens';
 import { PressableScale, AppText } from '../components/ui';
 import { supabase } from '../lib/supabase';
+import { findBillIdForDivision } from '../lib/divisionToBill';
 import { decodeHtml } from '../utils/decodeHtml';
 import { timeAgo } from '../lib/timeAgo';
 import { useVotePrediction } from '../hooks/useVotePrediction';
@@ -61,11 +62,32 @@ function isProcedural(name: string): boolean {
   return PROCEDURAL_PREFIXES.some(p => name.startsWith(p));
 }
 
+const DONATION_VOTE_KEYWORDS: Record<string, string[]> = {
+  mining: ['mining', 'mineral', 'resources', 'coal', 'gas', 'petroleum', 'offshore'],
+  property: ['housing', 'property', 'construction', 'planning', 'building', 'rent', 'home'],
+  finance: ['banking', 'financial', 'credit', 'superannuation', 'insurance', 'prudential'],
+  unions: ['workplace', 'industrial', 'fair work', 'employment', 'worker', 'bargaining'],
+  pharmacy: ['health', 'medical', 'pharmaceutical', 'therapeutic', 'medicare', 'hospital'],
+  health: ['health', 'medical', 'hospital', 'medicare'],
+  tech: ['technology', 'digital', 'cyber', 'data', 'telecom', 'broadband', 'online'],
+  telecom: ['technology', 'digital', 'telecom', 'broadband', 'online'],
+  energy: ['energy', 'electricity', 'renewable', 'emissions', 'carbon', 'climate'],
+  fossil_fuels: ['energy', 'gas', 'petroleum', 'offshore', 'emissions'],
+  agriculture: ['agriculture', 'farm', 'rural', 'water', 'drought', 'biosecurity'],
+  gambling: ['gambling', 'wagering', 'gaming', 'betting'],
+  media: ['media', 'broadcast', 'press', 'journalism'],
+  defence: ['defence', 'military', 'security', 'veteran'],
+  transport: ['transport', 'aviation', 'shipping', 'freight', 'infrastructure'],
+  education: ['education', 'university', 'school', 'training'],
+  retail: ['consumer', 'retail', 'competition'],
+};
+
 type TabId = 'overview' | 'votes' | 'speeches' | 'more';
 
 export function MemberProfileScreen({ route, navigation }: any) {
   const { member: memberParam, memberId } = (route.params ?? {}) as { member?: Member; memberId?: string };
   const [member, setMember] = useState<Member | null>(memberParam ?? null);
+  const [memberFailed, setMemberFailed] = useState(!memberParam && !memberId);
 
   useEffect(() => {
     if (!member && memberId) {
@@ -77,8 +99,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
             .eq('id', memberId)
             .maybeSingle();
           if (data) setMember(data as Member);
+          else setMemberFailed(true);
         } catch {
-          // Network failure — caller sees initial state
+          setMemberFailed(true);
         }
       })();
     }
@@ -90,10 +113,11 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const [showMethodology, setShowMethodology] = useState(false);
   const { votes, loading: votesLoading } = useVotes(member?.id ?? null);
   const { data: hypocrisyData, loading: hypocrisyLoading } = useHypocrisyIndex(member?.id ?? null);
-  const { links: moneyVoteLinks } = useDonationVoteLinks(member?.id ?? null);
+  // 'More'-tab hooks are gated on the active tab so opening a profile doesn't fan out 16 queries
+  const { links: moneyVoteLinks } = useDonationVoteLinks(activeTab === 'more' ? member?.id ?? null : null);
   const { summary: voteMoneyData, loading: voteMoneyLoading } = useVoteMoneySummary(member?.id);
-  const { records: repGapRecords } = useRepresentationGap(member?.id);
-  const { votes: decisiveVotes, winningCount: decisiveWinning } = useDecisiveVotes(member?.id);
+  const { records: repGapRecords } = useRepresentationGap(activeTab === 'votes' ? member?.id : undefined);
+  const { votes: decisiveVotes, winningCount: decisiveWinning } = useDecisiveVotes(activeTab === 'votes' ? member?.id : undefined);
   const { data: discourseData, updatedAt: discourseUpdatedAt } = useMPDiscourse(member?.id);
   const { mpStats } = useStatsMetrics(member?.id, member?.electorate_id ?? undefined);
 
@@ -110,10 +134,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const { donations: indDonations, total: indTotal, loading: indLoading } = useIndividualDonations(member?.id);
   const { current: committees, loading: committeesLoading } = useCommittees(member?.id);
   const { entries: hansardEntries, loading: hansardLoading } = useHansard(member?.id);
-  const { grouped: interestsGrouped, interests: allInterests, loading: interestsLoading } = useRegisteredInterests(member?.id);
-  const { contradictions, loading: contradictionsLoading } = useContradictions({ memberId: member?.id });
-  const { demographics } = useElectorateDemographics(member?.electorate_id ?? undefined);
-  const { summary: contractSummary } = useGovernmentContracts(member?.electorate_id ?? undefined);
+  const { grouped: interestsGrouped, interests: allInterests, loading: interestsLoading } = useRegisteredInterests(activeTab === 'more' ? member?.id : undefined);
+  const { contradictions, loading: contradictionsLoading } = useContradictions({ memberId: activeTab === 'more' ? member?.id : undefined });
+  const { demographics } = useElectorateDemographics(activeTab === 'more' ? member?.electorate_id ?? undefined : undefined);
+  const { summary: contractSummary } = useGovernmentContracts(activeTab === 'more' ? member?.electorate_id ?? undefined : undefined);
 
   const party = member?.party;
   const partyColour = party?.colour || tokenColors.textMuted;
@@ -166,7 +190,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
   }, [shareHypocrisy]);
 
   // Top donors for report card
-  const topDonors = Array.from(
+  const topDonors = useMemo(() => Array.from(
     indDonations.reduce((acc, d) => {
       acc.set(d.donor_name, (acc.get(d.donor_name) ?? 0) + Number(d.amount));
       return acc;
@@ -174,7 +198,46 @@ export function MemberProfileScreen({ route, navigation }: any) {
   )
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
-    .map(([name]) => name);
+    .map(([name]) => name), [indDonations]);
+
+  const rebelVotes = useMemo(() => votes.filter(v => v.rebelled), [votes]);
+
+  // Donation-vs-voting analysis (heavy: scans all votes per donor industry)
+  const donationVoteAnalysis = useMemo(() => {
+    const donorSource = indDonations.length > 0 ? indDonations : donations;
+    const donorAgg = new Map<string, { amount: number; industry: string | null }>();
+    for (const d of donorSource) {
+      const existing = donorAgg.get(d.donor_name);
+      donorAgg.set(d.donor_name, {
+        amount: (existing?.amount ?? 0) + Number(d.amount),
+        industry: d.industry ?? existing?.industry ?? null,
+      });
+    }
+    const topDonorsWithIndustry = Array.from(donorAgg.entries())
+      .sort((a, b) => b[1].amount - a[1].amount)
+      .slice(0, 5)
+      .map(([name, { amount, industry }]) => ({ name, amount, industry }))
+      .filter(d => d.industry && d.industry !== 'individual' && d.industry !== 'unidentified');
+
+    if (topDonorsWithIndustry.length === 0) return null;
+
+    const industryVotes: Record<string, { aye: number; no: number }> = {};
+    for (const donor of topDonorsWithIndustry) {
+      if (!donor.industry || industryVotes[donor.industry]) continue;
+      const keywords = DONATION_VOTE_KEYWORDS[donor.industry] || [];
+      let aye = 0;
+      let no = 0;
+      for (const v of votes) {
+        const divName = (v.division?.name || '').toLowerCase();
+        if (keywords.some(kw => divName.includes(kw))) {
+          if (v.vote_cast === 'aye') aye++;
+          else if (v.vote_cast === 'no') no++;
+        }
+      }
+      if (aye + no > 0) industryVotes[donor.industry] = { aye, no };
+    }
+    return { topDonorsWithIndustry, industryVotes };
+  }, [indDonations, donations, votes]);
 
   const { following: followingMP, toggle: toggleFollow } = useFollow('member', member?.id ?? '');
   const { colors } = useTheme();
@@ -204,9 +267,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
   const isMinisterOrChair = !!(member?.ministerial_role || participationIndex.chairCount > 0);
 
   // Recent substantive votes for overview tab
-  const recentVotes = votes
+  const recentVotes = useMemo(() => votes
     .filter(v => !isProcedural(v.division?.name || ''))
-    .slice(0, 3);
+    .slice(0, 3), [votes]);
 
   const TABS: { id: TabId; label: string }[] = [
     { id: 'overview', label: 'Overview' },
@@ -216,6 +279,20 @@ export function MemberProfileScreen({ route, navigation }: any) {
   ];
 
   if (!member) {
+    if (memberFailed) {
+      return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: spacing.xl }}>
+          <Ionicons name="person-circle-outline" size={40} color={colors.textMuted} />
+          <AppText variant="heading" style={{ marginTop: spacing.md }}>MP not found</AppText>
+          <AppText variant="body" color="textMuted" style={{ marginTop: spacing.xs, textAlign: 'center' }}>
+            This profile couldn't be loaded. It may have been removed or the link is out of date.
+          </AppText>
+          <PressableScale onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Go back" style={{ marginTop: spacing.lg }}>
+            <AppText variant="body" style={{ color: tokenColors.accent, fontWeight: '600' }}>Go back</AppText>
+          </PressableScale>
+        </SafeAreaView>
+      );
+    }
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <SkeletonLoader width="100%" height={200} />
@@ -518,11 +595,10 @@ export function MemberProfileScreen({ route, navigation }: any) {
             memberName={displayName}
             partyName={party.short_name || party.name}
             userId={user?.id}
-            onPressRebellion={(divisionId) => {
-              const vote = votes.find(v => v.division?.id === divisionId);
-              if (vote?.division) {
-                navigation.navigate('BillDetail', { billId: vote.division.id });
-              }
+            onPressRebellion={async (divisionId) => {
+              // Divisions aren't bills — resolve to the actual bill before navigating
+              const billId = await findBillIdForDivision(divisionId);
+              if (billId) navigation.navigate('BillDetail', { billId });
             }}
           />
         )}
@@ -669,14 +745,14 @@ export function MemberProfileScreen({ route, navigation }: any) {
                           {/* Position bar */}
                           <View style={{ marginVertical: 4 }}>
                             <View style={{ height: 6, backgroundColor: tokenColors.surfaceMuted, borderRadius: 3, position: 'relative' }}>
-                              <View style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, backgroundColor: '#D1D5DB' }} />
+                              <View style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, backgroundColor: tokenColors.borderStrong }} />
                               <View style={{
-                                position: 'absolute', left: `${((topic.stated_position + 1) / 2) * 100}%`,
+                                position: 'absolute', left: `${(((topic.stated_position ?? 0) + 1) / 2) * 100}%`,
                                 top: -4, width: 12, height: 12, borderRadius: 6,
                                 backgroundColor: '#2563EB', borderWidth: 2, borderColor: '#fff', marginLeft: -6,
                               }} />
                               <View style={{
-                                position: 'absolute', left: `${((topic.voting_position + 1) / 2) * 100}%`,
+                                position: 'absolute', left: `${(((topic.voting_position ?? 0) + 1) / 2) * 100}%`,
                                 top: -4, width: 12, height: 12, borderRadius: 6,
                                 backgroundColor: tokenColors.danger, borderWidth: 2, borderColor: '#fff', marginLeft: -6,
                               }} />
@@ -698,7 +774,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                             <View style={{ backgroundColor: '#FFF0D6', borderRadius: 8, padding: 10, marginTop: 4 }}>
                               <Text style={{ fontSize: 10, fontWeight: '700', color: '#92400E', marginBottom: 2 }}>They said:</Text>
                               <Text style={{ fontSize: 12, fontStyle: 'italic', color: '#1F2937', lineHeight: 18 }} numberOfLines={2}>
-                                "{topic.speech_excerpt}"
+                                "{decodeHtml(topic.speech_excerpt)}"
                               </Text>
                             </View>
                           )}
@@ -707,7 +783,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                           {topic.example_vote && (
                             <View style={{ backgroundColor: tokenColors.surfaceMuted, borderRadius: 8, padding: 10, marginTop: 4 }}>
                               <Text style={{ fontSize: 10, fontWeight: '700', color: tokenColors.textMuted, marginBottom: 2 }}>They voted:</Text>
-                              <Text style={{ fontSize: 12, color: '#1F2937', lineHeight: 18 }} numberOfLines={2}>
+                              <Text style={{ fontSize: 12, color: tokenColors.textPrimary, lineHeight: 18 }} numberOfLines={2}>
                                 {topic.example_vote.division_name}
                               </Text>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
@@ -788,8 +864,12 @@ export function MemberProfileScreen({ route, navigation }: any) {
                   Sources — Parliament of Australia · OpenAustralia · AEC
                 </AppText>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm }}>
-                  <AppText variant="caption" color="textMuted">Updated {timeAgo(new Date().toISOString())}</AppText>
-                  <AppText variant="caption" color="textMuted">·</AppText>
+                  {votes[0]?.division?.date ? (
+                    <>
+                      <AppText variant="caption" color="textMuted">Latest vote {timeAgo(votes[0].division.date)}</AppText>
+                      <AppText variant="caption" color="textMuted">·</AppText>
+                    </>
+                  ) : null}
                   <PressableScale onPress={() => Linking.openURL('mailto:corrections@verity.run')} accessibilityRole="button" accessibilityLabel="Report an issue via email">
                     <AppText variant="caption" style={{ color: tokenColors.accent }}>Report an issue</AppText>
                   </PressableScale>
@@ -801,7 +881,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 <View style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}>
                   <AppText variant="heading" style={{ color: colors.text, marginBottom: spacing.md }}>In the conversation</AppText>
                   <View style={{
-                    backgroundColor: '#FFFBF0',
+                    backgroundColor: tokenColors.surface,
                     borderRadius: radius.md,
                     padding: spacing.lg,
                     ...elevation.sm,
@@ -816,7 +896,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 15, color: colors.text, fontStyle: 'italic', lineHeight: 21 }} numberOfLines={4}>
-                          &ldquo;{discourseData.best_takes[0]}&rdquo;
+                          &ldquo;{decodeHtml(discourseData.best_takes[0])}&rdquo;
                         </Text>
                         {discourseData.sources_searched?.length > 0 && (
                           <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: spacing.xs }}>
@@ -1235,60 +1315,8 @@ export function MemberProfileScreen({ route, navigation }: any) {
                 )}
 
                 {/* ── Donation vs Voting Analysis ── */}
-                {(() => {
-                  const VOTE_KEYWORDS: Record<string, string[]> = {
-                    mining: ['mining', 'mineral', 'resources', 'coal', 'gas', 'petroleum', 'offshore'],
-                    property: ['housing', 'property', 'construction', 'planning', 'building', 'rent', 'home'],
-                    finance: ['banking', 'financial', 'credit', 'superannuation', 'insurance', 'prudential'],
-                    unions: ['workplace', 'industrial', 'fair work', 'employment', 'worker', 'bargaining'],
-                    pharmacy: ['health', 'medical', 'pharmaceutical', 'therapeutic', 'medicare', 'hospital'],
-                    health: ['health', 'medical', 'hospital', 'medicare'],
-                    tech: ['technology', 'digital', 'cyber', 'data', 'telecom', 'broadband', 'online'],
-                    telecom: ['technology', 'digital', 'telecom', 'broadband', 'online'],
-                    energy: ['energy', 'electricity', 'renewable', 'emissions', 'carbon', 'climate'],
-                    fossil_fuels: ['energy', 'gas', 'petroleum', 'offshore', 'emissions'],
-                    agriculture: ['agriculture', 'farm', 'rural', 'water', 'drought', 'biosecurity'],
-                    gambling: ['gambling', 'wagering', 'gaming', 'betting'],
-                    media: ['media', 'broadcast', 'press', 'journalism'],
-                    defence: ['defence', 'military', 'security', 'veteran'],
-                    transport: ['transport', 'aviation', 'shipping', 'freight', 'infrastructure'],
-                    education: ['education', 'university', 'school', 'training'],
-                    retail: ['consumer', 'retail', 'competition'],
-                  };
-
-                  const donorSource = indDonations.length > 0 ? indDonations : donations;
-                  const donorAgg = new Map<string, { amount: number; industry: string | null }>();
-                  for (const d of donorSource) {
-                    const existing = donorAgg.get(d.donor_name);
-                    donorAgg.set(d.donor_name, {
-                      amount: (existing?.amount ?? 0) + Number(d.amount),
-                      industry: d.industry ?? existing?.industry ?? null,
-                    });
-                  }
-                  const topDonorsWithIndustry = Array.from(donorAgg.entries())
-                    .sort((a, b) => b[1].amount - a[1].amount)
-                    .slice(0, 5)
-                    .map(([name, { amount, industry }]) => ({ name, amount, industry }))
-                    .filter(d => d.industry && d.industry !== 'individual' && d.industry !== 'unidentified');
-
-                  if (topDonorsWithIndustry.length === 0) return null;
-
-                  const industryVotes: Record<string, { aye: number; no: number }> = {};
-                  for (const donor of topDonorsWithIndustry) {
-                    if (!donor.industry || industryVotes[donor.industry]) continue;
-                    const keywords = VOTE_KEYWORDS[donor.industry] || [];
-                    let aye = 0;
-                    let no = 0;
-                    for (const v of votes) {
-                      const divName = (v.division?.name || '').toLowerCase();
-                      if (keywords.some(kw => divName.includes(kw))) {
-                        if (v.vote_cast === 'aye') aye++;
-                        else if (v.vote_cast === 'no') no++;
-                      }
-                    }
-                    if (aye + no > 0) industryVotes[donor.industry] = { aye, no };
-                  }
-
+                {donationVoteAnalysis && (() => {
+                  const { topDonorsWithIndustry, industryVotes } = donationVoteAnalysis;
                   return (
                     <View style={{ marginTop: spacing.xl }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.lg }}>
@@ -1465,7 +1493,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
                               <Text style={{ fontSize: 11, color: colors.text }}>{ind.name}</Text>
                             </View>
                             <View style={{ backgroundColor: colors.green + '22', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1 }}>
-                              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.green }}>{ind.pct}%</Text>
+                              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.green }}>{Math.round(Number(ind.pct) || 0)}%</Text>
                             </View>
                           </View>
                         ))}
@@ -1571,7 +1599,7 @@ export function MemberProfileScreen({ route, navigation }: any) {
               attendance={accountabilityScore.attendance}
               totalVotes={totalVotes}
               speeches={hansardEntries.length}
-              partyLoyalty={totalVotes > 0 ? Math.round(((totalVotes - votes.filter(v => v.rebelled).length) / totalVotes) * 100) : 0}
+              partyLoyalty={totalVotes > 0 ? Math.round(((totalVotes - rebelVotes.length) / totalVotes) * 100) : 0}
               topDonors={Array.from(
                 indDonations.reduce((acc, d) => {
                   acc.set(d.donor_name, (acc.get(d.donor_name) ?? 0) + Number(d.amount));
@@ -1604,9 +1632,9 @@ export function MemberProfileScreen({ route, navigation }: any) {
               partyColour={partyColour}
               electorateName={member.electorate?.name ?? ''}
               items={[
-                { label: 'Attendance', value: findMetric(mpStats, 'attendance_rate')?.display_value || `${Math.round((totalVotes / Math.max(totalVotes, 1)) * 100)}%` },
-                { label: 'Party loyalty', value: findMetric(mpStats, 'party_loyalty_rate')?.display_value || `${totalVotes > 0 ? Math.round(((totalVotes - votes.filter(v => v.rebelled).length) / totalVotes) * 100) : 0}%` },
-                { label: 'Floor crossings', value: findMetric(mpStats, 'floor_crossings')?.display_value || `${votes.filter(v => v.rebelled).length}`, highlight: votes.filter(v => v.rebelled).length > 0 },
+                { label: 'Attendance', value: findMetric(mpStats, 'attendance_rate')?.display_value || `${participationIndex.attendanceRate}%` },
+                { label: 'Party loyalty', value: findMetric(mpStats, 'party_loyalty_rate')?.display_value || `${totalVotes > 0 ? Math.round(((totalVotes - rebelVotes.length) / totalVotes) * 100) : 0}%` },
+                { label: 'Floor crossings', value: findMetric(mpStats, 'floor_crossings')?.display_value || `${rebelVotes.length}`, highlight: rebelVotes.length > 0 },
                 { label: 'Votes this term', value: findMetric(mpStats, 'votes_cast')?.display_value || `${totalVotes}` },
                 { label: 'Speeches', value: `${hansardEntries.length}` },
                 ...(indDonations.length > 0 ? [{

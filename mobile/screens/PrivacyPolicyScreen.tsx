@@ -5,10 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
 function Section({ title, body }: { title: string; body: string }) {
+  const { colors } = useTheme();
   return (
     <View style={{ marginBottom: 24 }}>
-      <Text style={{ fontSize: 18, fontWeight: '700', color: '#1A1A1A', marginBottom: 8 }}>{title}</Text>
-      <Text style={{ fontSize: 15, lineHeight: 24, color: '#374151' }}>{body}</Text>
+      <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 8 }}>{title}</Text>
+      <Text style={{ fontSize: 15, lineHeight: 24, color: colors.textBody }}>{body}</Text>
     </View>
   );
 }
@@ -22,8 +23,8 @@ export function PrivacyPolicyScreen({ navigation }: any) {
         <Ionicons name="arrow-back" size={22} color={colors.text} />
       </Pressable>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 24 }} showsVerticalScrollIndicator={false}>
-        <Text style={{ fontSize: 28, fontWeight: '800', color: '#1A1A1A', marginBottom: 4 }}>Privacy Policy</Text>
-        <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 24 }}>Last updated: May 2026</Text>
+        <Text style={{ fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 4 }}>Privacy Policy</Text>
+        <Text style={{ fontSize: 14, color: colors.textMuted, marginBottom: 24 }}>Last updated: May 2026</Text>
 
         <Section
           title="Who We Are"

@@ -2,18 +2,20 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const LAST_UPDATED = 'May 2026';
 
 export function TermsScreen({ navigation }: any) {
+  const { colors } = useTheme();
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <Pressable style={styles.back} onPress={() => navigation.goBack()} accessibilityLabel="Go back" accessibilityRole="button">
-        <Ionicons name="arrow-back" size={22} color="#1a2332" />
+        <Ionicons name="arrow-back" size={22} color={colors.text} />
       </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Terms of Service</Text>
-        <Text style={styles.updated}>Last updated: {LAST_UPDATED}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Terms of Service</Text>
+        <Text style={[styles.updated, { color: colors.textMuted }]}>Last updated: {LAST_UPDATED}</Text>
 
         <Section title="Agreement">
           By using Verity, you agree to these Terms of Service. If you do not agree, please do
@@ -104,10 +106,11 @@ export function TermsScreen({ navigation }: any) {
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const { colors } = useTheme();
   return (
     <View style={sectionStyles.container}>
-      <Text style={sectionStyles.title}>{title}</Text>
-      <Text style={sectionStyles.body}>{children}</Text>
+      <Text style={[sectionStyles.title, { color: colors.text }]}>{title}</Text>
+      <Text style={[sectionStyles.body, { color: colors.textBody }]}>{children}</Text>
     </View>
   );
 }

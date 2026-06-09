@@ -54,6 +54,7 @@ const SITUATION_OPTIONS = [
 function PersonalImpactCard({ billTitle, billSummary, billId, colors }: {
   billTitle: string; billSummary: string; billId: string; colors: any;
 }) {
+  const { isDark } = useTheme();
   const [selected, setSelected] = React.useState<string | null>(null);
   const [impact, setImpact] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -84,7 +85,7 @@ function PersonalImpactCard({ billTitle, billSummary, billId, colors }: {
 
   return (
     <View style={{
-      backgroundColor: '#FFF8E7', borderRadius: 14,
+      backgroundColor: isDark ? colors.cardAlt : '#FFF8E7', borderRadius: 14,
       borderWidth: 2, borderColor: '#F59E0B', padding: 16,
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -106,13 +107,13 @@ function PersonalImpactCard({ billTitle, billSummary, billId, colors }: {
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: 6,
                 paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
-                backgroundColor: isActive ? tokenColors.success : '#FFF0D6',
+                backgroundColor: isActive ? tokenColors.success : isDark ? colors.surface : '#FFF0D6',
               }}
               accessibilityRole="button"
               accessibilityLabel={`I'm a ${opt.label}`}
             >
-              <Ionicons name={opt.icon as any} size={14} color={isActive ? '#fff' : '#92400E'} />
-              <Text style={{ fontSize: 13, fontWeight: '600', color: isActive ? '#fff' : '#92400E' }}>{opt.label}</Text>
+              <Ionicons name={opt.icon as any} size={14} color={isActive ? '#fff' : isDark ? tokenColors.warning : '#92400E'} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: isActive ? '#fff' : isDark ? tokenColors.warning : '#92400E' }}>{opt.label}</Text>
             </Pressable>
           );
         })}
@@ -127,7 +128,7 @@ function PersonalImpactCard({ billTitle, billSummary, billId, colors }: {
       )}
 
       {impact && !loading && (
-        <View style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 14, marginTop: 4 }}>
+        <View style={{ backgroundColor: isDark ? colors.card : '#FFF', borderRadius: 10, padding: 14, marginTop: 4 }}>
           <Text style={{ fontSize: 14, color: colors.text, lineHeight: 22 }}>{impact}</Text>
           <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 8 }}>
             AI-generated analysis. Verify with official bill text.
