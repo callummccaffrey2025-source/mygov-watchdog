@@ -44,6 +44,9 @@ export interface DailyBriefData {
   one_thing: string | null;
   // AI-generated brief from daily_briefs table (fallback/supplement)
   ai_text: any | null;
+  // The date (YYYY-MM-DD) the AI brief was generated — may lag today if the
+  // pipeline missed a morning; the UI labels stale content honestly.
+  ai_text_date: string | null;
 }
 
 export function useDailyBrief(refreshToken = 0) {
@@ -52,6 +55,7 @@ export function useDailyBrief(refreshToken = 0) {
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     (async () => {
       try {
         const electorateId = await AsyncStorage.getItem('user_electorate_id');
@@ -206,6 +210,7 @@ export function useDailyBrief(refreshToken = 0) {
           polls,
           one_thing: oneThing,
           ai_text: aiBriefRes.data?.ai_text || null,
+          ai_text_date: aiBriefRes.data?.date || null,
         });
       } catch {
         // non-critical

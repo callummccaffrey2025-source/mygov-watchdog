@@ -5,14 +5,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDailyBrief } from '../hooks/useDailyBrief';
+import { useTheme } from '../context/ThemeContext';
 import { spacing, radius, elevation, colors as tokenColors } from '../theme/tokens';
 import { PressableScale, AppText, Card, Skeleton } from '../components/ui';
 
 export function DailyBriefScreen({ navigation }: any) {
-  const { brief, loading } = useDailyBrief();
+  useTheme(); // subscribe so token colours follow the scheme
+  const [refreshKey, setRefreshKey] = React.useState(0);
+  const { brief, loading } = useDailyBrief(refreshKey);
   const [refreshing, setRefreshing] = React.useState(false);
 
-  if (loading) {
+  React.useEffect(() => {
+    if (!loading) setRefreshing(false);
+  }, [loading]);
+
+  // Is the AI-written section from a previous day? Label it honestly.
+  const today = new Date().toISOString().slice(0, 10);
+  const aiStale = !!(brief?.ai_text_date && brief.ai_text_date !== today);
+  const aiDateLabel = aiStale && brief?.ai_text_date
+    ? new Date(brief.ai_text_date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })
+    : null;
+
+  if (loading && !brief) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: tokenColors.background }} edges={['top']}>
         <View style={{ padding: spacing.xl, gap: spacing.lg }}>
@@ -43,7 +57,7 @@ export function DailyBriefScreen({ navigation }: any) {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={async () => { setRefreshing(true); setTimeout(() => setRefreshing(false), 1000); }}
+            onRefresh={() => { setRefreshing(true); setRefreshKey(k => k + 1); }}
             tintColor="#FFFFFF"
           />
         }
@@ -87,6 +101,15 @@ export function DailyBriefScreen({ navigation }: any) {
           <AppText variant="label" color="textMuted" style={{ fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: spacing.sm }}>
             What happened
           </AppText>
+
+          {aiDateLabel && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm }}>
+              <Ionicons name="time-outline" size={13} color={tokenColors.textMuted} />
+              <AppText variant="caption" color="textMuted">
+                From {aiDateLabel} — today's brief is still being prepared
+              </AppText>
+            </View>
+          )}
 
           {brief?.ai_text?.what_happened?.length > 0 ? (
             (brief!.ai_text.what_happened as any[]).map((story: any, i: number) => (
