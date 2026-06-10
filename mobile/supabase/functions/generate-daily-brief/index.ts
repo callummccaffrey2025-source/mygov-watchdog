@@ -146,6 +146,21 @@ Return ONLY valid JSON with exactly these three fields — no preamble, no markd
     const anthropicData = await anthropicRes.json();
     const rawText: string = anthropicData.content?.[0]?.text ?? "";
 
+    // Cost tracking — mirror of scripts/llm_costs.py pricing (haiku 4.5: $1/$5 per MTok).
+    // Fire-and-forget: cost logging must never break brief generation.
+    try {
+      const inputTokens = anthropicData.usage?.input_tokens ?? 0;
+      const outputTokens = anthropicData.usage?.output_tokens ?? 0;
+      await supabase.from("llm_calls").insert({
+        caller: "generate-daily-brief",
+        purpose: "daily-brief",
+        model: "claude-haiku-4-5-20251001",
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        cost_usd: (inputTokens * 1.0 + outputTokens * 5.0) / 1_000_000,
+      });
+    } catch (_) { /* non-fatal */ }
+
     // Parse JSON — strip any accidental markdown fences
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error(`No JSON in response: ${rawText.slice(0, 200)}`);
