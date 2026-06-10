@@ -7,6 +7,7 @@ import { SkeletonLoader } from '../components/SkeletonLoader';
 import { useTheme } from '../context/ThemeContext';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS } from '../constants/design';
 import { timeAgo } from '../lib/timeAgo';
+import { decodeHtml } from '../utils/decodeHtml';
 
 function scoreColor(score: number): string {
   if (score > 66) return '#DC3545';
@@ -15,6 +16,7 @@ function scoreColor(score: number): string {
 }
 
 function PositionBar({ stated, voting }: { stated: number; voting: number }) {
+  const { colors } = useTheme();
   // Bar from -1 to +1, 0 centered
   const statedPct = ((stated + 1) / 2) * 100;
   const votingPct = ((voting + 1) / 2) * 100;
@@ -22,12 +24,12 @@ function PositionBar({ stated, voting }: { stated: number; voting: number }) {
   return (
     <View style={{ marginVertical: SPACING.sm }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-        <Text style={{ fontSize: 10, color: '#9CA3AF' }}>Against</Text>
-        <Text style={{ fontSize: 10, color: '#9CA3AF' }}>For</Text>
+        <Text style={{ fontSize: 10, color: colors.textMuted }}>Against</Text>
+        <Text style={{ fontSize: 10, color: colors.textMuted }}>For</Text>
       </View>
-      <View style={{ height: 8, backgroundColor: '#F3F4F6', borderRadius: 4, position: 'relative' }}>
+      <View style={{ height: 8, backgroundColor: colors.cardAlt, borderRadius: 4, position: 'relative' }}>
         {/* Center line */}
-        <View style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, backgroundColor: '#D1D5DB' }} />
+        <View style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, backgroundColor: colors.borderStrong }} />
         {/* Stated position (blue) */}
         <View style={{
           position: 'absolute', left: `${statedPct}%`, top: -3, width: 14, height: 14,
@@ -44,11 +46,11 @@ function PositionBar({ stated, voting }: { stated: number; voting: number }) {
       <View style={{ flexDirection: 'row', gap: SPACING.md, marginTop: 6 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#2563EB' }} />
-          <Text style={{ fontSize: 10, color: '#6B7280' }}>What they said</Text>
+          <Text style={{ fontSize: 10, color: colors.textMuted }}>What they said</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#DC3545' }} />
-          <Text style={{ fontSize: 10, color: '#6B7280' }}>How they voted</Text>
+          <Text style={{ fontSize: 10, color: colors.textMuted }}>How they voted</Text>
         </View>
       </View>
     </View>
@@ -56,9 +58,10 @@ function PositionBar({ stated, voting }: { stated: number; voting: number }) {
 }
 
 function TopicCard({ topic, colors }: { topic: HypocrisyTopic; colors: any }) {
+  const { isDark } = useTheme();
   return (
     <View style={{
-      backgroundColor: '#FFF8E7', borderRadius: BORDER_RADIUS.lg,
+      backgroundColor: isDark ? colors.cardAlt : '#FFF8E7', borderRadius: BORDER_RADIUS.lg,
       borderWidth: 2, borderColor: '#DC3545', padding: SPACING.lg,
       marginBottom: SPACING.md,
     }}>
@@ -78,7 +81,7 @@ function TopicCard({ topic, colors }: { topic: HypocrisyTopic; colors: any }) {
         <View style={{ backgroundColor: '#FFF0D6', borderRadius: 8, padding: 12, marginTop: SPACING.sm }}>
           <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#92400E', marginBottom: 4 }}>They said:</Text>
           <Text style={{ fontSize: 14, fontStyle: 'italic', color: '#1F2937', lineHeight: 20 }}>
-            "{topic.speech_excerpt}"
+            "{decodeHtml(topic.speech_excerpt)}"
           </Text>
           {topic.speech_date && (
             <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 4 }}>{timeAgo(topic.speech_date)}</Text>
@@ -88,24 +91,24 @@ function TopicCard({ topic, colors }: { topic: HypocrisyTopic; colors: any }) {
 
       {/* They voted */}
       {topic.example_vote && (
-        <View style={{ backgroundColor: '#F3F4F6', borderRadius: 8, padding: 12, marginTop: SPACING.sm }}>
-          <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#6B7280', marginBottom: 4 }}>They voted:</Text>
-          <Text style={{ fontSize: 14, color: '#1F2937', lineHeight: 20 }} numberOfLines={3}>
+        <View style={{ backgroundColor: isDark ? colors.surface : '#F3F4F6', borderRadius: 8, padding: 12, marginTop: SPACING.sm }}>
+          <Text style={{ fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: colors.textMuted, marginBottom: 4 }}>They voted:</Text>
+          <Text style={{ fontSize: 14, color: colors.text, lineHeight: 20 }} numberOfLines={3}>
             {topic.example_vote.division_name}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
             <View style={{
-              backgroundColor: topic.example_vote.vote === 'aye' ? '#E8F5EE' : topic.example_vote.vote === 'no' ? '#FDECEA' : '#F3F4F6',
+              backgroundColor: topic.example_vote.vote === 'aye' ? colors.greenBg : topic.example_vote.vote === 'no' ? colors.redBg : colors.cardAlt,
               borderRadius: 6, paddingHorizontal: 10, paddingVertical: 3,
             }}>
               <Text style={{
                 fontSize: 12, fontWeight: FONT_WEIGHT.bold,
-                color: topic.example_vote.vote === 'aye' ? '#00843D' : topic.example_vote.vote === 'no' ? '#DC3545' : '#6B7280',
+                color: topic.example_vote.vote === 'aye' ? colors.green : topic.example_vote.vote === 'no' ? colors.red : colors.textMuted,
               }}>
                 {topic.example_vote.vote === 'aye' ? 'Voted Aye' : topic.example_vote.vote === 'no' ? 'Voted No' : `Voted ${topic.example_vote.vote}`}
               </Text>
             </View>
-            <Text style={{ fontSize: 11, color: '#9CA3AF' }}>{topic.example_vote.date}</Text>
+            <Text style={{ fontSize: 11, color: colors.textMuted }}>{topic.example_vote.date}</Text>
           </View>
         </View>
       )}
@@ -113,10 +116,10 @@ function TopicCard({ topic, colors }: { topic: HypocrisyTopic; colors: any }) {
       {/* Stats */}
       <View style={{ flexDirection: 'row', gap: SPACING.lg, marginTop: SPACING.sm }}>
         {topic.speech_count != null && (
-          <Text style={{ fontSize: 11, color: '#6B7280' }}>{topic.speech_count} speeches</Text>
+          <Text style={{ fontSize: 11, color: colors.textMuted }}>{topic.speech_count} speeches</Text>
         )}
         {topic.vote_count != null && (
-          <Text style={{ fontSize: 11, color: '#6B7280' }}>{topic.vote_count} votes</Text>
+          <Text style={{ fontSize: 11, color: colors.textMuted }}>{topic.vote_count} votes</Text>
         )}
       </View>
     </View>
@@ -171,7 +174,7 @@ export function HypocrisyDetailScreen({ route, navigation }: any) {
               <Text style={{ fontSize: 56, fontWeight: '800', color: scoreColor(data.overall_score ?? 0) }}>
                 {data.overall_score}
               </Text>
-              <Text style={{ fontSize: 13, color: '#4B5563' }}>
+              <Text style={{ fontSize: 13, color: colors.textBody }}>
                 Ranks #{data.rank_among_mps} of {data.total_mps_scored} MPs scored
               </Text>
               <Text style={{ fontSize: 11, color: colors.textMuted, textAlign: 'center', marginTop: SPACING.sm, lineHeight: 16, paddingHorizontal: SPACING.xl }}>

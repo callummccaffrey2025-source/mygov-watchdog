@@ -27,9 +27,7 @@ const WatchlistCard = React.memo(function WatchlistCard({
     : item.entity_type === 'bill' ? '#00843D'
     : '#F59E0B';
 
-  const iconBg = item.entity_type === 'member' ? '#EFF6FF'
-    : item.entity_type === 'bill' ? '#E8F5EE'
-    : '#FFFBEB';
+  const iconBg = iconColor + '1F'; // 12% tint of the type colour — works on both schemes
 
   const typeLabel = item.entity_type === 'member' ? 'MP'
     : item.entity_type === 'bill' ? 'BILL'
@@ -220,6 +218,8 @@ export function WatchlistScreen({ navigation }: any) {
           icon="eye-outline"
           title="Your watchlist is empty"
           subtitle="Follow MPs, bills, or topics to track their activity here — like a portfolio for democracy."
+          actionLabel="Find an MP to follow"
+          onAction={() => navigation.navigate('Main', { screen: 'Explore' })}
         />
       ) : (
         <FlashList

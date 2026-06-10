@@ -52,6 +52,8 @@ export function ActivityScreen({ route, navigation }: any) {
         navigation.navigate('BillDetail', { billId: data.billId });
       } else if (data.screen === 'member' && data.memberId) {
         navigation.navigate('MemberProfile', { memberId: data.memberId });
+      } else if (data.screen === 'daily_brief' || data.screen === 'DailyBrief') {
+        navigation.navigate('DailyBrief');
       }
     },
     [markRead, navigation]
@@ -128,12 +130,14 @@ export function ActivityScreen({ route, navigation }: any) {
     if (loading) return null;
     return (
       <EmptyState
-        icon="🔔"
+        icon="notifications-outline"
         title="No activity yet"
         subtitle="Notifications about your MP and electorate will appear here"
+        actionLabel="Notification settings"
+        onAction={() => navigation.navigate('NotificationPreferences')}
       />
     );
-  }, [loading]);
+  }, [loading, navigation]);
 
   const renderSkeleton = () => (
     <View style={{ padding: SPACING.lg }}>

@@ -19,7 +19,7 @@ function MethodSection({ icon, title, children, colors }: SectionProps) {
       padding: SPACING.lg, marginBottom: SPACING.md, ...SHADOWS.sm,
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: SPACING.md }}>
-        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#E8F5EE', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.greenBg, justifyContent: 'center', alignItems: 'center' }}>
           <Ionicons name={icon as any} size={16} color="#00843D" />
         </View>
         <Text style={{ fontSize: 16, fontWeight: FONT_WEIGHT.bold, color: colors.text }}>{title}</Text>

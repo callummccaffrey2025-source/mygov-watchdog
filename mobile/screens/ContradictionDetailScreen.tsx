@@ -15,6 +15,7 @@ import { timeAgo } from '../lib/timeAgo';
 import { captureAndShare } from '../utils/shareContent';
 import { ContradictionShareCard } from '../components/ContradictionShareCard';
 import { SPACING, FONT_SIZE, FONT_WEIGHT, BORDER_RADIUS, SHADOWS } from '../constants/design';
+import { SkeletonLoader } from '../components/SkeletonLoader';
 import type { Contradiction } from '../hooks/useContradictions';
 
 function formatDate(dateStr: string | null): string {
@@ -59,10 +60,25 @@ export function ContradictionDetailScreen({ route, navigation }: any) {
     }
   }, [sharing]);
 
-  if (loading || !contradiction) {
+  if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: colors.textMuted, fontSize: FONT_SIZE.body }}>Loading...</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, padding: SPACING.xl, gap: SPACING.lg }}>
+        <SkeletonLoader width="60%" height={28} />
+        <SkeletonLoader width="100%" height={160} borderRadius={BORDER_RADIUS.lg} />
+        <SkeletonLoader width="100%" height={100} borderRadius={BORDER_RADIUS.lg} />
+      </SafeAreaView>
+    );
+  }
+  if (!contradiction) {
+    // Fetch failed or row missing — give the user an escape, not a dead end
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: SPACING.xl }}>
+        <Ionicons name="cloud-offline-outline" size={40} color={colors.textMuted} />
+        <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginTop: SPACING.md }}>Couldn't load this</Text>
+        <Text style={{ fontSize: FONT_SIZE.body, color: colors.textMuted, marginTop: 4, textAlign: 'center' }}>Check your connection and try again.</Text>
+        <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Go back" style={{ marginTop: SPACING.lg }}>
+          <Text style={{ color: '#00843D', fontWeight: '600' }}>Go back</Text>
+        </Pressable>
       </SafeAreaView>
     );
   }

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -185,6 +186,7 @@ export function SavedScreen({ navigation }: any) {
         // Saved votes store a division id — resolve to the bill before navigating
         const billId = await findBillIdForDivision(item.content_id);
         if (billId) navigation.navigate('BillDetail', { billId });
+        else Alert.alert('No bill linked', 'This vote was on a motion without an associated bill.');
         break;
       }
       case 'post':
@@ -206,9 +208,9 @@ export function SavedScreen({ navigation }: any) {
     if (loading) return null;
     return (
       <EmptyState
-        icon="📌"
+        icon="bookmark-outline"
         title="Nothing saved yet"
-        subtitle="Tap the bookmark icon on any article to save it here"
+        subtitle="Tap the bookmark icon on any bill, vote, or article to save it here"
       />
     );
   };

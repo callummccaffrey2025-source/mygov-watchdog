@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
 interface EmptyStateProps {
@@ -14,7 +15,11 @@ export function EmptyState({ icon, title, subtitle, actionLabel, onAction }: Emp
   const { colors } = useTheme();
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, paddingVertical: 48 }}>
-      <Text style={{ fontSize: 48, marginBottom: 16 }}>{icon}</Text>
+      {/^[a-z0-9-]+$/.test(icon) ? (
+        <Ionicons name={icon as any} size={48} color={colors.textMuted} style={{ marginBottom: 16 }} />
+      ) : (
+        <Text style={{ fontSize: 48, marginBottom: 16 }}>{icon}</Text>
+      )}
       <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8 }}>
         {title}
       </Text>

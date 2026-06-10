@@ -32,10 +32,22 @@ function formatPopulation(n: number): string {
 type Tab = 'overview' | 'councillors';
 
 export function CouncilProfileScreen({ route, navigation }: any) {
-  const { council }: { council: Council } = route.params;
-  const { councillors, loading: councillorsLoading } = useCouncillors(council.id);
+  const council: Council | undefined = route.params?.council;
+  const { councillors, loading: councillorsLoading } = useCouncillors(council?.id ?? '');
   const { colors } = useTheme();
   const [tab, setTab] = useState<Tab>('overview');
+
+  if (!council) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl }}>
+        <Ionicons name="business-outline" size={40} color={colors.textMuted} />
+        <Text style={{ fontSize: FONT_SIZE.subtitle, fontWeight: '700', color: colors.text, marginTop: SPACING.md }}>Council not found</Text>
+        <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Go back" style={{ marginTop: SPACING.lg }}>
+          <Text style={{ color: '#00843D', fontWeight: '600' }}>Go back</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
 
   const meta = TYPE_META[council.type] || { label: council.type, color: '#9aabb8', icon: 'business-outline' as const };
 
