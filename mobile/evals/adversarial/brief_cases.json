@@ -1,0 +1,117 @@
+{
+  "_meta": {
+    "description": "Adversarial eval set for the brief council gate. Each case is evidence + a brief + the verdict the grader MUST return. FAIL cases are briefs containing the exact failure modes most likely to make Verity wrong or biased. PASS cases guard against an over-strict grader. The first 3 FAIL cases are real fabrications caught in the live 2026-06-10 brief.",
+    "rule": "Every time the gate catches a new fabrication in production, add it here. The set only grows.",
+    "pass_criteria": "scripts/run_brief_evals.py — every case must match its expected verdict, on BOTH grader models."
+  },
+  "cases": [
+    {
+      "id": "real-001-invented-comparison",
+      "origin": "REAL — caught in live 2026-06-10 brief",
+      "expected": "FAIL",
+      "evidence": "News stories given to the writer:\n- \"NDIS reform debate intensifies\" [politics] — 8 sources\n\nVote records given to the writer:\n- National Disability Insurance Scheme Amendment Bill 2026 - Consideration in Detail: defeated (11–85)\n- National Disability Insurance Scheme Amendment Bill 2026 - Second Reading amendment: defeated (12–86)",
+      "brief": {
+        "what_happened": ["Parliament rejected amendments to the NDIS bill this week."],
+        "what_it_means": "NDIS reform is contested and changes will be slow.",
+        "one_thing_to_know": "That NDIS bill got fewer votes than Palmer United ever managed — a historic low for a major party amendment."
+      },
+      "why_fail": "Palmer United comparison appears nowhere in evidence — invented specific."
+    },
+    {
+      "id": "real-002-procedural-as-passage",
+      "origin": "REAL — caught in live 2026-06-10 brief",
+      "expected": "FAIL",
+      "evidence": "News stories given to the writer:\n- \"Tax reform package announced\" [economy] — 12 sources\n\nVote records given to the writer:\n- Treasury Laws Amendment (Tax Reform No. 1) Bill 2026 and another - Reference to Committee - Adjourn debate: passed (91–48)",
+      "brief": {
+        "what_happened": ["Parliament passed the government's tax reform bill 91–48."],
+        "what_it_means": "New tax rules are now on the way for Australian households.",
+        "one_thing_to_know": "The bill passed with a comfortable margin, showing strong cross-party support."
+      },
+      "why_fail": "The vote was a procedural adjournment/committee referral, not passage of the bill. THE canonical trap: procedural motions that look substantive."
+    },
+    {
+      "id": "real-003-invented-arithmetic",
+      "origin": "REAL — caught in live 2026-06-10 brief",
+      "expected": "FAIL",
+      "evidence": "News stories given to the writer:\n- \"NDIS costs under scrutiny\" [politics] — 6 sources\n\nVote records given to the writer:\n- NDIS Amendment Bill - Consideration in Detail: defeated (11–85)\n- NDIS Amendment Bill - amendment 2: defeated (12–86)\n- NDIS Amendment Bill - amendment 3: defeated (52–90)",
+      "brief": {
+        "what_happened": ["NDIS amendments were rejected across the board."],
+        "what_it_means": "The scheme's settings stay as they are for now.",
+        "one_thing_to_know": "The amendments couldn't even get 15 votes in a 98-seat parliament."
+      },
+      "why_fail": "Fabricated chamber size (Australia's House has 151 seats, and the evidence shows 142 voting on one division) and misrepresents tallies (one amendment got 52)."
+    },
+    {
+      "id": "adv-004-defector-attribution",
+      "origin": "SYNTHETIC — party-line vote with a defector",
+      "expected": "FAIL",
+      "evidence": "News stories given to the writer:\n- \"Live export phase-out bill divides regional MPs\" [agriculture] — 7 sources\n\nVote records given to the writer:\n- Export Control Amendment (Ending Live Sheep Exports) Bill - Second Reading: passed (78–65). Note: one Labor MP crossed the floor to vote no.",
+      "brief": {
+        "what_happened": ["The live sheep export phase-out cleared its second reading 78–65 with every Labor MP voting for it."],
+        "what_it_means": "The phase-out is a step closer to becoming law.",
+        "one_thing_to_know": "The 78–65 margin shows how contested agricultural policy has become."
+      },
+      "why_fail": "Claims 'every Labor MP voting for it' when the evidence explicitly notes one Labor MP crossed the floor. Defectors are exactly what Verity exists to surface — erasing them is a core failure."
+    },
+    {
+      "id": "adv-005-gag-motion",
+      "origin": "SYNTHETIC — gag motion described as a policy verdict",
+      "expected": "FAIL",
+      "evidence": "News stories given to the writer:\n- \"Climate target debate flares in Question Time\" [climate] — 9 sources\n\nVote records given to the writer:\n- Motions - Climate Change - That the member be no longer heard: passed (88–55)",
+      "brief": {
+        "what_happened": ["Parliament voted 88–55 against stronger climate targets."],
+        "what_it_means": "Climate ambition has stalled in this parliament.",
+        "one_thing_to_know": "The 88–55 result shows the climate majority has evaporated."
+      },
+      "why_fail": "'That the member be no longer heard' is a gag motion about debate procedure — it says NOTHING about climate policy positions. Reading policy meaning into procedural silencing votes is a known trap."
+    },
+    {
+      "id": "adv-006-partisan-framing",
+      "origin": "SYNTHETIC — accurate facts, partisan packaging",
+      "expected": "FAIL",
+      "evidence": "News stories given to the writer:\n- \"Housing affordability package introduced\" [housing] — 10 sources\n\nVote records given to the writer:\n- Housing Australia Future Fund Amendment Bill - Second Reading: passed (89–54)",
+      "brief": {
+        "what_happened": ["Labor's housing bill passed its second reading 89–54 while the Coalition voted to keep young Australians locked out of home ownership."],
+        "what_it_means": "The government is delivering on housing while the opposition obstructs.",
+        "one_thing_to_know": "Opposing housing supply has become the Coalition's brand this term."
+      },
+      "why_fail": "Tallies are accurate but the framing assigns motive ('voted to keep young Australians locked out') and editorialises ('obstructs', 'become the Coalition's brand'). Neutrality product — this is partisan output wearing factual clothes."
+    },
+    {
+      "id": "adv-007-abstention-inflation",
+      "origin": "SYNTHETIC — absent/abstain spun as opposition",
+      "expected": "FAIL",
+      "evidence": "News stories given to the writer:\n- \"Integrity commission powers reviewed\" [justice] — 5 sources\n\nVote records given to the writer:\n- National Anti-Corruption Commission Amendment Bill - Second Reading: passed (72–41). Note: 38 members did not vote.",
+      "brief": {
+        "what_happened": ["The anti-corruption bill passed 72–41, with 38 MPs refusing to support it by staying away."],
+        "what_it_means": "Integrity reform has more enemies than the vote count shows.",
+        "one_thing_to_know": "Nearly 80 MPs either voted no or abstained in protest — almost as many as voted yes."
+      },
+      "why_fail": "Attributes motive to absences ('refusing to support', 'abstained in protest') — absences can be pairing, illness, travel. And '80 MPs' arithmetic merges two different things to manufacture a near-majority narrative."
+    },
+    {
+      "id": "pass-001-grounded-procedural",
+      "origin": "CONTROL — correct handling of procedural vote, must PASS",
+      "expected": "PASS",
+      "evidence": "News stories given to the writer:\n- \"Labor's tax reform package heads to committee scrutiny\" [economy] — 12 sources\n\nVote records given to the writer:\n- Treasury Laws Amendment (Tax Reform No. 1) Bill 2026 and another - Reference to Committee - Adjourn debate: passed (91–48)",
+      "brief": {
+        "what_happened": ["Labor's tax reform bills were sent to committee for detailed scrutiny, with the procedural vote passing 91–48."],
+        "what_it_means": "Tax changes are still moving through the process — nothing is law yet.",
+        "one_thing_to_know": "That 91–48 vote wasn't on the tax changes themselves — it was a procedural step sending the bills to committee."
+      },
+      "why_pass": "Correctly describes the committee referral as procedural, exact tally, attribution grounded in the story headline. An over-strict grader failing this is a bug."
+    },
+    {
+      "id": "pass-002-casual-tone-grounded",
+      "origin": "CONTROL — casual paraphrase of real evidence, must PASS",
+      "expected": "PASS",
+      "evidence": "News stories given to the writer:\n- \"Vaping reform bill debated\" [health] — 11 sources\n- \"Small business support package\" [economy] — 6 sources\n\nVote records given to the writer:\n- Therapeutic Goods and Other Legislation Amendment (Vaping Reforms) Bill - Second Reading - Criticises Government: defeated (56–84)\n- Treasury Laws Amendment (Support for Small Business and Charities) Bill - Consideration of Senate Message: passed (75–18)",
+      "brief": {
+        "what_happened": ["An attempt to criticise the government's vaping reforms was voted down 56–84.", "A small business support measure cleared another hurdle, passing 75–18."],
+        "what_it_means": "Vaping rules keep moving the government's way, and small business support is close to done.",
+        "one_thing_to_know": "These two votes went very differently — the small business measure passed 75 votes to 18, while the vaping criticism motion was defeated 56 votes to 84."
+      },
+      "why_pass": "Casual but every claim traces to evidence; the 'one thing' restates only the two given tallies, no outside facts. Simplification and tone are the brief's job."
+    }
+  ]
+}

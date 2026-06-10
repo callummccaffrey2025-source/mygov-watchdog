@@ -35,6 +35,8 @@ load_dotenv(PROJECT_DIR / ".env")
 import anthropic
 from supabase import create_client
 
+from llm_costs import log_llm_call
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s  %(message)s")
 log = logging.getLogger("grade_brief")
 
@@ -117,7 +119,7 @@ def fetch_evidence(sb) -> tuple[str, str]:
     return stories_text, divisions_text
 
 
-def run_grader(client, model: str, system_prompt: str, evidence: str, brief_json: str, verbose: bool) -> dict:
+def run_grader(client, model: str, system_prompt: str, evidence: str, brief_json: str, verbose: bool, sb=None) -> dict:
     """Run one grader model. Returns parsed verdict dict."""
     msg = client.messages.create(
         model=model,
@@ -128,6 +130,8 @@ def run_grader(client, model: str, system_prompt: str, evidence: str, brief_json
             "content": f"EVIDENCE:\n{evidence}\n\nBRIEF:\n{brief_json}\n\nGrade it now.",
         }],
     )
+    if sb is not None:
+        log_llm_call(sb, caller="grade_brief.py", purpose="brief-grade", model=model, usage=msg.usage)
     raw = msg.content[0].text.strip() if msg.content else ""
     if verbose:
         log.info("[%s] raw response:\n%s", model, raw)
@@ -211,7 +215,7 @@ def main() -> None:
     all_issues = []
     for model in GRADER_MODELS:
         try:
-            result = run_grader(client, model, system_prompt, evidence, brief_json, args.verbose)
+            result = run_grader(client, model, system_prompt, evidence, brief_json, args.verbose, sb=sb)
         except Exception as e:
             result = {"verdict": "FAIL", "issues": [f"grader call failed: {e}"], "checked_claims": 0}
         verdict = result.get("verdict", "FAIL")

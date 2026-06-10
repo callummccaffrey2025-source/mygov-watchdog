@@ -26,6 +26,8 @@ FAIL if ANY of these are true:
 
 PASS otherwise. Cautious paraphrase, simplification, and casual tone are fine — that's the brief's job.
 
+IMPORTANT: before flagging any numerical claim or comparison as wrong, write out the arithmetic step by step inside your reasoning and only flag it if it is clearly incorrect. A grader arithmetic mistake that blocks a true brief is as bad as missing a fabrication.
+
 Return ONLY valid JSON:
 {
   "verdict": "PASS" | "FAIL",

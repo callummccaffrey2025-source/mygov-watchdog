@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "description": "Golden fixture: Jerome Laxale MP (Bennelong). Frozen 2026-06-10 from production DB. Every 5am run regresses against this. If any frozen vote changes, the pipeline corrupted historical data — that is a CRITICAL failure.",
+    "frozen_at": "2026-06-10",
+    "founder_verified": false,
+    "founder_verification_note": "CALLUM: eyeball these 10 votes against https://theyvoteforyou.org.au/people/representatives/bennelong/jerome_laxale/divisions then set founder_verified: true. The fixture is machine-frozen until you do.",
+    "verification_source": "https://theyvoteforyou.org.au/people/representatives/bennelong/jerome_laxale"
+  },
+  "member": {
+    "id": "c232fb85-0150-4a99-91e8-8650ccc44ea1",
+    "first_name": "Jerome",
+    "last_name": "Laxale",
+    "party": "Australian Labor Party",
+    "electorate": "Bennelong",
+    "chamber": "house",
+    "is_active": true,
+    "has_photo": true,
+    "email": "Jerome.Laxale.MP@aph.gov.au",
+    "aph_id": "299174"
+  },
+  "vote_aggregates_min": {
+    "_note": "Counts only grow as new divisions happen. Check is >= frozen value, never <.",
+    "total_votes": 319,
+    "aye_votes": 221,
+    "no_votes": 98
+  },
+  "vote_aggregates_exact": {
+    "_note": "Rebellions are rare and politically loaded — an unexplained change is suspicious either way. Exact match; update fixture deliberately if he genuinely rebels.",
+    "rebellions": 0
+  },
+  "frozen_votes": [
+    { "tvfy_id": 8875, "name_contains": "Vaping Reforms", "date": "2024-05-15", "aye_votes": 56, "no_votes": 84, "vote_cast": "no", "rebelled": false },
+    { "tvfy_id": 8874, "name_contains": "Support for Small Business and Charities", "date": "2024-05-15", "aye_votes": 75, "no_votes": 18, "vote_cast": "aye", "rebelled": false },
+    { "tvfy_id": 8872, "name_contains": "Prominence and Anti-Siphoning", "date": "2024-05-14", "aye_votes": 13, "no_votes": 61, "vote_cast": "no", "rebelled": false },
+    { "tvfy_id": 8871, "name_contains": "Climate Change", "date": "2024-05-14", "aye_votes": 13, "no_votes": 98, "vote_cast": "no", "rebelled": false },
+    { "tvfy_id": 8836, "name_contains": "Australian Football League", "date": "2024-03-27", "aye_votes": 15, "no_votes": 51, "vote_cast": "no", "rebelled": false },
+    { "tvfy_id": 8835, "name_contains": "New Vehicle Efficiency Standard", "date": "2024-03-27", "aye_votes": 57, "no_votes": 80, "vote_cast": "no", "rebelled": false },
+    { "tvfy_id": 8834, "name_contains": "New Vehicle Efficiency Standard", "date": "2024-03-27", "aye_votes": 74, "no_votes": 64, "vote_cast": "aye", "rebelled": false },
+    { "tvfy_id": 8833, "name_contains": "Biosecurity Protection) Levies and Charges Collection", "date": "2024-03-27", "aye_votes": 74, "no_votes": 68, "vote_cast": "aye", "rebelled": false },
+    { "tvfy_id": 8832, "name_contains": "Biosecurity Protection) Charges Bill", "date": "2024-03-27", "aye_votes": 74, "no_votes": 68, "vote_cast": "aye", "rebelled": false },
+    { "tvfy_id": 8831, "name_contains": "Biosecurity Protection) Levies Bill", "date": "2024-03-27", "aye_votes": 74, "no_votes": 66, "vote_cast": "aye", "rebelled": false }
+  ]
+}

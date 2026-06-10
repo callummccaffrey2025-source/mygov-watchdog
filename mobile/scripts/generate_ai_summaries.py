@@ -21,6 +21,8 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env
 import anthropic
 from supabase import create_client
 
+from llm_costs import log_llm_call
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
@@ -162,6 +164,8 @@ def main() -> None:
                 total_output_tokens += msg.usage.output_tokens
             except AttributeError:
                 pass
+            log_llm_call(sb, caller="generate_ai_summaries.py", purpose="news-summary",
+                         model=MODEL, usage=msg.usage)
 
             sb.table("news_stories").update({"ai_summary": summary}).eq("id", story_id).execute()
             generated += 1

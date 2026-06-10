@@ -1099,6 +1099,12 @@ def compute_story_metrics(sb, story_id: int, story: dict) -> dict:
                         }],
                     )
                     ai_summary = msg.content[0].text.strip() if msg.content else None
+                    try:
+                        from llm_costs import log_llm_call
+                        log_llm_call(sb, caller="ingest_news.py", purpose="story-summary",
+                                     model="claude-haiku-4-5-20251001", usage=msg.usage)
+                    except Exception:
+                        pass
                 except Exception as e:
                     log.warning("AI summary failed for story %d: %s", story_id, e)
 

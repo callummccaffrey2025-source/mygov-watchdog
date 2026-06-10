@@ -125,6 +125,18 @@ phase_watchdog() {
 
 phase_quality() {
   log "═══ PHASE 4: QUALITY GATE ═══"
+
+  # Golden fixture: one hand-verified MP record regressed every run.
+  # A failure here means the pipeline corrupted HISTORICAL data — critical.
+  local fixture_exit=0
+  python3 scripts/check_golden_fixture.py >> "$CYCLE_LOG" 2>&1 || fixture_exit=$?
+  if [[ $fixture_exit -eq 0 ]]; then
+    log "✓ Golden fixture (Laxale) intact"
+  else
+    log "🔴 GOLDEN FIXTURE REGRESSION — historical data changed, run marked degraded"
+    CYCLE_STATUS="degraded"
+  fi
+
   bash "${LOOPS_DIR}/quality_gate.sh" >> "$CYCLE_LOG" 2>&1 || true
   log "✓ Quality gate complete"
 }
